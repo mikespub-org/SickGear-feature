@@ -13,7 +13,7 @@
 * Update soupsieve 2.7.0 (a616022) to 2.8.0 (bf93778)
 * Update Tornado Web Server 6.5.2 (f01a7b0) to 6.5.4 (63d4df4)
 * Update typing-extensions 4.14.0 (59d2c20) to 4.15.0 (2638b86)
-* Update urllib3 2.5.0 (98a60f9) to 2.6.2 (83f8643)
+* Update urllib3 2.5.0 (98a60f9) to 2.6.3 (0248277)
 * Update zoneinfo 2025a to 2025c (fallback)
 * Change improve Proper and Series name search for Newznab provider type
 * Fix id parsing in specific cases on newznab providers
@@ -27,6 +27,7 @@
 * Update Tornado Web Server 6.5.3 (38014dd) to 6.5.4 (63d4df4)
 * Update typing-extensions 4.15.0 (9215c95) to 4.15.0 (2638b86)
 * Update urllib3 2.6.1 (bfe8e19) to 2.6.2 (83f8643)
+* Update urllib3 2.6.2 (83f8643) to 2.6.3 (0248277)
 * Fix newznab misnamed variable for nzbgeek
 
 
