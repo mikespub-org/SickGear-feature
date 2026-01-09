@@ -9,6 +9,7 @@
 * Update idna library 3.10 (729225d) to 3.11 (ad949ee)
 * Update langcodes 3.5.0 (ed97477) to 3.5.1 (4701cd3)
 * Update language-data 1.3.0 (40fc5c9) to 1.4.0 (3231025)
+* Update packaging 25.0 (f585376) to 26.0rc1 (f34845a)
 * Update SimpleJSON 3.19.3 (6932004) to 3.20.2 (10e5aaf)
 * Update soupsieve 2.7.0 (a616022) to 2.8.0 (bf93778)
 * Update Tornado Web Server 6.5.2 (f01a7b0) to 6.5.4 (63d4df4)
