@@ -19,6 +19,7 @@
 * Change improve Proper and Series name search for Newznab provider type
 * Fix id parsing in specific cases on newznab providers
 * Fix torrent_parser is actually 0.4.1 (23b9e11)
+* Fix fetching of Shows IMDb Cards
 
 
 [develop]
