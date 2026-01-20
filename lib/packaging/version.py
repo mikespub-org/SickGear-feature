@@ -12,12 +12,45 @@ from __future__ import annotations
 import re
 import sys
 import typing
-from typing import Any, Callable, Literal, SupportsInt, Tuple, TypedDict, Union
+from typing import (
+    Any,
+    Callable,
+    Literal,
+    NamedTuple,
+    SupportsInt,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 from ._structures import Infinity, InfinityType, NegativeInfinity, NegativeInfinityType
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self, Unpack
+
+if sys.version_info >= (3, 13):  # pragma: no cover
+    from warnings import deprecated as _deprecated
+elif typing.TYPE_CHECKING:
+    from typing_extensions import deprecated as _deprecated
+else:  # pragma: no cover
+    import functools
+    import warnings
+
+    def _deprecated(message: str) -> object:
+        def decorator(func: object) -> object:
+            @functools.wraps(func)
+            def wrapper(*args: object, **kwargs: object) -> object:
+                warnings.warn(
+                    message,
+                    category=DeprecationWarning,
+                    stacklevel=2,
+                )
+                return func(*args, **kwargs)
+
+            return wrapper
+
+        return decorator
+
 
 _LETTER_NORMALIZATION = {
     "alpha": "a",
@@ -176,8 +209,15 @@ _VERSION_PATTERN = r"""
 
 _VERSION_PATTERN_OLD = _VERSION_PATTERN.replace("*+", "*").replace("?+", "?")
 
+# Possessive qualifiers were added in Python 3.11.
+# CPython 3.11.0-3.11.4 had a bug: https://github.com/python/cpython/pull/107795
+# Older PyPy also had a bug.
 VERSION_PATTERN = (
-    _VERSION_PATTERN_OLD if sys.version_info < (3, 11) else _VERSION_PATTERN
+    _VERSION_PATTERN_OLD
+    if (sys.implementation.name == "cpython" and sys.version_info < (3, 11, 5))
+    or (sys.implementation.name == "pypy" and sys.version_info < (3, 11, 13))
+    or sys.version_info < (3, 11)
+    else _VERSION_PATTERN
 )
 """
 A string containing the regular expression used to match a valid version.
@@ -255,6 +295,16 @@ def _validate_local(value: object, /) -> LocalType | None:
         return _parse_local_version(value)
     msg = f"local must be a valid version string, got {value!r}"
     raise InvalidVersion(msg)
+
+
+# Backward compatibility for internals before 26.0. Do not use.
+class _Version(NamedTuple):
+    epoch: int
+    release: tuple[int, ...]
+    dev: tuple[str, int] | None
+    pre: tuple[str, int] | None
+    post: tuple[str, int] | None
+    local: LocalType | None
 
 
 class Version(_BaseVersion):
@@ -366,6 +416,24 @@ class Version(_BaseVersion):
                 self._local,
             )
         return self._key_cache
+
+    @property
+    @_deprecated("Version._version is private and will be removed soon")
+    def _version(self) -> _Version:
+        return _Version(
+            self._epoch, self._release, self._dev, self._pre, self._post, self._local
+        )
+
+    @_version.setter
+    @_deprecated("Version._version is private and will be removed soon")
+    def _version(self, value: _Version) -> None:
+        self._epoch = value.epoch
+        self._release = value.release
+        self._dev = value.dev
+        self._pre = value.pre
+        self._post = value.post
+        self._local = value.local
+        self._key_cache = None
 
     def __repr__(self) -> str:
         """A representation of the Version that shows all internal state.
@@ -615,12 +683,13 @@ class _TrimmedRelease(Version):
         >>> _TrimmedRelease('0.0').release
         (0,)
         """
-        # Unlike _strip_trailing_zeros, this leaves one 0.
+        # This leaves one 0.
         rel = super().release
-        i = len(rel)
+        len_release = len(rel)
+        i = len_release
         while i > 1 and rel[i - 1] == 0:
             i -= 1
-        return rel[:i]
+        return rel if i == len_release else rel[:i]
 
 
 def _parse_letter_version(
@@ -662,17 +731,6 @@ def _parse_local_version(local: str | None) -> LocalType | None:
     return None
 
 
-def _strip_trailing_zeros(release: tuple[int, ...]) -> tuple[int, ...]:
-    # We want to strip trailing zeros from a tuple of values. This starts
-    # from the end and returns as soon as it finds a non-zero value. When
-    # reading a lot of versions, this is a fairly hot function, so not using
-    # enumerate/reversed, which is slightly slower.
-    for i in range(len(release) - 1, -1, -1):
-        if release[i] != 0:
-            return release[: i + 1]
-    return ()
-
-
 def _cmpkey(
     epoch: int,
     release: tuple[int, ...],
@@ -683,7 +741,11 @@ def _cmpkey(
 ) -> CmpKey:
     # When we compare a release version, we want to compare it with all of the
     # trailing zeros removed. We will use this for our sorting key.
-    _release = _strip_trailing_zeros(release)
+    len_release = len(release)
+    i = len_release
+    while i and release[i - 1] == 0:
+        i -= 1
+    _release = release if i == len_release else release[:i]
 
     # We need to "trick" the sorting algorithm to put 1.0.dev0 before 1.0a0.
     # We'll do this by abusing the pre segment, but we _only_ want to do this
