@@ -26,12 +26,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
+from collections import deque
 import os
 import re
 import time
 
 from .. import common, plugins
 from ..asset import AppriseAsset
+from ..logger import logging
 from ..manager_config import ConfigurationManager
 from ..manager_plugins import NotificationManager
 from ..url import URLBase
@@ -212,6 +214,11 @@ class ConfigBase(URLBase):
         # Execute our config parse function which always returns a tuple
         # of our servers and our configuration
         servers, configs = fn(content=content, asset=asset)
+
+        # Free memory
+        del content
+
+        # Add entry to our server list
         self._cached_servers.extend(servers)
 
         # Configuration files were detected; recursively populate them
@@ -306,9 +313,6 @@ class ConfigBase(URLBase):
                 # if we reach here, we can now add this servers found
                 # in this configuration file to our list
                 self._cached_servers.extend(cfg_plugin.servers(asset=asset))
-
-                # We no longer need our configuration object
-                del cfg_plugin
 
             else:
                 # CWE-312 (Secure Logging) Handling
@@ -832,6 +836,11 @@ class ConfigBase(URLBase):
 
         # Pop the element off of the stack
         return self._cached_servers.pop(index)
+
+    def clear_cache(self) -> None:
+        """Cleans cache"""
+        self._cached_servers = None
+        self._cached_time = None
 
     @staticmethod
     def _special_token_handler(
