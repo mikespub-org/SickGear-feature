@@ -9,7 +9,7 @@
 * Update idna library 3.10 (729225d) to 3.11 (ad949ee)
 * Update langcodes 3.5.0 (ed97477) to 3.5.1 (4701cd3)
 * Update language-data 1.3.0 (40fc5c9) to 1.4.0 (3231025)
-* Update packaging 25.0 (f585376) to 26.0rc2 (f0c324e)
+* Update packaging 25.0 (f585376) to 26.0 (3b77a26)
 * Update SimpleJSON 3.19.3 (6932004) to 3.20.2 (10e5aaf)
 * Update soupsieve 2.7.0 (a616022) to 2.8.3 (5aedc41)
 * Update Tornado Web Server 6.5.2 (f01a7b0) to 6.5.4 (63d4df4)
@@ -29,6 +29,7 @@
 * Update Beautiful Soup 4.13.5 (70c7473) to 4.14.2 (fc02060)
 * Update certifi 2025.10.05 to 2025.11.12
 * Update packaging 26.0rc1 (f34845a) to 26.0rc2 (f0c324e)
+* Update packaging 26.0rc2 (f0c324e) to 26.0 (3b77a26)
 * Update soupsieve 2.8.0 (bf93778) to 2.8.2 (09e106d)
 * Update soupsieve 2.8.2 (09e106d) to 2.8.3 (5aedc41)
 * Update Tornado Web Server 6.5.3 (38014dd) to 6.5.4 (63d4df4)
