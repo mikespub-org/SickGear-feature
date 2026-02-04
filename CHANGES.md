@@ -1,4 +1,9 @@
-﻿### 3.34.9 (2026-01-01 18:55:00 UTC)
+﻿### 3.34.10 (2026-02-03 14:55:00 UTC)
+
+* Change add support for Python 3.14.3, 3.13.12
+
+
+### 3.34.9 (2026-01-01 18:55:00 UTC)
 
 * Fix api endpoint to add new shows
 
