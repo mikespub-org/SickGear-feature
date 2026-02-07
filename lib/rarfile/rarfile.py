@@ -3482,7 +3482,7 @@ SEVENZIP2_CONFIG = {
 CURRENT_SETUP = None
 
 
-def tool_setup(unrar=True, unar=True, bsdtar=True, sevenzip=True, sevenzip2=True, force=False):
+def tool_setup(unrar=True, unar=True, bsdtar=False, sevenzip=True, sevenzip2=True, force=False):
     """Pick a tool, return cached ToolSetup.
     """
     global CURRENT_SETUP
