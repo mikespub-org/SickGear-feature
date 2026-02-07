@@ -40,6 +40,12 @@
 
 
 
+### 3.34.11 (2026-02-07 02:00:00 UTC)
+
+* Update UnRar x64 for Windows 7.13 to 7.20
+* Change on macOS, replace bsdtar failing to unpack password RARs, with UnRAR in the path
+
+
 ### 3.34.10 (2026-02-03 14:55:00 UTC)
 
 * Change add support for Python 3.14.3, 3.13.12
