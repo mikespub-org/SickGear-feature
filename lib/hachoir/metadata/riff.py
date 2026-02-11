@@ -180,7 +180,7 @@ class RiffMetadata(MultipleMetadata):
                 headers["/movie/size"].value) * 8 / timedelta2seconds(self.get('duration'))
 
         # Video has index?
-        scan_index = (True, kwargs['scan_index'])['scan_index' in kwargs]
+        scan_index = (True, kwargs.get('scan_index'))['scan_index' in kwargs]
         if scan_index and "/index" in headers:
             self.comment = "Has audio/video index (%s)" \
                 % humanFilesize(headers["/index"].size // 8)

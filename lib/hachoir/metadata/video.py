@@ -6,6 +6,7 @@ from hachoir.metadata.safe import fault_tolerant
 from hachoir.parser.video import AsfFile, FlvFile
 from hachoir.parser.video.asf import Descriptor as ASF_Descriptor
 from hachoir.parser.container import MkvFile, MP4File
+from hachoir.parser.container.mp4 import mp4_codecs, fourcc
 from hachoir.parser.container.mkv import dateToDatetime
 from hachoir.core.tools import makeUnicode, makePrintable, timedelta2seconds
 from datetime import timedelta
@@ -43,18 +44,19 @@ class MkvMetadata(MultipleMetadata):
                     return
 
     def processTracks(self, tracks):
+        track_counter = {'audio': 1, 'video': 1, 'sub': 1}
         for entry in tracks.array("TrackEntry"):
-            self.processTrack(entry)
+            self.processTrack(entry, track_counter)
 
-    def processTrack(self, track):
+    def processTrack(self, track, track_counter):
         if "TrackType/enum" not in track:
             return
         if track["TrackType/enum"].display == "video":
-            self.processVideo(track)
+            self.processVideo(track, track_counter)
         elif track["TrackType/enum"].display == "audio":
-            self.processAudio(track)
+            self.processAudio(track, track_counter)
         elif track["TrackType/enum"].display == "subtitle":
-            self.processSubtitle(track)
+            self.processSubtitle(track, track_counter)
 
     def trackCommon(self, track, meta):
         if "Name/unicode" in track:
@@ -64,7 +66,7 @@ class MkvMetadata(MultipleMetadata):
         else:
             meta.language = "eng"
 
-    def processVideo(self, track):
+    def processVideo(self, track, track_counter):
         video = Metadata(self)
         self.trackCommon(track, video)
         try:
@@ -74,7 +76,8 @@ class MkvMetadata(MultipleMetadata):
                 video.height = track["Video/PixelHeight/unsigned"].value
         except MissingField:
             pass
-        self.addGroup("video[]", video, "Video stream")
+        self.addGroup(f'video[{track_counter["video"]}]', video, f'Video stream #{track_counter["video"]}')
+        track_counter['video'] += 1
 
     def getDouble(self, field, parent):
         float_key = '%s/float' % parent
@@ -85,7 +88,7 @@ class MkvMetadata(MultipleMetadata):
             return field[double_key].value
         return None
 
-    def processAudio(self, track):
+    def processAudio(self, track, track_counter):
         audio = Metadata(self)
         self.trackCommon(track, audio)
         if "Audio" in track:
@@ -98,16 +101,18 @@ class MkvMetadata(MultipleMetadata):
                 audio.bits_per_sample = track["Audio/BitDepth/unsigned"].value
         if "CodecID/string" in track:
             audio.compression = track["CodecID/string"].value
-        self.addGroup("audio[]", audio, "Audio stream")
+        self.addGroup(f'audio[{track_counter["audio"]}]', audio, f'Audio stream #{track_counter["audio"]}')
+        track_counter['audio'] += 1
 
-    def processSubtitle(self, track):
+    def processSubtitle(self, track, track_counter):
         sub = Metadata(self)
         self.trackCommon(track, sub)
         try:
             sub.compression = track["CodecID/string"].value
         except MissingField:
             pass
-        self.addGroup("subtitle[]", sub, "Subtitle")
+        self.addGroup(f'subtitle[]{track_counter["sub"]}]', sub, f'Subtitle #{track_counter["sub"]}')
+        track_counter['sub'] += 1
 
     def processTag(self, tag):
         for field in tag.array("SimpleTag"):
@@ -215,7 +220,7 @@ class FlvMetadata(MultipleMetadata):
             self.height = int(entry["value"].value)
 
 
-class MP4Metadata(RootMetadata):
+class MP4Metadata(MultipleMetadata):
 
     def extract(self, mov):
         for atom in mov:
@@ -240,15 +245,74 @@ class MP4Metadata(RootMetadata):
             self.width = width
             self.height = height
 
-    def processTrack(self, atom):
+    def processTrack(self, atom, track_counter):
         for field in atom:
             if "track_hdr" in field:
                 self.processTrackHeader(field["track_hdr"])
+            if "media" in field:
+                self.processMedia(field["media"], track_counter)
+
+    def processMedia(self, atom, track_counter):
+        cur_data = {'data': []}
+        for field in atom:
+            if 'hdlr' in field and 'subtype' in field['hdlr']:
+                if 'vide' in field['hdlr']['subtype'].value:
+                    cur_data.update({'grp_key': f'video[{track_counter["video"]}]',
+                                     'grp_header': f'Video stream #{track_counter["video"]}'})
+                    track_counter['video'] += 1
+                elif 'soun' in field['hdlr']['subtype'].value:
+                    cur_data.update({'grp_key': f'audio[{track_counter["audio"]}]',
+                                     'grp_header': f'Audio stream #{track_counter["audio"]}'})
+                    track_counter['audio'] += 1
+                elif field['hdlr']['subtype'].value in ('sbtl', 'subp'):
+                    cur_data.update({'grp_key': f'subtitle[{track_counter["sub"]}]',
+                                     'grp_header': f'Subtitle #{track_counter["sub"]}'})
+                    track_counter['sub'] += 1
+
+            if 'media_hdr' in field and 'language' in field['media_hdr']:
+                cur_data['data'].append(('language', field['media_hdr']['language'].value))
+
+            if 'minf' in field:
+                for f in field['minf']:
+                    if 'stbl' in f:
+                        for s in f['stbl']:
+                            if 'stsd' in s and 'sample_entry[0]' in s['stsd']:
+                                sample_entry = s['stsd']['sample_entry[0]']
+                                if 'format' in sample_entry:
+                                    compression = sample_entry['format'].value.decode("utf-8")
+                                    cur_data['data'].append(('compression', fourcc.get(compression, compression)))
+
+                                if 'width' in sample_entry:
+                                    cur_data['data'].append(('width',  sample_entry['width'].value))
+                                if 'height' in sample_entry:
+                                    cur_data['data'].append(('height', sample_entry['height'].value))
+                                if 'samplerate' in sample_entry and 'int_part' in sample_entry['samplerate']:
+                                    cur_data['data'].append(('sample_rate',
+                                                             sample_entry['samplerate']['int_part'].value))
+                                if 'channels' in sample_entry:
+                                    cur_data['data'].append(('nb_channel', sample_entry['channels'].value))
+                                if 'samplesize' in sample_entry:
+                                    cur_data['data'].append(('bits_per_sample', sample_entry['samplesize'].value))
+
+                                if 'audio' in cur_data.get('grp_key', ''):
+                                    for es in sample_entry:
+                                        if ('esds' in es and 'ES' in es['esds'] and 'decConfigDescr' in es['esds']['ES']
+                                                and 'objectTypeIndication' in es['esds']['ES']['decConfigDescr']):
+                                            if (_a_c := es['esds']['ES']['decConfigDescr'
+                                            ]['objectTypeIndication'].value) in mp4_codecs:
+                                                cur_data['data'].append(('compression', mp4_codecs[_a_c]))
+                                            break
+        if 'grp_key' in cur_data:
+            cur_track = Metadata(self)
+            for en in cur_data['data']:
+                setattr(cur_track, en[0], en[1])
+            self.addGroup(cur_data['grp_key'], cur_track, cur_data['grp_header'])
 
     def processMovie(self, atom):
+        track_counter = {'audio': 1, 'video': 1, 'sub': 1}
         for field in atom:
             if "track" in field:
-                self.processTrack(field["track"])
+                self.processTrack(field["track"], track_counter)
             if "movie_hdr" in field:
                 self.processMovieHeader(field["movie_hdr"])
 
