@@ -6,6 +6,7 @@
 * Update Beautiful Soup 4.13.4 (9752e85) to 4.14.2 (fc02060)
 * Update certifi 2025.08.03 to 2025.11.12
 * Update feedparser 6.0.11 (89fde03) to 6.0.12 (5d2578b)
+* Update hachoir 3.3.0 (48b478f) to 3.3.0 (b1c8b57)
 * Update idna library 3.10 (729225d) to 3.11 (ad949ee)
 * Update langcodes 3.5.0 (ed97477) to 3.5.1 (4701cd3)
 * Update language-data 1.3.0 (40fc5c9) to 1.4.0 (3231025)

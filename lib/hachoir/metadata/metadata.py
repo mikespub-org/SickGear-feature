@@ -7,9 +7,6 @@ from hachoir.metadata.metadata_item import (
     MIN_PRIORITY, MAX_PRIORITY, QUALITY_NORMAL)
 from hachoir.metadata.register import registerAllItems
 
-from six import iteritems
-
-
 extractors = {}
 
 
@@ -240,18 +237,18 @@ class MultipleMetadata(RootMetadata):
         object.__setattr__(self, "_MultipleMetadata__key_counter", {})
 
     def __contains__(self, key):
-        return key in self._MultipleMetadata__groups
+        return key in self.__groups
 
     def __getitem__(self, key):
-        return self._MultipleMetadata__groups[key]
+        return self.__groups[key]
 
     def iterGroups(self):
-        return iter(self._MultipleMetadata__groups.values)
+        return iter(self.__groups.values)
 
     def __bool__(self):
         if RootMetadata.__bool__(self):
             return True
-        return any(bool(group) for group in self._MultipleMetadata__groups)
+        return any(bool(group) for group in self.__groups)
 
     def addGroup(self, key, metadata, header=None):
         """
@@ -264,14 +261,14 @@ class MultipleMetadata(RootMetadata):
             return False
         if key.endswith("[]"):
             key = key[:-2]
-            if key in self._MultipleMetadata__key_counter:
-                self._MultipleMetadata__key_counter[key] += 1
+            if key in self.__key_counter:
+                self.__key_counter[key] += 1
             else:
-                self._MultipleMetadata__key_counter[key] = 1
-            key += "[%u]" % self._MultipleMetadata__key_counter[key]
+                self.__key_counter[key] = 1
+            key += "[%u]" % self.__key_counter[key]
         if header:
             metadata.setHeader(header)
-        self._MultipleMetadata__groups.append(key, metadata)
+        self.__groups.append(key, metadata)
         return True
 
     def exportPlaintext(self, priority=None, human=True, line_prefix="- "):
@@ -280,7 +277,7 @@ class MultipleMetadata(RootMetadata):
             text = common
         else:
             text = []
-        for key, metadata in self._MultipleMetadata__groups.iteritems():
+        for key, metadata in self.__groups.items():
             if not human:
                 title = key
             else:
@@ -300,7 +297,7 @@ class MultipleMetadata(RootMetadata):
             text = common
         else:
             text = {}
-        for key, metadata in self._MultipleMetadata__groups.iteritems():
+        for key, metadata in self.__groups.items():
             if not human:
                 title = key
             else:
