@@ -4,7 +4,7 @@
 * Update apprise 1.9.2 (a2a2216) to 1.9.7 (d503bcd)
 * Update attr 25.3.0 (ca3fb0e) to 25.4.0 (9a98e00)
 * Update Beautiful Soup 4.13.4 (9752e85) to 4.14.2 (fc02060)
-* Update certifi 2025.08.03 to 2025.11.12
+* Update certifi 2025.08.03 to 2026.02.25
 * Update feedparser 6.0.11 (89fde03) to 6.0.12 (5d2578b)
 * Update hachoir 3.3.0 (48b478f) to 3.3.0 (b1c8b57)
 * Update idna library 3.10 (729225d) to 3.11 (ad949ee)
@@ -29,6 +29,7 @@
 * Update apprise 1.9.6 (cbc97ce) to 1.9.7 (d503bcd)
 * Update Beautiful Soup 4.13.5 (70c7473) to 4.14.2 (fc02060)
 * Update certifi 2025.10.05 to 2025.11.12
+* Update certifi 2025.11.12 to 2026.02.25
 * Update packaging 26.0rc1 (f34845a) to 26.0rc2 (f0c324e)
 * Update packaging 26.0rc2 (f0c324e) to 26.0 (3b77a26)
 * Update soupsieve 2.8.0 (bf93778) to 2.8.2 (09e106d)
