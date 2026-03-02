@@ -1,4 +1,9 @@
-﻿### 3.34.11 (2026-02-07 02:00:00 UTC)
+﻿### 3.34.12 (2026-03-03 22:40:00 UTC)
+
+* Change update fallback zoneinfo to 2026a
+
+
+### 3.34.11 (2026-02-07 02:00:00 UTC)
 
 * Update UnRar x64 for Windows 7.13 to 7.20
 * Change on macOS, replace bsdtar failing to unpack password RARs, with UnRAR in the path
