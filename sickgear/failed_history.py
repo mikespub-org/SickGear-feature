@@ -42,7 +42,10 @@ def db_cmd(sql, params, select=True):
     :return: sql result
     """
     my_db = db.DBConnection('failed.db')
-    sql_result = select and my_db.select(sql, params) or my_db.action(sql, params)
+    if select:
+        sql_result = my_db.select(sql, params)
+    else:
+        sql_result = my_db.action(sql, params)
     return sql_result
 
 
