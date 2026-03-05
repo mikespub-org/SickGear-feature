@@ -483,8 +483,11 @@ class Chunk(FieldSet):
         0xBA: ("pack_start[]", PackHeader, "Pack start"),
         0xBB: ("system_start[]", SystemHeader, "System start"),
         # streams
+        # 0xB8: ("audio[]", Stream, "For all MPEG Audio streams"),
+        # 0xB9: ("video[]", Stream, "For all MPEG Video streams"),
         0xBD: ("private[]", Stream, "Private elementary"),
         0xBE: ("padding[]", Stream, "Padding"),
+        # 0xBF: ("Private 2"),
         # 0xC0 to 0xFE handled specially
         0xFF: ("directory[]", Stream, "Program Stream Directory"),
     }
@@ -548,7 +551,7 @@ class MPEGVideoFile(Parser):
     version = None
 
     def createFields(self):
-        while self.current_size < self.size:
+        while self.size > self.current_size < 1024**2*2*8:
             # seek forward by at most 1MB
             pos = self.stream.searchBytes(
                 b'\0\0\1', self.current_size, self.current_size + 1024 * 1024 * 8)
@@ -561,7 +564,7 @@ class MPEGVideoFile(Parser):
                 # force chunk to be processed, so that CustomFragments are
                 # complete
                 chunk['content/data']
-            except Exception:
+            except Exception as e:
                 pass
             yield chunk
 

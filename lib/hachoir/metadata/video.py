@@ -6,7 +6,10 @@ from hachoir.metadata.safe import fault_tolerant
 from hachoir.parser.video import AsfFile, FlvFile
 from hachoir.parser.video.asf import Descriptor as ASF_Descriptor
 from hachoir.parser.container import MkvFile, MP4File
-from hachoir.parser.container.mp4 import mp4_codecs, fourcc
+from hachoir.parser.video.mpeg_ts import (MPEG_TS, TS_Audio_stream_types, TS_Elementary_stream_types,
+                                          TS_Video_stream_types)
+from hachoir.parser.video.mpeg_video import MPEGVideoFile  # noqa
+from hachoir.parser.container.mp4 import mp4_codecs, mp4_fourcc
 from hachoir.parser.container.mkv import dateToDatetime
 from hachoir.core.tools import makeUnicode, makePrintable, timedelta2seconds
 from datetime import timedelta
@@ -280,7 +283,9 @@ class MP4Metadata(MultipleMetadata):
                                 sample_entry = s['stsd']['sample_entry[0]']
                                 if 'format' in sample_entry:
                                     compression = sample_entry['format'].value.decode("utf-8")
-                                    cur_data['data'].append(('compression', fourcc.get(compression, compression)))
+                                    if compression:
+                                        cur_data['data'].append(('compression',
+                                                                 mp4_fourcc.get(compression, compression)))
 
                                 if 'width' in sample_entry:
                                     cur_data['data'].append(('width',  sample_entry['width'].value))
@@ -481,7 +486,57 @@ class AsfMetadata(MultipleMetadata):
 #                    meta.compression = text
 
 
+class TSMetadata(MultipleMetadata):
+
+    def extract(self, mov):
+        pmt_pid = None
+        stream_ids = {'video': [], 'audio': []}
+        for packet in mov:
+            if 'pid' in packet:
+                if (0 == packet['pid'].value and 'payload' in packet
+                        and 'PAT' in packet['payload']):
+                    pmt_pid = packet['payload']['PAT']['Program map PID'].value
+                elif pmt_pid == packet['pid'].value:
+                    if 'PMT' in packet['payload']:
+                        self.processPMT(packet['payload']['PMT'], stream_ids)
+                    break
+
+
+    def processPMT(self, data, stream_ids):
+        track_counter = {'audio': 1, 'video': 1, 'sub': 1}
+        for d in data:
+            if 'Elementary Stream #' in d.name:
+                cur_data = {'data': []}
+                if d['stream type'].value in TS_Video_stream_types:
+                    cur_data.update({'grp_key': f'video[{track_counter["video"]}]',
+                                     'grp_header': f'Video stream #{track_counter["video"]}'})
+                    stream_ids['video'].append(d['Elementary PID'].value)
+                    track_counter['video'] += 1
+                elif d['stream type'].value in TS_Audio_stream_types:
+                    cur_data.update({'grp_key': f'audio[{track_counter["audio"]}]',
+                                     'grp_header': f'Audio stream #{track_counter["audio"]}'})
+                    stream_ids['audio'].append(d['Elementary PID'].value)
+                    track_counter['audio'] += 1
+                else:
+                    continue
+                cur_data['data'].append(('compression', TS_Elementary_stream_types.get(d['stream type'].value)))
+                cur_track = Metadata(self)
+                for en in cur_data['data']:
+                    setattr(cur_track, en[0], en[1])
+                self.addGroup(cur_data['grp_key'], cur_track, cur_data['grp_header'])
+
+
+class MPEGMetadata(MultipleMetadata):
+
+    def extract(self, mov):
+        video_track = Metadata(self)
+        video_track.compression = mov.description
+        self.addGroup('video[1]', video_track, 'Video stream #1')
+
+
 registerExtractor(MP4File, MP4Metadata)
 registerExtractor(AsfFile, AsfMetadata)
 registerExtractor(FlvFile, FlvMetadata)
 registerExtractor(MkvFile, MkvMetadata)
+registerExtractor(MPEG_TS, TSMetadata)
+registerExtractor(MPEGVideoFile, MPEGMetadata)

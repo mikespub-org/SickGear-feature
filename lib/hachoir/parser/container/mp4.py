@@ -81,7 +81,7 @@ mp4_codecs = {
     0xe1: 'Private - QCELP',
 }
 
-fourcc = {
+mp4_fourcc = {
     '2vuy': 'YUV',
     '2Vuy': 'YUV',
     '8BPS': 'RGB',
