@@ -1,3 +1,0 @@
-from .base import CustomNotifyPlugin as CustomNotifyPlugin
-
-def notify(on, name=None): ...
