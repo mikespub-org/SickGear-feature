@@ -22,6 +22,7 @@
 * Fix id parsing in specific cases on newznab providers
 * Fix torrent_parser is actually 0.4.1 (23b9e11)
 * Fix fetching of Shows IMDb Cards
+* Change search 4k and x265 categories to TDay provider
 
 
 [develop]

@@ -43,7 +43,7 @@ class TorrentDayProvider(generic.TorrentProvider):
         self.url_tmpl = {'config_provider_home_uri': '%(home)s', 'login': '%(home)s%(vars)s',
                          'search': '%(home)s%(vars)s'}
 
-        self.categories = {'Season': [31, 33, 14], 'Episode': [24, 32, 26, 7, 34, 2], 'anime': [29]}
+        self.categories = {'Season': [31, 33, 14], 'Episode': [24, 104, 32, 34, 26, 7, 34, 2], 'anime': [29]}
         self.categories['Cache'] = self.categories['Season'] + self.categories['Episode']
 
         self.proper_search_terms = None
