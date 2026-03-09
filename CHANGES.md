@@ -1,4 +1,9 @@
-﻿### 3.34.12 (2026-03-03 22:40:00 UTC)
+﻿### 3.34.13 (2026-03-09 14:10:00 UTC)
+
+* Fix handling/detection of show not found in TMDB API
+
+
+### 3.34.12 (2026-03-03 22:40:00 UTC)
 
 * Change update fallback zoneinfo to 2026a
 * Change correct logic in failed_history db_action for select actions with no result

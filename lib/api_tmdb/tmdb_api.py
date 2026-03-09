@@ -9,6 +9,7 @@ __api_version__ = '1.0.0'
 import datetime
 import logging
 import re
+import requests
 
 from lib import tmdbsimple
 from lib.dateutil.parser import parser
@@ -55,7 +56,7 @@ empty_ep = TVInfoEpisode()
 def tmdb_get(self, path, params=None):
     url = self._get_complete_url(path)
     params = self._get_params(params)
-    return get_url(url=url, params=params, json=True, raise_skip_exception=True)
+    return get_url(url=url, params=params, json=True, raise_skip_exception=True, raise_status_code=True, raise_exceptions=True)
 
 
 def tmdb_post(self, path, params=None, payload=None):
@@ -679,6 +680,7 @@ class TmdbIndexer(TVInfoBase):
         # type: (integer_types, AnyStr, bool, bool, bool, bool, bool, bool, bool, Optional[Any]) -> bool
         # note: this is only working for images fetching currently
         self.show_not_found = False
+        self.not_found = False
         to_append = ['external_ids', 'alternative_titles', 'content_ratings', 'translations']
         tmdb_lang = ('en-US', language)[language in self._tmdb_supported_lang_list]
         if any((banners, posters, seasons, seasonwides, fanart)):
@@ -693,12 +695,17 @@ class TmdbIndexer(TVInfoBase):
             if tmdb_lang not in (_l['iso_639_1'] for _l in show_data['translations'].get('translations', []) or []):
                 tmdb_lang = 'en'
                 show_data = tmdb.info(append_to_response=','.join(to_append), language=tmdb_lang)
+        except requests.exceptions.HTTPError as e:
+            if 404 == e.response.status_code:
+                self.show_not_found = True
+            self.not_found = True
+            return False
         except (BaseException, Exception):
-            self.show_not_found = True
             return False
 
         if not show_data:
-            self.show_not_found = True
+            # self.show_not_found = True
+            self.not_found = True
             return False
 
         show_obj = self.ti_shows[sid]
