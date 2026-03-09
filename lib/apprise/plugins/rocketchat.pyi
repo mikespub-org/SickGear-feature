@@ -10,6 +10,7 @@ IS_ROOM_ID: Incomplete
 RC_HTTP_ERROR_MAP: Incomplete
 
 class RocketChatAuthMode:
+    """The Chat Authentication mode is detected."""
     WEBHOOK: str
     TOKEN: str
     BASIC: str
@@ -17,6 +18,7 @@ class RocketChatAuthMode:
 ROCKETCHAT_AUTH_MODES: Incomplete
 
 class NotifyRocketChat(NotifyBase):
+    """A wrapper for Notify Rocket.Chat Notifications."""
     service_name: str
     service_url: str
     protocol: str
@@ -38,17 +40,35 @@ class NotifyRocketChat(NotifyBase):
     headers: Incomplete
     mode: Incomplete
     avatar: Incomplete
-    def __init__(self, webhook=None, targets=None, mode=None, avatar=None, **kwargs) -> None: ...
+    def __init__(self, webhook=None, targets=None, mode=None, avatar=None, **kwargs) -> None:
+        """Initialize Notify Rocket.Chat Object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def _send_webhook_notification(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def _send_basic_notification(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def _payload(self, body, title: str = '', notify_type=...): ...
-    def _send(self, payload, notify_type, path: str = 'api/v1/chat.postMessage', **kwargs): ...
-    def login(self): ...
-    def logout(self): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Wrapper to _send since we can alert more then one channel."""
+    def _send_webhook_notification(self, body, title: str = '', notify_type=..., **kwargs):
+        """Sends a webhook notification."""
+    def _send_basic_notification(self, body, title: str = '', notify_type=..., **kwargs):
+        """Authenticates with the server using a user/pass combo for
+        notifications."""
+    def _payload(self, body, title: str = '', notify_type=...):
+        """Prepares a payload object."""
+    def _send(self, payload, notify_type, path: str = 'api/v1/chat.postMessage', **kwargs):
+        """Perform Notify Rocket.Chat Notification."""
+    def login(self):
+        """Login to our server."""
+    def logout(self):
+        """Logout of our server."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

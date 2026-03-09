@@ -1,10 +1,12 @@
 from .. import exception as exception
 from ..common import NotifyType as NotifyType
 from ..utils.parse import parse_list as parse_list, validate_regex as validate_regex
+from ..utils.sanitize import sanitize_payload as sanitize_payload
 from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class PushSaferSound:
+    """Defines all of the supported PushSafe sounds."""
     SILENT: int
     AHEM: int
     APPLAUSE: int
@@ -81,6 +83,7 @@ PUSHSAFER_PRIORITY_MAP: Incomplete
 DEFAULT_PRIORITY: str
 
 class PushSaferVibration:
+    """Defines the acceptable vibration settings for notification."""
     LOW: int
     NORMAL: int
     HIGH: int
@@ -90,6 +93,7 @@ PICTURE_PARAMETER: Incomplete
 PUSHSAFER_SEND_TO_ALL: str
 
 class NotifyPushSafer(NotifyBase):
+    """A wrapper for PushSafer Notifications."""
     service_name: str
     service_url: str
     protocol: str
@@ -107,12 +111,24 @@ class NotifyPushSafer(NotifyBase):
     vibration: Incomplete
     privatekey: Incomplete
     targets: Incomplete
-    def __init__(self, privatekey, targets=None, priority=None, sound=None, vibration=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
-    def _send(self, payload, **kwargs): ...
+    def __init__(self, privatekey, targets=None, priority=None, sound=None, vibration=None, **kwargs) -> None:
+        """Initialize PushSafer Object."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Perform PushSafer Notification."""
+    def _send(self, payload, **kwargs):
+        """Wrapper to the requests (post) object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

@@ -4,6 +4,8 @@ from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class syslog:
+    """Extrapoloated information from the syslog library so that this plugin
+    would not be dependent on it."""
     LOG_KERN: int
     LOG_USER: int
     LOG_MAIL: int
@@ -28,6 +30,7 @@ class syslog:
     LOG_CRIT: int
 
 class SyslogFacility:
+    """All of the supported facilities."""
     KERN: str
     USER: str
     MAIL: str
@@ -52,6 +55,7 @@ SYSLOG_FACILITY_RMAP: Incomplete
 SYSLOG_PUBLISH_MAP: Incomplete
 
 class NotifyRSyslog(NotifyBase):
+    """A wrapper for Remote Syslog Notifications."""
     service_name: str
     service_url: str
     protocol: str
@@ -62,10 +66,20 @@ class NotifyRSyslog(NotifyBase):
     template_args: Incomplete
     facility: Incomplete
     log_pid: Incomplete
-    def __init__(self, facility=None, log_pid: bool = True, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, facility=None, log_pid: bool = True, **kwargs) -> None:
+        """Initialize RSyslog Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform RSyslog Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

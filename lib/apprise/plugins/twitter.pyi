@@ -8,12 +8,14 @@ from _typeshed import Incomplete
 IS_USER: Incomplete
 
 class TwitterMessageMode:
+    """Twitter Message Mode."""
     DM: str
     TWEET: str
 
 TWITTER_MESSAGE_MODES: Incomplete
 
 class NotifyTwitter(NotifyBase):
+    """A wrapper to Twitter Notifications."""
     service_name: str
     service_url: str
     secure_protocol: Incomplete
@@ -42,18 +44,40 @@ class NotifyTwitter(NotifyBase):
     targets: Incomplete
     _whoami_cache: Incomplete
     _user_cache: Incomplete
-    def __init__(self, ckey, csecret, akey, asecret, targets=None, mode=None, cache: bool = True, batch: bool = True, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
-    def _send_tweet(self, body, title: str = '', notify_type=..., attachments=None, **kwargs): ...
-    def _send_dm(self, body, title: str = '', notify_type=..., attachments=None, **kwargs): ...
-    def _whoami(self, lazy: bool = True): ...
-    def _user_lookup(self, screen_name, lazy: bool = True): ...
-    def _fetch(self, url, payload=None, method: str = 'POST', json: bool = True): ...
+    def __init__(self, ckey, csecret, akey, asecret, targets=None, mode=None, cache: bool = True, batch: bool = True, **kwargs) -> None:
+        """Initialize Twitter Object."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Perform Twitter Notification."""
+    def _send_tweet(self, body, title: str = '', notify_type=..., attachments=None, **kwargs):
+        """Twitter Public Tweet."""
+    def _send_dm(self, body, title: str = '', notify_type=..., attachments=None, **kwargs):
+        """Twitter Direct Message."""
+    def _whoami(self, lazy: bool = True):
+        """Looks details of current authenticated user."""
+    def _user_lookup(self, screen_name, lazy: bool = True):
+        """Looks up a screen name and returns the user id.
+
+        the screen_name can be a list/set/tuple as well
+        """
+    def _fetch(self, url, payload=None, method: str = 'POST', json: bool = True):
+        """Wrapper to Twitter API requests object."""
     @property
-    def body_maxlen(self): ...
+    def body_maxlen(self):
+        """The maximum allowable characters allowed in the body per message
+        This is used during a Private DM Message Size (not Public Tweets which
+        are limited to 280 characters)"""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

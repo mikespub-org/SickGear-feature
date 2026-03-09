@@ -20,6 +20,7 @@ PAGERTREE_URGENCIES: Incomplete
 PAGERTREE_HTTP_ERROR_MAP: Incomplete
 
 class NotifyPagerTree(NotifyBase):
+    """A wrapper for PagerTree Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -37,10 +38,20 @@ class NotifyPagerTree(NotifyBase):
     action: Incomplete
     urgency: Incomplete
     __tags: Incomplete
-    def __init__(self, integration, action=None, thirdparty=None, urgency=None, tags=None, headers=None, payload_extras=None, meta_extras=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, integration, action=None, thirdparty=None, urgency=None, tags=None, headers=None, payload_extras=None, meta_extras=None, **kwargs) -> None:
+        """Initialize PagerTree Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform PagerTree Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

@@ -7,6 +7,7 @@ from _typeshed import Incomplete
 NOTIFY_SIMPLEPUSH_ENABLED: bool
 
 class NotifySimplePush(NotifyBase):
+    """A wrapper for SimplePush Notifications."""
     enabled = NOTIFY_SIMPLEPUSH_ENABLED
     requirements: Incomplete
     service_name: str
@@ -24,11 +25,22 @@ class NotifySimplePush(NotifyBase):
     _iv: Incomplete
     _iv_hex: Incomplete
     _key: Incomplete
-    def __init__(self, apikey, event=None, **kwargs) -> None: ...
-    def _encrypt(self, content): ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, apikey, event=None, **kwargs) -> None:
+        """Initialize SimplePush Object."""
+    def _encrypt(self, content):
+        """Encrypts message for use with SimplePush."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform SimplePush Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

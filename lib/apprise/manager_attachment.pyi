@@ -2,6 +2,8 @@ from .manager import PluginManager as PluginManager
 from _typeshed import Incomplete
 
 class AttachmentManager(PluginManager):
+    """Designed to be a singleton object to maintain all initialized attachment
+    plugins/modules in memory."""
     name: str
     fname_prefix: str
     _id: str

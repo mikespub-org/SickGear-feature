@@ -7,6 +7,7 @@ from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class NtfyMode:
+    """Define ntfy Notification Modes."""
     CLOUD: str
     PRIVATE: str
 
@@ -14,12 +15,14 @@ NTFY_MODES: Incomplete
 NTFY_AUTH_DETECT_RE: Incomplete
 
 class NtfyAuth:
+    """Define ntfy Authentication Modes."""
     BASIC: str
     TOKEN: str
 
 NTFY_AUTH: Incomplete
 
 class NtfyPriority:
+    """Ntfy Priority Definitions."""
     MAX: str
     HIGH: str
     NORMAL: str
@@ -30,6 +33,7 @@ NTFY_PRIORITIES: Incomplete
 NTFY_PRIORITY_MAP: Incomplete
 
 class NotifyNtfy(NotifyBase):
+    """A wrapper for ntfy Notifications."""
     service_name: str
     service_url: str
     protocol: str
@@ -58,16 +62,32 @@ class NotifyNtfy(NotifyBase):
     token: Incomplete
     priority: Incomplete
     __tags: Incomplete
+    __actions: Incomplete
     avatar_url: Incomplete
     topics: Incomplete
-    def __init__(self, targets=None, attach=None, filename=None, click=None, delay=None, email=None, priority=None, tags=None, mode=None, include_image: bool = True, avatar_url=None, auth=None, token=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
-    def _send(self, topic, body=None, title=None, attach=None, image_url=None, **kwargs): ...
+    def __init__(self, targets=None, attach=None, filename=None, click=None, delay=None, email=None, priority=None, tags=None, actions=None, mode=None, include_image: bool = True, avatar_url=None, auth=None, token=None, **kwargs) -> None:
+        """Initialize ntfy Object."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Perform ntfy Notification."""
+    def _send(self, topic, body=None, title=None, attach=None, image_url=None, **kwargs):
+        """Wrapper to the requests (post) object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""
     @staticmethod
-    def parse_native_url(url): ...
+    def parse_native_url(url):
+        """
+        Support https://ntfy.sh/topic
+        """

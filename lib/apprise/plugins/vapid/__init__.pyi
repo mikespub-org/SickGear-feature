@@ -6,6 +6,7 @@ from ..base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class VapidPushMode:
+    """Supported Vapid Push Services."""
     CHROME: str
     FIREFOX: str
     EDGE: str
@@ -19,6 +20,7 @@ VAPID_API_LOOKUP: Incomplete
 VAPID_PUSH_MODES: Incomplete
 
 class NotifyVapid(NotifyBase):
+    """A wrapper for WebPush/Vapid notifications."""
     enabled: Incomplete
     requirements: Incomplete
     service_name: str
@@ -48,15 +50,28 @@ class NotifyVapid(NotifyBase):
     subscriber: Incomplete
     mode: Incomplete
     pem: Incomplete
-    def __init__(self, subscriber, mode=None, targets=None, keyfile=None, subfile=None, include_image=None, ttl=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, subscriber, mode=None, targets=None, keyfile=None, subfile=None, include_image=None, ttl=None, **kwargs) -> None:
+        """Initialize Vapid Messaging."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform Vapid Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""
     @property
-    def jwt_token(self): ...
+    def jwt_token(self):
+        """Returns our VAPID Token based on class details."""
     @property
-    def public_key(self): ...
+    def public_key(self):
+        """Returns our public key representation."""

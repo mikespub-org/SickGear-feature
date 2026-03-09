@@ -8,6 +8,7 @@ from _typeshed import Incomplete
 REDDIT_HTTP_ERROR_MAP: Incomplete
 
 class RedditMessageKind:
+    """Define the kinds of messages supported."""
     AUTO: str
     SELF: str
     LINK: str
@@ -15,6 +16,7 @@ class RedditMessageKind:
 REDDIT_MESSAGE_KINDS: Incomplete
 
 class NotifyReddit(NotifyBase):
+    """A wrapper for Notify Reddit Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -48,13 +50,26 @@ class NotifyReddit(NotifyBase):
     client_secret: Incomplete
     ratelimit_reset: Incomplete
     ratelimit_remaining: float
-    def __init__(self, app_id=None, app_secret=None, targets=None, kind=None, nsfw: bool = False, sendreplies: bool = True, resubmit: bool = False, spoiler: bool = False, advertisement: bool = False, flair_id=None, flair_text=None, **kwargs) -> None: ...
+    def __init__(self, app_id=None, app_secret=None, targets=None, kind=None, nsfw: bool = False, sendreplies: bool = True, resubmit: bool = False, spoiler: bool = False, advertisement: bool = False, flair_id=None, flair_text=None, **kwargs) -> None:
+        """Initialize Notify Reddit Object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
-    def login(self): ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def _fetch(self, url, payload=None): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
+    def login(self):
+        """A simple wrapper to authenticate with the Reddit Server."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform Reddit Notification."""
+    def _fetch(self, url, payload=None):
+        """Wrapper to Reddit API requests object."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

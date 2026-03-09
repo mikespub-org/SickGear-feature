@@ -1,7 +1,7 @@
 # BSD 2-Clause License
 #
 # Apprise - Push Notification Library.
-# Copyright (c) 2025, Chris Caron <lead2gold@gmail.com>
+# Copyright (c) 2026, Chris Caron <lead2gold@gmail.com>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@ from .base import ConfigBase
 # Support TEXT formats
 # text/plain
 # text/html
-MIME_IS_TEXT = re.compile("text/(plain|html)", re.I)
+MIME_IS_TEXT = re.compile(r"text/(plain|html)", re.I)
 
 
 class ConfigHTTP(ConfigBase):

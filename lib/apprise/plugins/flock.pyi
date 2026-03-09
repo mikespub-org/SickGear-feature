@@ -8,6 +8,7 @@ IS_CHANNEL_RE: Incomplete
 IS_USER_RE: Incomplete
 
 class NotifyFlock(NotifyBase):
+    """A wrapper for Flock Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -21,14 +22,29 @@ class NotifyFlock(NotifyBase):
     targets: Incomplete
     token: Incomplete
     include_image: Incomplete
-    def __init__(self, token, targets=None, include_image: bool = True, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def _post(self, url, headers, payload): ...
+    def __init__(self, token, targets=None, include_image: bool = True, **kwargs) -> None:
+        """Initialize Flock Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform Flock Notification."""
+    def _post(self, url, headers, payload):
+        """A wrapper to the requests object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""
     @staticmethod
-    def parse_native_url(url): ...
+    def parse_native_url(url):
+        """
+        Support https://api.flock.com/hooks/sendMessage/TOKEN
+        """

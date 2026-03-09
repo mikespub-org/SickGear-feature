@@ -45,6 +45,7 @@ PUSHOVER_PRIORITY_MAP: Incomplete
 PUSHOVER_HTTP_ERROR_MAP: Incomplete
 
 class NotifyPushover(NotifyBase):
+    """A wrapper for Pushover Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -68,11 +69,22 @@ class NotifyPushover(NotifyBase):
     priority: Incomplete
     retry: Incomplete
     expire: Incomplete
-    def __init__(self, user_key, token, targets=None, priority=None, sound=None, retry=None, expire=None, supplemental_url=None, supplemental_url_title=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
-    def _send(self, payload, attach=None): ...
+    def __init__(self, user_key, token, targets=None, priority=None, sound=None, retry=None, expire=None, supplemental_url=None, supplemental_url_title=None, **kwargs) -> None:
+        """Initialize Pushover Object."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Perform Pushover Notification."""
+    def _send(self, payload, attach=None):
+        """Wrapper to the requests (post) object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

@@ -7,12 +7,14 @@ LAMETRIC_APP_ID_DETECTOR_RE: Incomplete
 LAMETRIC_IS_APP_TOKEN: Incomplete
 
 class LametricMode:
+    """Define Lametric Notification Modes."""
     CLOUD: str
     DEVICE: str
 
 LAMETRIC_MODES: Incomplete
 
 class LametricPriority:
+    """Priority of the message."""
     INFO: str
     WARNING: str
     CRITICAL: str
@@ -20,6 +22,7 @@ class LametricPriority:
 LAMETRIC_PRIORITIES: Incomplete
 
 class LametricIconType:
+    """Represents the nature of notification."""
     INFO: str
     ALERT: str
     NONE: str
@@ -27,10 +30,16 @@ class LametricIconType:
 LAMETRIC_ICON_TYPES: Incomplete
 
 class LametricSoundCategory:
+    """Define Sound Categories."""
     NOTIFICATIONS: str
     ALARMS: str
 
 class LametricSound:
+    """There are 2 categories of sounds, to make things simple we just lump
+    them all togther in one class object.
+
+    Syntax is (Category, (AlarmID, Alias1, Alias2, ...))
+    """
     ALARM01: Incomplete
     ALARM02: Incomplete
     ALARM03: Incomplete
@@ -83,6 +92,7 @@ class LametricSound:
 LAMETRIC_SOUNDS: Incomplete
 
 class NotifyLametric(NotifyBase):
+    """A wrapper for LaMetric Notifications."""
     service_name: str
     service_url: str
     protocol: str
@@ -107,17 +117,37 @@ class NotifyLametric(NotifyBase):
     icon_type: Incomplete
     cycles: Incomplete
     sound: Incomplete
-    def __init__(self, apikey=None, app_token=None, app_id=None, app_ver=None, priority=None, icon=None, icon_type=None, sound=None, mode=None, cycles=None, **kwargs) -> None: ...
+    def __init__(self, apikey=None, app_token=None, app_id=None, app_ver=None, priority=None, icon=None, icon_type=None, sound=None, mode=None, cycles=None, **kwargs) -> None:
+        """Initialize LaMetric Object."""
     @staticmethod
-    def sound_lookup(lookup): ...
-    def _cloud_notification_payload(self, body, notify_type, headers): ...
+    def sound_lookup(lookup):
+        """A simple match function that takes string and returns the
+        LametricSound object it was found in."""
+    def _cloud_notification_payload(self, body, notify_type, headers):
+        """Return URL and payload for cloud directed requests."""
     user: Incomplete
-    def _device_notification_payload(self, body, notify_type, headers): ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def _device_notification_payload(self, body, notify_type, headers):
+        """Return URL and Payload for Device directed requests."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform LaMetric Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""
     @staticmethod
-    def parse_native_url(url): ...
+    def parse_native_url(url):
+        """
+        Support
+           https://developer.lametric.com/api/v1/dev/                   widget/update/com.lametric.{APP_ID}/1
+
+           https://developer.lametric.com/api/v1/dev/                   widget/update/com.lametric.{APP_ID}/{APP_VER}
+        """

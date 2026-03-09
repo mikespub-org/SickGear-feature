@@ -7,6 +7,7 @@ from _typeshed import Incomplete
 TARGET_LIST_DELIM: Incomplete
 
 class NotifyLine(NotifyBase):
+    """A wrapper for Line Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -22,11 +23,22 @@ class NotifyLine(NotifyBase):
     include_image: Incomplete
     targets: Incomplete
     __cached_users: Incomplete
-    def __init__(self, token, targets=None, include_image: bool = True, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, token, targets=None, include_image: bool = True, **kwargs) -> None:
+        """Initialize Line Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Send our Line Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

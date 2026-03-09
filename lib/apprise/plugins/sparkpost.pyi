@@ -1,12 +1,14 @@
 from .. import exception as exception
 from ..common import NotifyFormat as NotifyFormat, NotifyType as NotifyType
 from ..utils.parse import is_email as is_email, parse_bool as parse_bool, parse_emails as parse_emails, validate_regex as validate_regex
+from ..utils.sanitize import sanitize_payload as sanitize_payload
 from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 SPARKPOST_HTTP_ERROR_MAP: Incomplete
 
 class SparkPostRegion:
+    """Regions."""
     US: str
     EU: str
 
@@ -14,6 +16,7 @@ SPARKPOST_API_LOOKUP: Incomplete
 SPARKPOST_REGIONS: Incomplete
 
 class NotifySparkPost(NotifyBase):
+    """A wrapper for SparkPost Notifications."""
     service_name: str
     service_url: str
     attachment_support: bool
@@ -39,12 +42,24 @@ class NotifySparkPost(NotifyBase):
     headers: Incomplete
     tokens: Incomplete
     batch: Incomplete
-    def __init__(self, apikey, targets, cc=None, bcc=None, from_name=None, region_name=None, headers=None, tokens=None, batch=None, **kwargs) -> None: ...
-    def __post(self, payload, retry): ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
+    def __init__(self, apikey, targets, cc=None, bcc=None, from_name=None, region_name=None, headers=None, tokens=None, batch=None, **kwargs) -> None:
+        """Initialize SparkPost Object."""
+    def __post(self, payload, retry):
+        """Performs the actual post and returns the response."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Perform SparkPost Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

@@ -9,6 +9,7 @@ MQTT_PROTOCOL_MAP: Incomplete
 HUMAN_MQTT_PROTOCOL_MAP: Incomplete
 
 class NotifyMQTT(NotifyBase):
+    """A wrapper for MQTT Notifications."""
     enabled = NOTIFY_MQTT_SUPPORT_ENABLED
     requirements: Incomplete
     service_name: str
@@ -38,13 +39,33 @@ class NotifyMQTT(NotifyBase):
     mqtt_protocol: Incomplete
     client: Incomplete
     __initial_connect: bool
-    def __init__(self, targets=None, version=None, qos=None, client_id=None, session=None, retain=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, targets=None, version=None, qos=None, client_id=None, session=None, retain=None, **kwargs) -> None:
+        """Initialize MQTT Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform MQTT Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """There are no parameters nessisary for this protocol; simply having
+        windows:// is all you need.
+
+        This function just makes sure that is in place.
+        """
     @property
-    def CA_CERTIFICATE_FILE_LOCATIONS(self): ...
+    def CA_CERTIFICATE_FILE_LOCATIONS(self):
+        """Return possible locations to root certificate authority (CA)
+        bundles.
+
+        Taken from https://golang.org/src/crypto/x509/root_linux.go
+        TODO: Maybe refactor to a general utility function?
+        """

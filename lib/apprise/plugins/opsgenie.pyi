@@ -4,6 +4,7 @@ from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class OpsgenieCategory(NotifyBase):
+    """We define the different category types that we can notify."""
     USER: str
     SCHEDULE: str
     ESCALATION: str
@@ -12,6 +13,7 @@ class OpsgenieCategory(NotifyBase):
 OPSGENIE_CATEGORIES: Incomplete
 
 class OpsgenieAlertAction:
+    """Defines the supported actions."""
     MAP: str
     NEW: str
     CLOSE: str
@@ -40,6 +42,7 @@ OPSGENIE_PRIORITIES: Incomplete
 OPSGENIE_PRIORITY_MAP: Incomplete
 
 class NotifyOpsgenie(NotifyBase):
+    """A wrapper for Opsgenie Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -65,12 +68,24 @@ class NotifyOpsgenie(NotifyBase):
     entity: Incomplete
     alias: Incomplete
     targets: Incomplete
-    def __init__(self, apikey, targets, region_name=None, details=None, priority=None, alias=None, entity=None, batch: bool = False, tags=None, action=None, mapping=None, **kwargs) -> None: ...
-    def _fetch(self, method, url, payload, params=None): ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, apikey, targets, region_name=None, details=None, priority=None, alias=None, entity=None, batch: bool = False, tags=None, action=None, mapping=None, **kwargs) -> None:
+        """Initialize Opsgenie Object."""
+    def _fetch(self, method, url, payload, params=None):
+        """Performs server retrieval/update and returns JSON Response."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform Opsgenie Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

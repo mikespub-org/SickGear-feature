@@ -9,6 +9,7 @@ IS_USER: Incomplete
 USER_DETECTION_RE: Incomplete
 
 class MastodonMessageVisibility:
+    """The visibility of any status message made."""
     DEFAULT: str
     DIRECT: str
     PRIVATE: str
@@ -18,6 +19,7 @@ class MastodonMessageVisibility:
 MASTODON_MESSAGE_VISIBILITIES: Incomplete
 
 class NotifyMastodon(NotifyBase):
+    """A wrapper for Notify Mastodon Notifications."""
     service_name: str
     service_url: str
     protocol: Incomplete
@@ -51,13 +53,26 @@ class NotifyMastodon(NotifyBase):
     idempotency_key: Incomplete
     language: Incomplete
     targets: Incomplete
-    def __init__(self, token=None, targets=None, batch: bool = True, sensitive=None, spoiler=None, visibility=None, cache: bool = True, key=None, language=None, **kwargs) -> None: ...
+    def __init__(self, token=None, targets=None, batch: bool = True, sensitive=None, spoiler=None, visibility=None, cache: bool = True, key=None, language=None, **kwargs) -> None:
+        """Initialize Notify Mastodon Object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
-    def _whoami(self, lazy: bool = True): ...
-    def _request(self, path, payload=None, method: str = 'POST'): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Wrapper to _send since we can alert more then one channel."""
+    def _whoami(self, lazy: bool = True):
+        """Looks details of current authenticated user."""
+    def _request(self, path, payload=None, method: str = 'POST'):
+        """Wrapper to Mastodon API requests object."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

@@ -5,6 +5,7 @@ from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class NotifySpike(NotifyBase):
+    """A wrapper for Spike.sh Notifications."""
     service_name: Incomplete
     service_url: str
     secure_protocol: str
@@ -14,12 +15,24 @@ class NotifySpike(NotifyBase):
     template_tokens: Incomplete
     token: Incomplete
     webhook_url: Incomplete
-    def __init__(self, token, **kwargs) -> None: ...
+    def __init__(self, token, **kwargs) -> None:
+        """Initialize Spike.sh Object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Send Spike.sh Notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns arguments to re-instantiate the
+        object."""
     @staticmethod
-    def parse_native_url(url): ...
+    def parse_native_url(url):
+        """Supports reverse-parsing a Spike.sh native URL into an Apprise
+        one."""

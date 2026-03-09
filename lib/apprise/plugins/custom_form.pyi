@@ -4,6 +4,7 @@ from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class FORMPayloadField:
+    """Identifies the fields available in the FORM Payload."""
     VERSION: str
     TITLE: str
     MESSAGE: str
@@ -12,6 +13,7 @@ class FORMPayloadField:
 METHODS: Incomplete
 
 class NotifyForm(NotifyBase):
+    """A wrapper for Form Notifications."""
     __attach_as_re: Incomplete
     attach_as_count: str
     attach_as_default: Incomplete
@@ -36,10 +38,24 @@ class NotifyForm(NotifyBase):
     headers: Incomplete
     payload_overrides: Incomplete
     payload_extras: Incomplete
-    def __init__(self, headers=None, method=None, payload=None, params=None, attach_as=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
+    def __init__(self, headers=None, method=None, payload=None, params=None, attach_as=None, **kwargs) -> None:
+        """Initialize Form Object.
+
+        headers can be a dictionary of key/value pairs that you want to
+        additionally include as part of the server headers to post with
+        """
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Perform Form Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

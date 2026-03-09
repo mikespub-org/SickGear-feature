@@ -9,14 +9,23 @@ from _typeshed import Incomplete
 N_MGR: Incomplete
 
 class CustomNotifyPlugin(NotifyBase):
+    """Apprise Custom Plugin Hook.
+
+    This gets initialized based on @notify decorator definitions
+    """
     service_url: str
     category: str
     attachment_support: bool
     storage_mode: Incomplete
     templates: Incomplete
     @staticmethod
-    def parse_url(url): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def parse_url(url):
+        """Parses the URL and returns arguments retrieved."""
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """General URL assembly."""
     _default_args: Incomplete
     @staticmethod
-    def instantiate_plugin(url, send_func, name=None): ...
+    def instantiate_plugin(url, send_func, name=None):
+        """The function used to add a new notification plugin based on the
+        schema parsed from the provided URL into our supported matrix
+        structure."""

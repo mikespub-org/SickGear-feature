@@ -7,6 +7,7 @@ from _typeshed import Incomplete
 IS_GROUP_RE: Incomplete
 
 class BulkSMSRoutingGroup:
+    """The different categories of routing."""
     ECONOMY: str
     STANDARD: str
     PREMIUM: str
@@ -14,11 +15,13 @@ class BulkSMSRoutingGroup:
 BULKSMS_ROUTING_GROUPS: Incomplete
 
 class BulkSMSEncoding:
+    """The different categories of routing."""
     TEXT: str
     UNICODE: str
     BINARY: str
 
 class NotifyBulkSMS(NotifyBase):
+    """A wrapper for BulkSMS Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -36,11 +39,22 @@ class NotifyBulkSMS(NotifyBase):
     batch: Incomplete
     targets: Incomplete
     groups: Incomplete
-    def __init__(self, source=None, targets=None, unicode=None, batch=None, route=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def __init__(self, source=None, targets=None, unicode=None, batch=None, route=None, **kwargs) -> None:
+        """Initialize BulkSMS Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform BulkSMS Notification."""
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @property
-    def url_identifier(self): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

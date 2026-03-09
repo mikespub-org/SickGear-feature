@@ -8,6 +8,7 @@ IS_REGION: Incomplete
 AWS_HTTP_ERROR_MAP: Incomplete
 
 class NotifySES(NotifyBase):
+    """A wrapper for AWS SES (Amazon Simple Email Service)"""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -34,16 +35,66 @@ class NotifySES(NotifyBase):
     from_name: Incomplete
     from_addr: Incomplete
     reply_to: Incomplete
-    def __init__(self, access_key_id, secret_access_key, region_name, reply_to=None, from_addr=None, from_name=None, targets=None, cc=None, bcc=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
-    def _post(self, payload, to): ...
-    def aws_prepare_request(self, payload, reference=None): ...
-    def aws_auth_signature(self, to_sign, reference): ...
+    def __init__(self, access_key_id, secret_access_key, region_name, reply_to=None, from_addr=None, from_name=None, targets=None, cc=None, bcc=None, **kwargs) -> None:
+        """Initialize Notify AWS SES Object."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Wrapper to send_notification since we can alert more then one
+        channel."""
+    def _post(self, payload, to):
+        """Wrapper to request.post() to manage it's response better and make
+        the send() function cleaner and easier to maintain.
+
+        This function returns True if the _post was successful and False if it
+        wasn't.
+        """
+    def aws_prepare_request(self, payload, reference=None):
+        """Takes the intended payload and returns the headers for it.
+
+        The payload is presumed to have been already urlencoded()
+        """
+    def aws_auth_signature(self, to_sign, reference):
+        """Generates a AWS v4 signature based on provided payload which should
+        be in the form of a string."""
     @staticmethod
-    def aws_response_to_dict(aws_response): ...
+    def aws_response_to_dict(aws_response):
+        '''Takes an AWS Response object as input and returns it as a dictionary
+        but not befor extracting out what is useful to us first.
+
+        eg:
+          IN:
+
+            <SendRawEmailResponse
+                 xmlns="http://ses.amazonaws.com/doc/2010-12-01/">
+              <SendRawEmailResult>
+                <MessageId>
+                   010f017d87656ee2-a2ea291f-79ea-
+                   44f3-9d25-00d041de3007-000000</MessageId>
+              </SendRawEmailResult>
+              <ResponseMetadata>
+                <RequestId>7abb454e-904b-4e46-a23c-2f4d2fc127a6</RequestId>
+              </ResponseMetadata>
+            </SendRawEmailResponse>
+
+          OUT:
+           {
+             \'type\': \'SendRawEmailResponse\',
+              \'message_id\': \'010f017d87656ee2-a2ea291f-79ea-
+                             44f3-9d25-00d041de3007-000000\',
+              \'request_id\': \'7abb454e-904b-4e46-a23c-2f4d2fc127a6\',
+           }
+        '''
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

@@ -6,6 +6,7 @@ from _typeshed import Incomplete
 NOTIFY_WINDOWS_SUPPORT_ENABLED: bool
 
 class NotifyWindows(NotifyBase):
+    """A wrapper for local Windows Notifications."""
     enabled = NOTIFY_WINDOWS_SUPPORT_ENABLED
     requirements: Incomplete
     service_name: str
@@ -21,12 +22,21 @@ class NotifyWindows(NotifyBase):
     duration: Incomplete
     hwnd: Incomplete
     include_image: Incomplete
-    def __init__(self, include_image: bool = True, duration=None, **kwargs) -> None: ...
-    def _on_destroy(self, hwnd, msg, wparam, lparam): ...
+    def __init__(self, include_image: bool = True, duration=None, **kwargs) -> None:
+        """Initialize Windows Object."""
+    def _on_destroy(self, hwnd, msg, wparam, lparam):
+        """Destroy callback function."""
     wc: Incomplete
     hinst: Incomplete
     classAtom: Incomplete
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform Windows Notification."""
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """There are no parameters nessisary for this protocol; simply having
+        windows:// is all you need.
+
+        This function just makes sure that is in place.
+        """

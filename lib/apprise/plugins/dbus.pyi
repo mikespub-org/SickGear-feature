@@ -18,6 +18,7 @@ DBUS_URGENCIES: Incomplete
 DBUS_URGENCY_MAP: Incomplete
 
 class NotifyDBus(NotifyBase):
+    """A wrapper for local DBus/Qt Notifications."""
     enabled = NOTIFY_DBUS_SUPPORT_ENABLED
     requirements: Incomplete
     service_name: Incomplete
@@ -39,8 +40,16 @@ class NotifyDBus(NotifyBase):
     x_axis: Incomplete
     y_axis: Incomplete
     include_image: Incomplete
-    def __init__(self, urgency=None, x_axis=None, y_axis=None, include_image: bool = True, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def __init__(self, urgency=None, x_axis=None, y_axis=None, include_image: bool = True, **kwargs) -> None:
+        """Initialize DBus Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform DBus Notification."""
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """There are no parameters nessisary for this protocol; simply having
+        gnome:// is all you need.
+
+        This function just makes sure that is in place.
+        """

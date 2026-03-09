@@ -5,6 +5,7 @@ from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class NotifyXBMC(NotifyBase):
+    """A wrapper for XBMC/KODI Notifications."""
     service_name: str
     service_url: str
     xbmc_protocol: str
@@ -27,12 +28,30 @@ class NotifyXBMC(NotifyBase):
     schema: Incomplete
     headers: Incomplete
     include_image: Incomplete
-    def __init__(self, include_image: bool = True, duration=None, **kwargs) -> None: ...
-    def _payload_60(self, title, body, notify_type, **kwargs): ...
-    def _payload_20(self, title, body, notify_type, **kwargs): ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, include_image: bool = True, duration=None, **kwargs) -> None:
+        """Initialize XBMC/KODI Object."""
+    def _payload_60(self, title, body, notify_type, **kwargs):
+        """Builds payload for KODI API v6.0.
+
+        Returns (headers, payload)
+        """
+    def _payload_20(self, title, body, notify_type, **kwargs):
+        """Builds payload for XBMC API v2.0.
+
+        Returns (headers, payload)
+        """
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform XBMC/KODI Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

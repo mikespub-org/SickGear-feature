@@ -14,6 +14,7 @@ MAILGUN_API_LOOKUP: Incomplete
 MAILGUN_REGIONS: Incomplete
 
 class NotifyMailgun(NotifyBase):
+    """A wrapper for Mailgun Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -36,11 +37,22 @@ class NotifyMailgun(NotifyBase):
     batch: Incomplete
     region_name: Incomplete
     from_addr: Incomplete
-    def __init__(self, apikey, targets, cc=None, bcc=None, from_addr=None, region_name=None, headers=None, tokens=None, batch: bool = False, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
+    def __init__(self, apikey, targets, cc=None, bcc=None, from_addr=None, region_name=None, headers=None, tokens=None, batch: bool = False, **kwargs) -> None:
+        """Initialize Mailgun Object."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Perform Mailgun Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

@@ -7,6 +7,7 @@ from _typeshed import Incomplete
 CLICKSEND_HTTP_ERROR_MAP: Incomplete
 
 class NotifyClickSend(NotifyBase):
+    """A wrapper for ClickSend Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -20,11 +21,22 @@ class NotifyClickSend(NotifyBase):
     template_args: Incomplete
     batch: Incomplete
     targets: Incomplete
-    def __init__(self, targets=None, batch: bool = False, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def __init__(self, targets=None, batch: bool = False, **kwargs) -> None:
+        """Initialize ClickSend Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform ClickSend Notification."""
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @property
-    def url_identifier(self): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

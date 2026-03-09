@@ -4,6 +4,7 @@ from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class NotifyRevolt(NotifyBase):
+    """A wrapper for Revolt Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -25,11 +26,22 @@ class NotifyRevolt(NotifyBase):
     ratelimit_reset: Incomplete
     ratelimit_remaining: float
     def __init__(self, bot_token, targets, icon_url=None, link=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def _send(self, payload, channel_id, retries: int = 1, **kwargs): ...
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform Revolt Notification."""
+    def _send(self, payload, channel_id, retries: int = 1, **kwargs):
+        """Wrapper to the requests (post) object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

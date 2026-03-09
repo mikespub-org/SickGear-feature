@@ -8,6 +8,7 @@ HANDLE_HOST_PARSE_RE: Incomplete
 IS_USER: Incomplete
 
 class NotifyBlueSky(NotifyBase):
+    """A wrapper for BlueSky Notifications."""
     service_name: str
     service_url: str
     secure_protocol: Incomplete
@@ -34,13 +35,26 @@ class NotifyBlueSky(NotifyBase):
     __endpoint: Incomplete
     host: Incomplete
     user: Incomplete
-    def __init__(self, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs): ...
-    def get_identifier(self, user=None, login: bool = False): ...
-    def login(self): ...
-    def _fetch(self, url, payload=None, params=None, method: str = 'POST', content_type=None, login: bool = False): ...
+    def __init__(self, **kwargs) -> None:
+        """Initialize BlueSky Object."""
+    def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
+        """Perform BlueSky Notification."""
+    def get_identifier(self, user=None, login: bool = False):
+        """Performs a Decentralized User Lookup and returns the identifier."""
+    def login(self):
+        """A simple wrapper to authenticate with the BlueSky Server."""
+    def _fetch(self, url, payload=None, params=None, method: str = 'POST', content_type=None, login: bool = False):
+        """Wrapper to BlueSky API requests object."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

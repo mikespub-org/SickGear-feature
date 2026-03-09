@@ -12,6 +12,7 @@ DAPNET_PRIORITIES: Incomplete
 DAPNET_PRIORITY_MAP: Incomplete
 
 class NotifyDapnet(NotifyBase):
+    """A wrapper for DAPNET / Hampager Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -27,11 +28,22 @@ class NotifyDapnet(NotifyBase):
     priority: Incomplete
     txgroups: Incomplete
     batch: Incomplete
-    def __init__(self, targets=None, priority=None, txgroups=None, batch: bool = False, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def __init__(self, targets=None, priority=None, txgroups=None, batch: bool = False, **kwargs) -> None:
+        """Initialize Dapnet Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform Dapnet Notification."""
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @property
-    def url_identifier(self): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

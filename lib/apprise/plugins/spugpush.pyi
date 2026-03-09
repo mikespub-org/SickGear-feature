@@ -5,6 +5,7 @@ from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
 
 class NotifySpugpush(NotifyBase):
+    """A wrapper for SpugPush Notifications."""
     service_name: Incomplete
     service_url: str
     secure_protocol: str
@@ -14,12 +15,19 @@ class NotifySpugpush(NotifyBase):
     template_tokens: Incomplete
     token: Incomplete
     webhook_url: Incomplete
-    def __init__(self, token, **kwargs) -> None: ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def __init__(self, token, **kwargs) -> None:
+        """Initialize SpugPush Object."""
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @property
-    def url_identifier(self): ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def url_identifier(self):
+        """Returns a unique identifier for this plugin instance."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Send a SpugPush Notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns arguments to re-instantiate the
+        object."""
     @staticmethod
-    def parse_native_url(url): ...
+    def parse_native_url(url):
+        """Parse native SpugPush webhook URL into Apprise format."""

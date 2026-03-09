@@ -18,6 +18,7 @@ class StrmlabsAlert:
 STRMLABS_ALERTS: Incomplete
 
 class NotifyStreamlabs(NotifyBase):
+    """A wrapper to Streamlabs Donation Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -38,10 +39,24 @@ class NotifyStreamlabs(NotifyBase):
     currency: Incomplete
     name: Incomplete
     identifier: Incomplete
-    def __init__(self, access_token, call=..., alert_type=..., image_href: str = '', sound_href: str = '', duration: int = 1000, special_text_color: str = '', amount: int = 0, currency: str = 'USD', name: str = 'Anon', identifier: str = 'Apprise', **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def __init__(self, access_token, call=..., alert_type=..., image_href: str = '', sound_href: str = '', duration: int = 1000, special_text_color: str = '', amount: int = 0, currency: str = 'USD', name: str = 'Anon', identifier: str = 'Apprise', **kwargs) -> None:
+        """Initialize Streamlabs Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform Streamlabs notification call (either donation or alert)"""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object.
+
+        Syntax:
+          strmlabs://access_token
+        """

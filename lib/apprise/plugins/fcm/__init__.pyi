@@ -16,6 +16,7 @@ class GoogleOAuth: ...
 FCM_HTTP_ERROR_MAP: Incomplete
 
 class NotifyFCM(NotifyBase):
+    """A wrapper for Google's Firebase Cloud Messaging Notifications."""
     enabled = NOTIFY_FCM_SUPPORT_ENABLED
     requirements: Incomplete
     service_name: str
@@ -42,13 +43,25 @@ class NotifyFCM(NotifyBase):
     image_src: Incomplete
     priority: Incomplete
     color: Incomplete
-    def __init__(self, project, apikey, targets=None, mode=None, keyfile=None, data_kwargs=None, image_url=None, include_image: bool = False, color=None, priority=None, **kwargs) -> None: ...
+    def __init__(self, project, apikey, targets=None, mode=None, keyfile=None, data_kwargs=None, image_url=None, include_image: bool = False, color=None, priority=None, **kwargs) -> None:
+        """Initialize Firebase Cloud Messaging."""
     @property
-    def access_token(self): ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
+    def access_token(self):
+        """Generates a access_token based on the keyfile provided."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Perform FCM Notification."""
     @property
-    def url_identifier(self): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""

@@ -6,6 +6,7 @@ from _typeshed import Incomplete
 D7NETWORKS_HTTP_ERROR_MAP: Incomplete
 
 class NotifyD7Networks(NotifyBase):
+    """A wrapper for D7 Networks Notifications."""
     service_name: str
     service_url: str
     secure_protocol: str
@@ -22,11 +23,23 @@ class NotifyD7Networks(NotifyBase):
     unicode: Incomplete
     token: Incomplete
     targets: Incomplete
-    def __init__(self, token=None, targets=None, source=None, batch: bool = False, unicode=None, **kwargs) -> None: ...
-    def send(self, body, title: str = '', notify_type=..., **kwargs): ...
-    def url(self, privacy: bool = False, *args, **kwargs): ...
+    def __init__(self, token=None, targets=None, source=None, batch: bool = False, unicode=None, **kwargs) -> None:
+        """Initialize D7 Networks Object."""
+    def send(self, body, title: str = '', notify_type=..., **kwargs):
+        """Depending on whether we are set to batch mode or single mode this
+        redirects to the appropriate handling."""
+    def url(self, privacy: bool = False, *args, **kwargs):
+        """Returns the URL built dynamically based on specified arguments."""
     @property
-    def url_identifier(self): ...
-    def __len__(self) -> int: ...
+    def url_identifier(self):
+        """Returns all of the identifiers that make this URL unique from
+        another simliar one.
+
+        Targets or end points should never be identified here.
+        """
+    def __len__(self) -> int:
+        """Returns the number of targets associated with this notification."""
     @staticmethod
-    def parse_url(url): ...
+    def parse_url(url):
+        """Parses the URL and returns enough arguments that can allow us to re-
+        instantiate this object."""
