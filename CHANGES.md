@@ -43,6 +43,7 @@
 * Update urllib3 2.6.1 (bfe8e19) to 2.6.2 (83f8643)
 * Update urllib3 2.6.2 (83f8643) to 2.6.3 (0248277)
 * Fix newznab misnamed variable for nzbgeek
+* Fix reinstate a chardet version file to suppress Requests lib warn
 
 
 
