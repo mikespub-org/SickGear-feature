@@ -2,6 +2,7 @@
 
 * Change update actions and optimise unittest
 * Update filelock 3.20.1 (377f622) to 3.25.2 (5b9872c)
+* Fix parsing same named show with different appended years
 
 
 [develop]

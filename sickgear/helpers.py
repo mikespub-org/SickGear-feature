@@ -925,6 +925,16 @@ def full_sanitize_scene_name(name):
     return re.sub('[. -]', ' ', sanitize_scene_name(name)).lower().lstrip()
 
 
+def full_sanitize_scene_name_without_year(name):
+    # type: (str) -> str
+    """
+    sanitize scene name
+
+    :param name: name
+    """
+    return re.sub(r'[. -]\(?\d{4}\)?$', '', full_sanitize_scene_name(name)).lower().lstrip()
+
+
 def get_show(name, try_scene_exceptions=False):
     # type: (AnyStr, bool) -> Optional[TVShow]
     """

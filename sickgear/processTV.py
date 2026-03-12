@@ -639,16 +639,17 @@ class ProcessTVShow(object):
         all_dirs.append(dir_name)
 
         # check if the directory have at least one tv video file
+        force_show_obj = bool(show_obj)
         for video in video_files:
             try:
-                NameParser(show_obj=show_obj).parse(video, cache_result=False)
+                NameParser(show_obj=show_obj, force_show_obj=force_show_obj).parse(video, cache_result=False)
                 return True
             except (InvalidNameException, InvalidShowException):
                 pass
 
         for directory in all_dirs:
             try:
-                NameParser(show_obj=show_obj).parse(directory, cache_result=False)
+                NameParser(show_obj=show_obj, force_show_obj=force_show_obj).parse(directory, cache_result=False)
                 return True
             except (InvalidNameException, InvalidShowException):
                 pass
@@ -659,7 +660,7 @@ class ProcessTVShow(object):
 
             for packed in packed_files:
                 try:
-                    NameParser(show_obj=show_obj).parse(packed, cache_result=False)
+                    NameParser(show_obj=show_obj, force_show_obj=force_show_obj).parse(packed, cache_result=False)
                     return True
                 except (InvalidNameException, InvalidShowException):
                     pass

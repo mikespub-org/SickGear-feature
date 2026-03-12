@@ -552,7 +552,7 @@ class PostProcessor(object):
             return to_return
 
         # parse the name to break it into show name, season, and episode
-        np = NameParser(resource, convert=True, show_obj=self.show_obj or show_obj)
+        np = NameParser(resource, convert=True, show_obj=self.show_obj or show_obj, force_show_obj=bool(self.show_obj))
         parse_result = np.parse(name)
         self._log(f'Parsed {decode_str(str(parse_result), errors="xmlcharrefreplace")}<br>'
                   f'.. from {name}', logger.DEBUG)
@@ -926,7 +926,7 @@ class PostProcessor(object):
 
         # if there's an existing downloaded file with same quality, check filesize to decide
         if new_ep_quality == old_ep_quality:
-            np = NameParser(show_obj=self.show_obj)
+            np = NameParser(show_obj=self.show_obj, force_show_obj=bool(self.show_obj))
             cur_proper_level = 0
             try:
                 pr = np.parse(ep_obj.release_name)
