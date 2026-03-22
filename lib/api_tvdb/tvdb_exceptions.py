@@ -1,4 +1,3 @@
-# encoding:utf-8
 # author:dbr/Ben
 # project:tvdb_api
 # repository:http://github.com/dbr/tvdb_api
