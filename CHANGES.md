@@ -3,7 +3,7 @@
 * Change add support for Python 3.14.2 and add to unittest matrix
 * Update apprise 1.9.2 (a2a2216) to 1.9.9 (4639799)
 * Update attr 25.3.0 (ca3fb0e) to 25.4.0 (9a98e00)
-* Update Beautiful Soup 4.13.4 (9752e85) to 4.14.2 (fc02060)
+* Update Beautiful Soup 4.13.4 (9752e85) to 4.14.3 (55f655f)
 * Update certifi 2025.08.03 to 2026.02.25
 * Update chardet packages 5.3.0dev0 (8e8dfcd) to 7.2.0 (884996a)
 * Update feedparser 6.0.11 (89fde03) to 6.0.12 (5d2578b)
@@ -32,6 +32,7 @@
 * Update apprise 1.9.7 (d503bcd) to 1.9.8 (4d794d6)
 * Update apprise 1.9.8 (4d794d6) to 1.9.9 (4639799)
 * Update Beautiful Soup 4.13.5 (70c7473) to 4.14.2 (fc02060)
+* Update Beautiful Soup 4.14.2 (fc02060) to 4.14.3 (55f655f)
 * Update certifi 2025.10.05 to 2025.11.12
 * Update certifi 2025.11.12 to 2026.02.25
 * Update chardet packages 7.0.1 (330e41e) → 7.2.0 (884996a)
