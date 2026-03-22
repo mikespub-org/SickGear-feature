@@ -12,6 +12,7 @@
 * Update langcodes 3.5.0 (ed97477) to 3.5.1 (4701cd3)
 * Update language-data 1.3.0 (40fc5c9) to 1.4.0 (3231025)
 * Update packaging 25.0 (f585376) to 26.0 (3b77a26)
+* Update Send2Trash 1.8.3 (91d0698) to 2.1.0 (ad0f2af)
 * Update SimpleJSON 3.19.3 (6932004) to 3.20.2 (10e5aaf)
 * Update soupsieve 2.7.0 (a616022) to 2.8.3 (5aedc41)
 * Update Tornado Web Server 6.5.2 (f01a7b0) to 6.5.5 (7d64650)
