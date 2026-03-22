@@ -11,6 +11,7 @@ from .logger import logger as logger
 from .manager_plugins import NotificationManager as NotificationManager
 from .plugins.base import NotifyBase as NotifyBase
 from .utils.cwe312 import cwe312_url as cwe312_url
+from .utils.json import AppriseJSONEncoder as AppriseJSONEncoder
 from .utils.logic import is_exclusive_match as is_exclusive_match
 from .utils.parse import parse_list as parse_list, parse_urls as parse_urls
 from _typeshed import Incomplete
@@ -122,6 +123,8 @@ class Apprise:
     async def _notify_parallel_asyncio(*servers_kwargs):
         """Process a list of async_notify() calls in parallel and
         asynchronously."""
+    def json(self, lang: str | None = None, show_requirements: bool = False, show_disabled: bool = False, indent: int | None = None, path: str | None = None) -> str | bool:
+        """Returns a json response associated with the Apprise object."""
     def details(self, lang: str | None = None, show_requirements: bool = False, show_disabled: bool = False) -> dict[str, Any]:
         """Returns the details associated with the Apprise object."""
     def urls(self, privacy: bool = False) -> list[str]:

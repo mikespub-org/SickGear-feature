@@ -1,6 +1,6 @@
 from ...common import NotifyType as NotifyType
 from ...url import PrivacyMode as PrivacyMode
-from ...utils.parse import parse_bool as parse_bool, parse_list as parse_list
+from ...utils.parse import parse_bool as parse_bool, parse_list as parse_list, validate_regex as validate_regex
 from ..base import NotifyBase as NotifyBase
 from .adapter import SLIXMPP_SUPPORT_AVAILABLE as SLIXMPP_SUPPORT_AVAILABLE, SlixmppAdapter as SlixmppAdapter, XMPPConfig as XMPPConfig
 from .common import SECURE_MODES as SECURE_MODES, SecureXMPPMode as SecureXMPPMode
@@ -21,15 +21,16 @@ class NotifyXMPP(NotifyBase):
     templates: Incomplete
     template_tokens: Incomplete
     template_args: Incomplete
-    jid: Incomplete
-    targets: list[str]
+    targets: list[str, str]
+    want_muc: bool
     secure_mode: Incomplete
     roster: Incomplete
     subject: Incomplete
     keepalive: Incomplete
     secure: bool
+    name: Incomplete
     _adapter: SlixmppAdapter | None
-    def __init__(self, targets: list[str] | None = None, secure_mode: str | None = None, roster: bool | None = None, subject: bool | None = None, keepalive: bool | None = None, **kwargs: Any) -> None: ...
+    def __init__(self, targets: list[str, str] | None = None, secure_mode: str | None = None, roster: bool | None = None, subject: bool | None = None, keepalive: bool | None = None, name: str | None = None, **kwargs: Any) -> None: ...
     def __del__(self) -> None:
         """Best-effort close for keepalive sessions."""
     @property
@@ -46,7 +47,7 @@ class NotifyXMPP(NotifyBase):
         how the message is constructed.
         """
     @staticmethod
-    def normalize_jid(value: str, default_host: str) -> str:
+    def normalize_jid(value: str, default_host: str) -> tuple[str, bool]:
         """Normalize and validate a JID.
 
         Behaviour:
