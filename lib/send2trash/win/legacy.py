@@ -4,12 +4,7 @@
 # which should be included with this package. The terms are also available at
 # http://www.hardcoded.net/licenses/bsd_license
 
-from __future__ import unicode_literals
 import os.path as op
-
-from send2trash.compat import text_type
-from send2trash.util import preprocess_paths
-
 from ctypes import (
     windll,
     Structure,
@@ -21,6 +16,8 @@ from ctypes import (
     FormatError,
 )
 from ctypes.wintypes import HWND, UINT, LPCWSTR, BOOL
+
+from send2trash.util import preprocess_paths
 
 kernel32 = windll.kernel32
 GetShortPathNameW = kernel32.GetShortPathNameW
@@ -143,7 +140,7 @@ def send2trash(paths):
     if not paths:
         return
     # convert data type
-    paths = [text_type(path, "mbcs") if not isinstance(path, text_type) else path for path in paths]
+    paths = [str(path, "mbcs") if not isinstance(path, str) else path for path in paths]
     # convert to full paths
     paths = [op.abspath(path) if not op.isabs(path) else path for path in paths]
     # get short path to handle path length issues
