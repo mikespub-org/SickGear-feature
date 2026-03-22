@@ -1,5 +1,8 @@
 from enum import Enum
 
+AWARE_DATE_ISO_FORMAT: str
+NAIVE_DATE_ISO_FORMAT: str
+
 class NotifyType(str, Enum):
     """A simple mapping of notification types most commonly used with all types
     of logging and notification services."""

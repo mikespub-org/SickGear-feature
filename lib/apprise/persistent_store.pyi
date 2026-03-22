@@ -2,7 +2,7 @@ import builtins
 import hashlib
 import json
 from . import exception as exception
-from .common import PersistentStoreMode as PersistentStoreMode
+from .common import AWARE_DATE_ISO_FORMAT as AWARE_DATE_ISO_FORMAT, NAIVE_DATE_ISO_FORMAT as NAIVE_DATE_ISO_FORMAT, PersistentStoreMode as PersistentStoreMode
 from .logger import logger as logger
 from .utils.disk import path_decode as path_decode
 from _typeshed import Incomplete
@@ -10,8 +10,6 @@ from datetime import datetime
 from typing import Any
 
 EPOCH: Incomplete
-AWARE_DATE_ISO_FORMAT: str
-NAIVE_DATE_ISO_FORMAT: str
 
 def _ntf_tidy(ntf) -> None:
     """Reusable NamedTemporaryFile Cleanup."""

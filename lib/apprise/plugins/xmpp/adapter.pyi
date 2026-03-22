@@ -60,7 +60,9 @@ class SlixmppAdapter:
     _supported_version: Incomplete
     _enabled = SLIXMPP_SUPPORT_AVAILABLE
     timeout: Incomplete
+    _want_muc: Incomplete
     logger: Incomplete
+    nickname: Incomplete
     _state_lock: Incomplete
     _closing: bool
     _thread: threading.Thread | None
@@ -69,7 +71,7 @@ class SlixmppAdapter:
     _loop_ready: Incomplete
     _connect_lock: asyncio.Lock | None
     _session_started: asyncio.Event | None
-    def __init__(self, config: XMPPConfig, targets: list[str], subject: str, body: str, timeout: float = 30.0, roster: bool = False, before_message: Callable[[], None] | None = None, keepalive: bool = False) -> None: ...
+    def __init__(self, config: XMPPConfig, targets: list[str, str], subject: str, body: str, timeout: float = 30.0, roster: bool = False, before_message: Callable[[], None] | None = None, keepalive: bool = False, want_muc: bool = False, default_nickname: str | None = None) -> None: ...
     def __del__(self) -> None:
         """Best effort close for keepalive sessions."""
     @staticmethod
@@ -88,11 +90,11 @@ class SlixmppAdapter:
         """Ensure the background loop and client exist."""
     def _keepalive_runner(self) -> None: ...
     async def _connect_if_required(self) -> bool: ...
-    async def _send_keepalive_async(self, targets: list[str], subject: str, body: str) -> bool: ...
+    async def _send_keepalive_async(self, targets: list[str, str], subject: str, body: str) -> bool: ...
     targets: Incomplete
     subject: Incomplete
     body: Incomplete
-    def send_message(self, targets: list[str] | None = None, subject: str | None = None, body: str | None = None) -> bool:
+    def send_message(self, targets: list[str, str] | None = None, subject: str | None = None, body: str | None = None) -> bool:
         """Send a message, keeping the session alive if keepalive=True."""
     @staticmethod
     def package_dependency() -> str:
