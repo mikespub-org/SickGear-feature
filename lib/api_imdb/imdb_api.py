@@ -1,4 +1,3 @@
-# encoding:utf-8
 # author:Prinz23
 # project:imdb_api
 

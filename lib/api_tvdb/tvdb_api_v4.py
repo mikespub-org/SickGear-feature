@@ -1,4 +1,3 @@
-# encoding:utf-8
 # author:Prinz23
 # project:tvdb_api_v4
 
