@@ -1,4 +1,3 @@
-# encoding:utf-8
 # ---------------
 # functions are placed here to remove cyclic import issues from placement in helpers
 #

@@ -1,4 +1,34 @@
-﻿### 3.34.13 (2026-03-09 14:10:00 UTC)
+﻿### 3.35.0 (2026-03-25 19:25:00 UTC)
+
+* Change add support for Python 3.14 and add to unittest matrix
+* Update apprise 1.9.2 (a2a2216) to 1.9.9 (4639799)
+* Update attr 25.3.0 (ca3fb0e) to 26.1.0 (7bfc49e)
+* Update Beautiful Soup 4.13.4 (9752e85) to 4.14.3 (55f655f)
+* Update certifi 2025.08.03 to 2026.02.25
+* Update chardet packages 5.3.0dev0 (8e8dfcd) to 7.3.0 (00667a4)
+* Update feedparser 6.0.11 (89fde03) to 6.0.12 (5d2578b)
+* Update hachoir 3.3.0 (48b478f) to 3.3.0 (b1c8b57)
+* Update idna library 3.10 (729225d) to 3.11 (ad949ee)
+* Update langcodes 3.5.0 (ed97477) to 3.5.1 (4701cd3)
+* Update language-data 1.3.0 (40fc5c9) to 1.4.0 (3231025)
+* Update packaging 25.0 (f585376) to 26.0 (3b77a26)
+* Update Requests library 2.32.4 (131e506) to 2.33.0 (bc04dfd)
+* Update Send2Trash 1.8.3 (91d0698) to 2.1.0 (ad0f2af)
+* Update SimpleJSON 3.19.3 (6932004) to 3.20.2 (10e5aaf)
+* Update soupsieve 2.7.0 (a616022) to 2.8.3 (5aedc41)
+* Update Tornado Web Server 6.5.2 (f01a7b0) to 6.5.5 (7d64650)
+* Update typing-extensions 4.14.0 (59d2c20) to 4.15.0 (2638b86)
+* Update urllib3 2.5.0 (98a60f9) to 2.6.3 (0248277)
+* Update zoneinfo 2025a to 2025c (fallback)
+* Change improve Proper and Series name search for Newznab provider type
+* Fix id parsing in specific cases on newznab providers
+* Fix torrent_parser is actually 0.4.1 (23b9e11)
+* Fix fetching of Shows IMDb Cards
+* Change search 4k and x265 categories to TDay provider
+* Change some general code cleanups
+
+
+### 3.34.13 (2026-03-09 14:10:00 UTC)
 
 * Fix handling/detection of show not found in TMDB API
 
@@ -78,8 +108,8 @@
 * Update filelock 3.15.4 (9a979df) to 3.19.0 (0c54837)
 * Update hachoir 3.2.0 (38d759f) to 3.3.0 (48b478f)
 * Update idna library 3.7 (1d365e1) to 3.10 (729225d)
-* Update langcodes 3.3.0 to 3.5.0
-* Update language-data 1.1 to 1.3
+* Update langcodes 3.3.0 (49beea8) to 3.5.0 (ed97477)
+* Update language-data 1.1.0 (b0ac5fc) to 1.3.0 (40fc5c9)
 * Update Msgpack 1.0.6 (e1d3d5d) to 1.1.1 (42f056f)
 * Update deprecated pkg_resources 24.0 to Packaging 25.0 (f585376)
 * Update profilehooks module 1.13.0.dev0 (99f8a31) to 1.13.1.dev0 (824fcd4) 

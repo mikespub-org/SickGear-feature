@@ -4997,7 +4997,8 @@ class AddShows(Home):
         url_ui = '?mode=detail&page=1&sort=date_added,desc&' \
                  'title_type=tvSeries,tvEpisode,tvMiniSeries&ref_=wl_ref_typ'
 
-        html = helpers.get_url(url + url_ui, headers={'Accept-Language': 'en-US'})
+        html = helpers.get_url(url + url_ui, headers={'Accept-Language': 'en-US'},
+                               proxy_browser=True, url_solver=sickgear.FLARESOLVERR_HOST)
         if html:
             show_list_found = None
             try:
@@ -5059,7 +5060,8 @@ class AddShows(Home):
             mode += '-more'
         url = 'https://www.imdb.com/search/title?at=0&sort=moviemeter&' \
               'title_type=tvSeries,tvEpisode,tvMiniSeries&year=%s,%s&start=%s' % (start_year, end_year, page)
-        html = helpers.get_url(url, headers={'Accept-Language': 'en-US'})
+        html = helpers.get_url(url, headers={'Accept-Language': 'en-US'},
+                               proxy_browser=True, url_solver=sickgear.FLARESOLVERR_HOST)
         if html:
             show_list_found = None
             try:
