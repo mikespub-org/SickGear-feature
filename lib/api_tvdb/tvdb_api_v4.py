@@ -527,7 +527,9 @@ class TvdbAPIv4(TVInfoBase):
 
     def _get_series_name(self, show_data, language=None):
         # type: (Dict, AnyStr) -> Tuple[Optional[AnyStr], List]
-        if 'nameTranslations' in show_data.get('translations', {}):
+        if language and language == show_data.get('originalLanguage'):
+            series_name = clean_data(show_data['name'])
+        elif 'nameTranslations' in show_data.get('translations', {}):
             series_name = clean_data(
                 next(filter(lambda l: language and language == l['language'],
                             show_data.get('translations', {}).get('nameTranslations', [])),
