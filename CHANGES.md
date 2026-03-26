@@ -1,4 +1,12 @@
-﻿### 3.35.0 (2026-03-25 19:25:00 UTC)
+﻿### 3.36.0 (2026-xx-xx xx:xx:00 UTC)
+
+* Update filelock 3.20.1 (377f622) to 3.25.2 (5b9872c)
+
+
+[develop]
+
+
+### 3.35.0 (2026-03-25 19:25:00 UTC)
 
 * Change add support for Python 3.14 and add to unittest matrix
 * Update apprise 1.9.2 (a2a2216) to 1.9.9 (4639799)
