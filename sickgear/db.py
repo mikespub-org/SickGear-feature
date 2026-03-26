@@ -124,6 +124,10 @@ class DBConnection(object):
         else:
             self.connection.row_factory = sqlite3.Row
 
+    def __del__(self):
+        if getattr(self, 'connection', None):
+            self.connection.close()
+
     def backup_db(self, target, backup_filename=None):
         # type: (AnyStr, AnyStr) -> Tuple[bool, AnyStr]
         """
