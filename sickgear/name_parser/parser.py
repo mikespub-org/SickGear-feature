@@ -53,7 +53,8 @@ class NameParser(object):
     ANIME_REGEX = 2
 
     def __init__(self, file_name=True, show_obj=None, try_scene_exceptions=True, convert=False,
-                 naming_pattern=False, testing=False, indexer_lookup=True):
+                 naming_pattern=False, testing=False, indexer_lookup=True, force_show_obj=False):
+        # type: (bool, Optional[TVShow], bool, bool, bool, bool, bool, bool) -> None
 
         self.file_name = file_name  # type: bool
         self.show_obj = show_obj  # type: Optional[sickgear.tv.TVShow]
@@ -62,6 +63,7 @@ class NameParser(object):
         self.naming_pattern = naming_pattern  # type: bool
         self.testing = testing  # type: bool
         self.indexer_lookup = indexer_lookup  # type: bool
+        self.force_show_obj = force_show_obj  # type: bool
 
         if self.show_obj and not self.show_obj.is_anime:
             self.compiled_regexes = compiled_regexes[self.NORMAL_REGEX]
@@ -299,11 +301,17 @@ class NameParser(object):
                     show_obj = helpers.get_show(best_result.series_name, self.try_scene_exceptions)
 
                 # confirm passed in show object tvid_prodid matches result show object tvid_prodid
-                if show_obj and not self.testing:
+                if show_obj and not self.testing and not self.force_show_obj:
                     if self.show_obj and show_obj.tvid_prodid != self.show_obj.tvid_prodid \
                             and helpers.full_sanitize_scene_name(show_obj.name) != \
                             helpers.full_sanitize_scene_name(self.show_obj.name):
-                        show_obj = None
+                        # special case when self.show_obj name and parsed show_obj have different years in name
+                        # still use the in init given self.show_obj in this case
+                        if helpers.full_sanitize_scene_name_without_year(show_obj.name) == \
+                            helpers.full_sanitize_scene_name_without_year(self.show_obj.name):
+                            show_obj = self.show_obj
+                        else:
+                            show_obj = None
                 elif not show_obj and self.show_obj:
                     show_obj = self.show_obj
                 best_result.show_obj = show_obj
