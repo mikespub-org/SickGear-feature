@@ -1,4 +1,9 @@
-﻿### 3.35.0 (2026-03-25 19:25:00 UTC)
+﻿### 3.35.1 (2026-03-26 23:10:00 UTC)
+
+* Fix TVDb API to prioritise what is used for the main show name
+
+
+### 3.35.0 (2026-03-25 19:25:00 UTC)
 
 * Change add support for Python 3.14 and add to unittest matrix
 * Update apprise 1.9.2 (a2a2216) to 1.9.9 (4639799)
