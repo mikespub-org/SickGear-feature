@@ -1,6 +1,7 @@
 ﻿### 3.36.0 (2026-xx-xx xx:xx:00 UTC)
 
 * Change update actions and optimise unittest
+* Update chardet packages 7.3.0 (00667a4) to 7.4.0 (582c664)
 * Update filelock 3.20.1 (377f622) to 3.25.2 (5b9872c)
 * Fix parsing same named show with different appended years
 * Change close DBConnection connection when object is destroyed
