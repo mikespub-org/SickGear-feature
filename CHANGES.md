@@ -7,6 +7,7 @@
 
 
 [develop]
+* Change disable check_same_thread for sqllite connection to make sure that finalize __del__ doesn't throw exceptions
 
 
 ### 3.35.1 (2026-03-26 23:10:00 UTC)
