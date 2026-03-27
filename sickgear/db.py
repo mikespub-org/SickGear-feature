@@ -113,7 +113,7 @@ class DBConnection(object):
                 helpers.copy_file(db_alt, db_src)
 
         self.filename = filename
-        self.connection = sqlite3.connect(db_src, timeout=20)
+        self.connection = sqlite3.connect(db_src, timeout=20, check_same_thread=False)
         # enable legacy double quote support
         if db_supports_setconfig_dqs:
             self.connection.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DDL, True)
