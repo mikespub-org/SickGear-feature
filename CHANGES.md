@@ -6,6 +6,7 @@
 * Update Requests library 2.33.0 (bc04dfd) to 2.33.1 (111d2b7)
 * Fix parsing same named show with different appended years
 * Change close DBConnection connection when object is destroyed
+* Change add "NA" as potential non-named episode name
 
 
 [develop]

@@ -82,8 +82,8 @@ if coreid_warnings:
 tz_p = du_parser()
 invalid_date_limit = datetime.date(1900, 1, 1)
 
-tba_tvinfo_name = re.compile(r'^(episode \d+|tb[acd])$', flags=re.I)
-tba_file_name = re.compile(r'\b(episode.\d+|tb[acd])\b', flags=re.I)
+tba_tvinfo_name = re.compile(r'^(episode \d+|tb[acd]|na)$', flags=re.I)
+tba_file_name = re.compile(r'\b(episode.\d+|tb[acd]|na)\b', flags=re.I)
 pattern_ep_name = re.compile(r'%E[._]?N', flags=re.I)
 
 # status codes for switching tv show source
