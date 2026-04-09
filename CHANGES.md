@@ -1,4 +1,9 @@
-﻿### 3.35.1 (2026-03-26 23:10:00 UTC)
+﻿### 3.35.2 (2026-04-09 11:00:00 UTC)
+
+* Change add support for Python 3.14.4, 3.13.13
+
+
+### 3.35.1 (2026-03-26 23:10:00 UTC)
 
 * Fix TVDb API to prioritise what is used for the main show name
 
