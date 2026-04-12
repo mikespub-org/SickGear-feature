@@ -1,7 +1,7 @@
 ﻿### 3.36.0 (2026-xx-xx xx:xx:00 UTC)
 
 * Change update actions and optimise unittest
-* Update chardet packages 7.3.0 (00667a4) to 7.4.0 (582c664)
+* Update chardet packages 7.3.0 (00667a4) to 7.4.1 (9079efc)
 * Update filelock 3.20.1 (377f622) to 3.25.2 (5b9872c)
 * Update Requests library 2.33.0 (bc04dfd) to 2.33.1 (111d2b7)
 * Fix parsing same named show with different appended years
@@ -11,6 +11,7 @@
 
 [develop]
 * Change disable check_same_thread for sqllite connection to make sure that finalize __del__ doesn't throw exceptions
+* Update chardet packages 7.4.0 (582c664) to 7.4.1 (9079efc)
 
 
 ### 3.35.2 (2026-04-09 11:00:00 UTC)
