@@ -111,7 +111,7 @@ $(document).ready(function () {
 		return $([idView, idLink].join()).removeClass() &&
 			((isAdd() || isOff()) && $(idLink).addClass('hide') || $(idView).addClass('hide')) &&
 			(!isOff() && $(idLink)
-				.attr('href', sbRoot + '/add-shows/watchlist-imdb?account=' + accId())
+				.attr('href', sbRoot + '/add-shows/browse_imdb?api_method=watchlist6account=' + accId())
 				.attr('title', 'View ' + nameList()));
 	}
 
@@ -164,7 +164,8 @@ $(document).ready(function () {
 					'class'	: 'green',
 					'action': function() {
 						all('off');
-						$.get(sbRoot + '/add-shows/watchlist-imdb', {
+						$.get(sbRoot + '/add-shows/browse_imdb', {
+							'api_method': 'watchlist',
 							'action': elDel.val().toLowerCase(),
 							'select': accId()})
 							.done(function(response) {
@@ -189,13 +190,13 @@ $(document).ready(function () {
 			warnMessage('Missing IMDb list Id or URL');
 		} else {
 			all('off');
-			var params = {'action': elOnOff.val().toLowerCase()};
+			var params = {'api_method': 'watchlist', 'action': elOnOff.val().toLowerCase()};
 			if ('enable' == params.action)
 				params.input = strList;
 			else
 				params.select = accId();
 
-			$.get(sbRoot + '/add-shows/watchlist-imdb', params)
+			$.get(sbRoot + '/add-shows/browse_imdb', params)
 				.done(function(data) { setControls(!populateSelect(data), !1); })
 				.fail(function() { setControls(!0, 'Failed to load list'); });
 		}

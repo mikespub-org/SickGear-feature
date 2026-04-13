@@ -48,6 +48,9 @@ try:
     # noinspection PyUnresolvedReferences
     is_orjson = getattr(json.JSONEncoder, 'is_orjson', False)
     ORJSON_OPTIONS = json.OPT_NON_STR_KEYS | json.OPT_SORT_KEYS | json.OPT_INDENT_2
+    OPT_NON_STR_KEYS = json.OPT_NON_STR_KEYS
+    OPT_SORT_KEYS = json.OPT_SORT_KEYS
+    OPT_INDENT_2 = json.OPT_INDENT_2
 
     try:
         import simplejson as json_fallback

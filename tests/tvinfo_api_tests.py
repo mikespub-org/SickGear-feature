@@ -45,6 +45,8 @@ mock_data_dir = os.path.join(file_dir, 'mock_data', test_base_name)
 os.makedirs(mock_data_dir, exist_ok=True)
 cast_types = [t for t in RoleTypes.reverse.keys() if t < RoleTypes.crew_limit]
 crew_types = [t for t in RoleTypes.reverse.keys() if t >= RoleTypes.crew_limit]
+org_get = requests.sessions.Session.get
+org_post = requests.sessions.Session.post
 
 # settings for mock file creation
 disable_content_creation = True
@@ -68,6 +70,7 @@ def _make_filename(file_str, file_ext, extra_strs=None):
 
 def _mock_get(*args, **kwargs):
     url = (1 < len(args) and args[1]) or kwargs.get('url')
+    post = 'post' == kwargs.pop('method', 'get')
     resp = requests.Response()
     resp.url = url
     resp.status_code = 200
@@ -76,7 +79,8 @@ def _mock_get(*args, **kwargs):
     resp.headers.update({'Content-Type': 'application/json; charset=UTF-8'})
     filename = _make_filename(
         url, '.data', extra_strs=['%s%s' % (_k, _v) for _k, _v in (args[0].params or {}).items()
-                                  if _k not in ('api_key')])
+                                  if _k not in ('api_key')] + [
+            '%s%s' % (_k, _v) for _k, _v in kwargs.items() if _k in ('json',)])
     data_file = os.path.join(mock_data_dir, filename)
     used_files.add(filename)
     if (disable_content_creation or only_new_urls_data_creation) and os.path.isfile(data_file):
@@ -86,20 +90,26 @@ def _mock_get(*args, **kwargs):
     elif not disable_content_creation:
         kw = kwargs.copy()
         kw.update({'params': args[0].params, 'headers': args[0].headers})
-        resp = requests.get(*args[1:], **kw)
-        with lzma.open(data_file, 'wb') as fd:
-            fd.write(resp.content)
+        if post:
+            resp = requests.post(*args[1:], **kw)
+        else:
+            resp = requests.get(*args[1:], **kw)
+        if not post or 'imdb.com' in url:
+            with lzma.open(data_file, 'wb') as fd:
+                fd.write(resp.content)
     else:
         print('error getting: %s' % url)
     return resp
 
 
 def _mock_post(*args, **kwargs):
-    url = (1 < len(args) and args[1]) or kwargs.get('url')
-    resp = requests.Response()
-    resp.status_code = 200
-    resp._content = ''
-    return resp
+    kwargs['method'] = 'post'
+    return _mock_get(*args, **kwargs)
+    # url = (1 < len(args) and args[1]) or kwargs.get('url')
+    # resp = requests.Response()
+    # resp.status_code = 200
+    # resp._content = ''
+    # return resp
 
 
 browse_start_date_filename = os.path.join(mock_data_dir, 'browse_start_date.data')
@@ -461,22 +471,6 @@ def _property_type_checker(obj, checked_objs=None):
         datetime.datetime = _FakeDateTime
 
 
-def _compare_helper(obj_a, obj_b):
-    _property_type_checker(obj_a)
-
-    for prop, value in vars(obj_a).items():
-        if isinstance(value, threading_Lock):
-            continue
-        try:
-            assert value == getattr(obj_b, prop)
-        except AssertionError as e:
-            print('property [%s] different: obj_a [%s], obj_b [%s)' % (prop, value, getattr(obj_b, prop)))
-            raise e
-        except (BaseException, Exception) as e:
-            print(e)
-            raise e
-
-
 person_tests = [
     {'p_id': 346941, 'tvid': TVINFO_TVDB},  # Katherine McNamara
     {'p_id': 968006, 'tvid': TVINFO_TMDB},  # Katherine McNamara
@@ -581,8 +575,9 @@ class TVInfoTests(test.SickbeardTestDBCase):
         datetime.date = _FakeDate
         datetime.datetime = _FakeDateTime
         requests.sessions.Session.get = _mock_get
-        if disable_content_creation:
-            requests.sessions.Session.post = _mock_post
+        requests.sessions.Session.post = _mock_post
+        # if disable_content_creation:
+        #     requests.sessions.Session.post = _mock_post
 
     @classmethod
     def tearDownClass(cls):
@@ -613,6 +608,22 @@ class TVInfoTests(test.SickbeardTestDBCase):
         except (BaseException, Exception):
             pass
 
+    def _compare_helper(self, obj_a, obj_b):
+        _property_type_checker(obj_a)
+
+        for prop, value in vars(obj_a).items():
+            if isinstance(value, threading_Lock):
+                continue
+            try:
+                self.assertEqual(value, getattr(obj_b, prop),
+                                 msg=f'properties not equal: {prop} of {obj_b} to value: {value}')
+            except AssertionError as e:
+                print('property [%s] different: obj_a [%s], obj_b [%s)' % (prop, value, getattr(obj_b, prop)))
+                raise e
+            except (BaseException, Exception) as e:
+                print(e)
+                raise e
+
     def test_person_data(self):
         for t_c in person_tests:
             tvid = t_c['tvid']
@@ -635,13 +646,13 @@ class TVInfoTests(test.SickbeardTestDBCase):
                 _p_o = person_obj
             try:
                 assert None is not person_obj and None is not _p_o
-                _compare_helper(person_obj, _p_o)
+                self._compare_helper(person_obj, _p_o)
             except (BaseException, Exception) as e:
                 if not disable_content_creation and os.path.isfile(os.path.join(mock_data_dir, filename)):
                     _save_pickle_file(filename, person_obj)
                     _p_o = person_obj
                     assert None is not person_obj and None is not _p_o
-                    _compare_helper(person_obj, _p_o)
+                    self._compare_helper(person_obj, _p_o)
                 else:
                     raise e
 
@@ -666,13 +677,13 @@ class TVInfoTests(test.SickbeardTestDBCase):
                 _s_o = show_obj
             try:
                 assert None is not show_obj and None is not _s_o
-                _compare_helper(show_obj, _s_o)
+                self._compare_helper(show_obj, _s_o)
             except (BaseException, Exception) as e:
                 if not disable_content_creation and os.path.isfile(os.path.join(mock_data_dir, filename)):
                     _save_pickle_file(filename, show_obj)
                     _s_o = show_obj
                     assert None is not show_obj and None is not _s_o
-                    _compare_helper(show_obj, _s_o)
+                    self._compare_helper(show_obj, _s_o)
                 else:
                     raise e
 
@@ -697,14 +708,14 @@ class TVInfoTests(test.SickbeardTestDBCase):
             try:
                 assert None is not search_results and None is not _s_o
                 for _i, _r in enumerate(search_results):
-                    _compare_helper(_r, _s_o[_i])
+                    self._compare_helper(_r, _s_o[_i])
             except (BaseException, Exception) as e:
                 if not disable_content_creation and os.path.isfile(os.path.join(mock_data_dir, filename)):
                     _save_pickle_file(filename, search_results)
                     _s_o = search_results
                     assert None is not search_results and None is not _s_o
                     for _i, _r in enumerate(search_results):
-                        _compare_helper(_r, _s_o[_i])
+                        self._compare_helper(_r, _s_o[_i])
                 else:
                     raise e
 
@@ -729,14 +740,14 @@ class TVInfoTests(test.SickbeardTestDBCase):
             try:
                 assert None is not search_results and None is not _s_o
                 for _i, _r in enumerate(search_results):
-                    _compare_helper(_r, _s_o[_i])
+                    self._compare_helper(_r, _s_o[_i])
             except (BaseException, Exception) as e:
                 if not disable_content_creation and os.path.isfile(os.path.join(mock_data_dir, filename)):
                     _save_pickle_file(filename, search_results)
                     _s_o = search_results
                     assert None is not search_results and None is not _s_o
                     for _i, _r in enumerate(search_results):
-                        _compare_helper(_r, _s_o[_i])
+                        self._compare_helper(_r, _s_o[_i])
                 else:
                     raise e
 
@@ -751,7 +762,8 @@ class TVInfoTests(test.SickbeardTestDBCase):
                        ('get_recommended', {}), ('get_most_collected', {}), ('get_most_watched', {}),
                        ('get_most_played', {}), ('get_returning', {}), ('discover', {}), ('get_new_seasons', {}),
                        ('get_new_shows', {}), ('get_top_rated', {}), ('get_popular', {}), ('get_trending', {}),
-                       ('get_recommended_for_show', {}), ('get_similar', {})):
+                       ('get_recommended_for_show', {}), ('get_similar', {}), ('get_coming_soon', {}),
+                       ('get_trending', {}), ('get_watchlist', {'user_id': '64552276'})):
                 _method = getattr(t, _m[0], None)
                 # check if method is implemented in tvid source
                 if not _method or 'TVInfoBase' in _method.__qualname__:
@@ -762,6 +774,8 @@ class TVInfoTests(test.SickbeardTestDBCase):
                     print('testing %s: %s%s' % (sickgear.TVInfoAPI(_tvid).name, _m[0],
                                                 ('', ' with parameter: %s' % kw)[0 != len(kw)]))
                     results = _method(**kw)
+                    if isinstance(results, tuple):
+                        results = results[0]
                     filename = _make_filename('%s_%s_%s' % (
                         _tvid, ''.join('%s%s' % (_k, _v) for _k, _v in kw.items()), _m[0]), '.obj_data')
                     if os.path.isfile(os.path.join(mock_data_dir, filename)):
@@ -773,14 +787,14 @@ class TVInfoTests(test.SickbeardTestDBCase):
                     try:
                         assert None is not results and None is not _s_o
                         for _i, _r in enumerate(results):
-                            _compare_helper(_r, _s_o[_i])
+                            self._compare_helper(_r, _s_o[_i])
                     except (BaseException, Exception) as e:
                         if not disable_content_creation and os.path.isfile(os.path.join(mock_data_dir, filename)):
                             _save_pickle_file(filename, results)
                             _s_o = results
                             assert None is not results and None is not _s_o
                             for _i, _r in enumerate(results):
-                                _compare_helper(_r, _s_o[_i])
+                                self._compare_helper(_r, _s_o[_i])
                         else:
                             raise e
 

@@ -99,6 +99,7 @@ except ImportError as e:
     from lib.fuzzywuzzy import fuzz
 from lib.api_trakt import TraktAPI
 from lib.api_trakt.exceptions import TraktException, TraktAuthException
+from lib.api_imdb.imdb_exceptions import IMDbException
 from lib.tvinfo_base import TVInfoEpisode, RoleTypes
 from lib.tvinfo_base.base import tv_src_names
 from lib.tvinfo_base.exceptions import *
@@ -4739,8 +4740,8 @@ class AddShows(Home):
         if not list(filter(lambda tvid_prodid: helpers.find_show_by_id(tvid_prodid), ids.split(' '))):
             return self.new_show('|'.join(['', '', '', ' '.join([ids, show_name])]), use_show_name=True, is_anime=True)
 
-    @staticmethod
-    def watchlist_config(**kwargs):
+    @private_call
+    def watchlist_config(self, **kwargs):
 
         if not isinstance(sickgear.IMDB_ACCOUNTS, type([])):
             sickgear.IMDB_ACCOUNTS = list(sickgear.IMDB_ACCOUNTS)
@@ -4751,19 +4752,20 @@ class AddShows(Home):
             if not account_id:
                 return json_dumps({'result': 'Fail: Invalid IMDb ID'})
             acc_id = account_id[0]
-
-            url = 'https://www.imdb.com/user/ur%s/watchlist' % acc_id + \
-                  '?sort=date_added,desc&title_type=tvSeries,tvEpisode,tvMiniSeries&view=detail'
-            html = helpers.get_url(url, nocache=True)
-            if not html:
-                return json_dumps({'result': 'Fail: No list found with id: %s' % acc_id})
-            if 'id="unavailable"' in html or 'list is not public' in html or 'not enabled public view' in html:
-                return json_dumps({'result': 'Fail: List is not public with id: %s' % acc_id})
+            list_info = None
 
             try:
-                list_name = re.findall(r'(?i)og:title[^>]+?content[^"]+?"([^"]+?)\s+Watchlist\s*"',
-                                       html)[0].replace('\'s', '')
-                accounts[acc_id] = list_name or 'noname'
+                filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info = self._get_imdb_data(
+                    'watchlist', acc_id=acc_id)
+            except (BaseException, Exception):
+                error_msg = 'No items in watchlist.  Use the "Add to watchlist" button at the IMDb website'
+                logger.debug(error_msg)
+
+            if not list_info:
+                return json_dumps({'result': 'Fail: No list found with id: %s' % acc_id})
+
+            try:
+                accounts[acc_id] = list_info.get('username') or 'noname'
             except (BaseException, Exception):
                 return json_dumps({'result': 'Fail: No list found with id: %s' % acc_id})
 
@@ -4795,256 +4797,153 @@ class AddShows(Home):
         return json_dumps({'result': 'Success', 'accounts': sickgear.IMDB_ACCOUNTS})
 
     @private_call
-    @staticmethod
-    def parse_imdb_overview(tag):
-        paragraphs = tag.select('.dli-plot-container .ipc-html-content-inner-div')
-        filtered = []
-        for item in paragraphs:
-            if not (item.select('span.certificate') or item.select('span.genre') or
-                    item.select('span.runtime') or item.select('span.ghost')):
-                filtered.append(item.get_text().strip())
-        split_lines = [element.split('\n') for element in filtered]
-        filtered = []
-        least_lines = 10
-        for item_lines in split_lines:
-            if len(item_lines) < least_lines:
-                least_lines = len(item_lines)
-                filtered = [item_lines]
-            elif len(item_lines) == least_lines:
-                filtered.append(item_lines)
-        overview = ''
-        for item_lines in filtered:
-            text = ' '.join([item_lines.strip() for item_lines in item_lines]).strip()
-            if len(text) and (not overview or (len(text) > len(overview))):
-                overview = text
-        return overview
+    def _get_imdb_data(self, api_method, **kwargs):
 
-    @private_call
-    def parse_imdb(self, data, filtered, kwargs):
+        mode = kwargs.get('mode', '')
+        items, filtered, p_ref = ([], [], None)
+        end_cursor, total, list_info = None, 0, None
+        error_msg = None
+        tvid = TVINFO_IMDB
+        tvinfo_config = sickgear.TVInfoAPI(tvid).api_params.copy()
+        t = sickgear.TVInfoAPI(tvid).setup(**tvinfo_config)  # type: Union[TraktIndexer, TVInfoBase]
+        try:
+            imdb_func = getattr(t, f'get_{api_method}', None)  # type: callable
+            if not callable(imdb_func):
+                raise IMDbException(f'missing api_trakt lib func: ({api_method})')
 
-        oldest, newest, oldest_dt, newest_dt = None, None, 9999999, 0
-        show_list = (data or {}).get('list', {}).get('items', {})
-        idx_ids = dict(map(lambda so: (so.imdbid, (so.tvid, so.prodid)),
-                           filter(lambda _so: getattr(_so, 'imdbid', None), sickgear.showList)))
+            if 'new_seasons' == api_method:
+                items, end_cursor, total = t.get_new_seasons(**kwargs)
+            elif 'new_shows' == api_method:
+                items, end_cursor, total = t.get_new_shows(**kwargs)
+            elif 'popular' == api_method:
+                items, end_cursor, total = t.get_popular(**kwargs)
+            elif 'top_rated' == api_method:
+                items, end_cursor, total = t.get_top_rated(**kwargs)
+            elif 'coming_soon' == api_method:
+                items, end_cursor = t.get_coming_soon(**kwargs)
+            elif 'watchlist' == api_method and 'acc_id' in kwargs:
+                items, end_cursor, total, list_info = t.get_watchlist(kwargs['acc_id'], **kwargs)
+            elif 'person' == api_method:
+                items = []
+                p_item = t.get_person_tvshow_filmography(**kwargs)  # type: TVInfoPerson
+                if p_item:
+                    p_ref = f'{TVINFO_IMDB}:{p_item.id}'
+                    dup = {}  # type: Dict[int, TVInfoShow]
+                    for c in p_item.characters:  # type: TVInfoCharacter
+                        if c.ti_show.id not in dup:
+                            dup[c.ti_show.id] = c.ti_show
+                            items.append(c.ti_show)
+                    del dup
+        except IMDbException as e:
+            logger.warning(f'Could not connect to Imdb service: {ex(e)}')
+        except exceptions_helper.ConnectionSkipException as e:
+            logger.log('Skipping Imdb because of previous failure: %s' % ex(e))
+        except ValueError as e:
+            raise e
+        except (IndexError, KeyError):
+            pass
 
-        # list_id = (data or {}).get('list', {}).get('id', {})
-        for row in show_list:
-            row = data.get('titles', {}).get(row.get('const'))
-            if not row:
+        oldest, newest, oldest_dt, newest_dt, dedupe = None, None, 9999999, 0, []
+        use_networks = False
+        for cur_show_info in items:  # type: TVInfoShow
+            if cur_show_info.id in dedupe or not cur_show_info.seriesname:
                 continue
+            dedupe += [cur_show_info.id]
+            network_name = cur_show_info.network
+            if network_name:
+                use_networks = True
+            language = (cur_show_info.language or '').lower() or \
+                       ((cur_show_info.spoken_languages and cur_show_info.spoken_languages[0]) or '').lower()
+            country = (cur_show_info.network_country or '').lower() or \
+                      ((cur_show_info.origin_countries and cur_show_info.origin_countries[0]) or '').lower()
             try:
-                ids = dict(imdb=row.get('id', ''))
-                year, ended = 2 * [None]
-                if 2 == len(row.get('primary').get('year')):
-                    year, ended = row.get('primary').get('year')
-                ord_premiered = 0
-                started_past = False
-                if year:
-                    ord_premiered, str_premiered, started_past, oldest_dt, newest_dt, oldest, newest, _, _, _, _ \
-                        = self.sanitise_dates('01-01-%s' % year, oldest_dt, newest_dt, oldest, newest)
+                season = next(iter(cur_show_info))
+                if 1 == season and 'returning' == mode:
+                    # new shows and new seasons have season 1 shows, filter S1 from new seasons list
+                    continue
+                episode_info = cur_show_info[season][next(iter(cur_show_info[season]))]
+            except(BaseException, Exception):
+                episode_info = TVInfoEpisode()
 
-                overview = row.get('plot')
-                rating = row.get('ratings', {}).get('rating', 0)
-                voting = row.get('ratings', {}).get('votes', 0)
-                images = {}
-                img_uri = '%s' % row.get('poster', {}).get('url', '')
-                if img_uri and 'tv_series.gif' not in img_uri and 'nopicture' not in img_uri:
-                    scale = (lambda low1, high1: int((float(450) / high1) * low1))
-                    dims = [row.get('poster', {}).get('width', 0), row.get('poster', {}).get('height', 0)]
-                    s = [scale(x, int(max(dims))) for x in dims]
-                    img_uri = re.sub(r'(?im)(.*V1_?)(\..*?)$', r'\1UX%s_CR0,0,%s,%s_AL_\2'
-                                     % (s[0], s[0], s[1]), img_uri)
-                    images = dict(poster=dict(thumb='imagecache?path=browse/thumb/imdb&source=%s' % img_uri))
-                    sickgear.CACHE_IMAGE_URL_LIST.add_url(img_uri)
+            try:
+                ord_premiered, str_premiered, started_past, oldest_dt, newest_dt, oldest, newest, \
+                    ok_returning, ord_returning, str_returning, return_past \
+                    = self.sanitise_dates(cur_show_info.firstaired, oldest_dt, newest_dt, oldest, newest, episode_info)
+
+                img_uri = cur_show_info.poster_thumb
+                images = dict(poster=dict(thumb='imagecache?path=browse/thumb/imdb&source=%s' % img_uri))
+                sickgear.CACHE_IMAGE_URL_LIST.add_url(img_uri)
 
                 filtered.append(dict(
                     ord_premiered=ord_premiered,
-                    str_premiered=year or 'No year',
-                    ended_str=ended or '',
-                    started_past=started_past,  # air time not poss. 16.11.2015
-                    genres=', '.join(row.get('metadata', {}).get('genres', {})) or 'No genre yet',
-                    ids=ids,
-                    images='' if not img_uri else images,
-                    overview=self.clean_overview(overview),
-                    rating=int(helpers.try_float(rating) * 10),
-                    title=row.get('primary').get('title'),
-                    url_src_db='https://www.imdb.com/%s/' % row.get('primary').get('href').strip('/'),
-                    votes=helpers.try_int(voting, 'TBA')))
-
-                tvid, prodid = idx_ids.get(ids['imdb'], (None, None))
-                if tvid and tvid in [_tvid for _tvid in sickgear.TVInfoAPI().search_sources]:
-                    infosrc_slug, infosrc_url = (sickgear.TVInfoAPI(tvid).config[x] for x in ('slug', 'show_url'))
-                    filtered[-1]['ids'][infosrc_slug] = prodid
-                    filtered[-1]['url_' + infosrc_slug] = infosrc_url % prodid
-            except (AttributeError, TypeError, KeyError, IndexError):
-                pass
-
-        kwargs.update(dict(oldest=oldest, newest=newest))
-
-        return show_list and True or None
-
-    @private_call
-    def parse_imdb_html(self, html, filtered, kwargs):
-
-        img_size = re.compile(r'(?im)(V1[^XY]+([XY]))(\d+)(\D+)(\d+)(\D+)(\d+)(\D+)(\d+)(\D+)(\d+)(.*?)$')
-
-        with BS4Parser(html, features=['html5lib', 'permissive']) as soup:
-            show_list = soup.select('.detailed-list-view ')
-            shows = [] if not show_list else show_list[0].select('li')
-            oldest, newest, oldest_dt, newest_dt = None, None, 9999999, 0
-
-            for row in shows:
-                try:
-                    title = re.sub(r'\d+\.\s(.*)', r'\1', row.select('.ipc-title__text')[0].get_text(strip=True))
-                    url_path = re.sub(r'(.*?)(\?ref_=.*)?', r'\1', row.select('.ipc-title-link-wrapper')[0]['href'])
-                    ids = dict(imdb=helpers.parse_imdb_id(url_path))
-                    year, ended = 2 * [None]
-                    first_aired = row.select('.dli-title-metadata .dli-title-metadata-item')
-                    if len(first_aired):
-                        years = re.findall(r'.*?(\d{4})(?:.*?(\d{4}))?.*', first_aired[0].get_text(strip=True))
-                        year, ended = years and years[0] or 2 * [None]
-                    ord_premiered = 0
-                    started_past = False
-                    if year:
-                        ord_premiered, str_premiered, started_past, oldest_dt, newest_dt, oldest, newest, _, _, _, _ \
-                            = self.sanitise_dates('01-01-%s' % year, oldest_dt, newest_dt, oldest, newest)
-
-                    images = {}
-                    img = row.select('img.ipc-image')
-                    overview = self.parse_imdb_overview(row)
-                    rating = row.select_one('.ipc-rating-star').get_text()
-                    rating = rating and rating.split()[0] or ''
-                    try:
-                        voting = row.select_one('.ipc-rating-star--voteCount').get_text(strip=True).strip('()').lower()
-                        if voting.endswith('k'):
-                            voting = helpers.try_float(voting[:-1]) * 1000
-                        elif voting.endswith('m'):
-                            voting = helpers.try_float(voting[:-1]) * 1000000
-                    except (BaseException, Exception):
-                        voting = ''
-                    img_uri = None
-                    if len(img):
-                        img_uri = img[0].get('src')
-                        match = img_size.search(img_uri)
-                        if match and 'tv_series.gif' not in img_uri and 'nopicture' not in img_uri:
-                            scale = (lambda low1, high1: int((float(450) / high1) * low1))
-                            high = int(max([match.group(9), match.group(11)]))
-                            scaled = [scale(x, high) for x in
-                                      [(int(match.group(n)), high)[high == int(match.group(n))] for n in
-                                       (3, 5, 7, 9, 11)]]
-                            parts = [match.group(1), match.group(4), match.group(6), match.group(8), match.group(10),
-                                     match.group(12)]
-                            img_uri = img_uri.replace(match.group(), ''.join(
-                                [str(y) for x in map_none(parts, scaled) for y in x if None is not y]))
-                            images = dict(poster=dict(thumb='imagecache?path=browse/thumb/imdb&source=%s' % img_uri))
-                            sickgear.CACHE_IMAGE_URL_LIST.add_url(img_uri)
-
-                    filtered.append(dict(
-                        ord_premiered=ord_premiered,
-                        str_premiered=year or 'No year',
-                        ended_str=ended or '',
-                        started_past=started_past,  # air time not poss. 16.11.2015
-                        genres='',
-                        ids=ids,
-                        images='' if not img_uri else images,
-                        overview=self.clean_overview(overview),
-                        rating=0 if not len(rating) else int(helpers.try_float(rating) * 10),
-                        title=title,
-                        url_src_db='https://www.imdb.com/%s/' % url_path.strip('/'),
-                        votes=helpers.try_int(voting, 'TBA')))
-
-                    show_obj = helpers.find_show_by_id({TVINFO_IMDB: int(ids['imdb'].replace('tt', ''))},
-                                                       no_mapped_ids=False)
-                    for tvid in filter(lambda _tvid: _tvid == show_obj.tvid, sickgear.TVInfoAPI().search_sources):
-                        infosrc_slug, infosrc_url = (sickgear.TVInfoAPI(tvid).config[x] for x in
-                                                     ('slug', 'show_url'))
-                        filtered[-1]['ids'][infosrc_slug] = show_obj.prodid
-                        filtered[-1]['url_' + infosrc_slug] = infosrc_url % show_obj.prodid
-                except (AttributeError, TypeError, KeyError, IndexError):
-                    continue
-
-            kwargs.update(dict(oldest=oldest, newest=newest))
-
-        return show_list and True or None
-
-    def watchlist_imdb(self, **kwargs):
-
-        if 'add' == kwargs.get('action'):
-            return self.redirect('/config/general/#core-component-group2')
-
-        if kwargs.get('action') in ('delete', 'enable', 'disable'):
-            return self.watchlist_config(**kwargs)
-
-        browse_type = 'IMDb'
-
-        filtered = []
-        footnote = None
-        start_year, end_year = (dt_date.today().year - 10, dt_date.today().year + 1)
-        periods = [(start_year, end_year)] + [(x - 10, x) for x in range(start_year, start_year - 40, -10)]
-
-        accounts = dict(map_none(*[iter(sickgear.IMDB_ACCOUNTS)] * 2))
-        acc_id, list_name = (sickgear.IMDB_DEFAULT_LIST_ID, sickgear.IMDB_DEFAULT_LIST_NAME) if \
-            0 == helpers.try_int(kwargs.get('account')) or \
-            kwargs.get('account') not in accounts or \
-            accounts.get(kwargs.get('account'), '').startswith('(Off) ') else \
-            (kwargs.get('account'), accounts.get(kwargs.get('account')))
-
-        list_name += ('\'s', '')['your' == list_name.replace('(Off) ', '').lower()]
-
-        mode = 'watchlist-%s' % acc_id
-
-        url = 'https://www.imdb.com/user/ur%s/watchlist' % acc_id
-        url_ui = '?mode=detail&page=1&sort=date_added,desc&' \
-                 'title_type=tvSeries,tvEpisode,tvMiniSeries&ref_=wl_ref_typ'
-
-        html = helpers.get_url(url + url_ui, headers={'Accept-Language': 'en-US'},
-                               proxy_browser=True, url_solver=sickgear.FLARESOLVERR_HOST)
-        if html:
-            show_list_found = None
-            try:
-                data = json_loads((re.findall(r'(?im)IMDb.*?Initial.*?\.push\((.*)\).*?$', html) or ['{}'])[0])
-                show_list_found = self.parse_imdb(data, filtered, kwargs)
+                    str_premiered=str_premiered,
+                    ord_returning=ord_returning,
+                    str_returning=str_returning,
+                    started_past=started_past,  # air time not yet available 16.11.2015
+                    return_past=return_past,
+                    episode_number=episode_info.episodenumber,
+                    episode_overview=self.clean_overview(episode_info),
+                    episode_season=getattr(episode_info.season, 'number', 1),
+                    genres=(', '.join(['%s' % v for v in cur_show_info.genre_list])),
+                    ids=cur_show_info.ids.__dict__,
+                    images=images,
+                    network=network_name,
+                    overview=self.clean_overview(cur_show_info),
+                    rating=0 < (cur_show_info.rating or 0) and
+                           ('%.2f' % (cur_show_info.rating * 10)).replace('.00', '') or 0,
+                    title=(cur_show_info.seriesname or '').strip(),
+                    language=language,
+                    language_img=sickgear.MEMCACHE_FLAG_IMAGES.get(language, False),
+                    country=country,
+                    country_img=sickgear.MEMCACHE_FLAG_IMAGES.get(country, False),
+                    url_src_db=f'https://www.imdb.com/title/{cur_show_info.imdb_id}',
+                    votes=cur_show_info.vote_count or '0'
+                ))
+                if p_ref:
+                    p_chars = self._make_char_person_list(cur_show_info)
+                    tag_classes = ' '.join({('tag-acting', 'tag-self')[_s[4]] for _s in p_chars} or [])
+                    filtered[-1].update(dict(
+                        p_name=p_item.name,
+                        p_ref=p_ref,
+                        tag_classes=tag_classes,
+                        p_chars=p_chars
+                    ))
             except (BaseException, Exception):
                 pass
-            if not show_list_found:
-                show_list_found = self.parse_imdb_html(html, filtered, kwargs)
-            kwargs.update(dict(start_year=start_year))
 
-            if len(filtered):
-                footnote = ('Note; Some images on this page may be cropped at source: ' +
-                            '<a target="_blank" href="%s">%s watchlist at IMDb</a>' % (
-                                helpers.anon_url(url + url_ui), list_name))
-            elif None is not show_list_found or (None is show_list_found and list_name in html):
-                kwargs['show_header'] = True
-                kwargs['error_msg'] = 'No TV titles in the <a target="_blank" href="%s">%s watchlist at IMDb</a>' % (
-                    helpers.anon_url(url + url_ui), list_name)
-
-        kwargs.update(dict(footnote=footnote, mode='watchlist-%s' % acc_id, periods=periods))
-
-        if mode:
-            sickgear.IMDB_MRU = mode
-            sickgear.save_config()
-
-        return self.browse_shows(browse_type, '%s IMDb Watchlist' % list_name, filtered, **kwargs)
+        return filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info
 
     def imdb_default(self, **kwargs):
-        if 'popular-' in sickgear.IMDB_MRU:
-            kwargs.update(dict(period=sickgear.IMDB_MRU.split('-')[1]))
-            return self.popular_imdb(**kwargs)
-        if 'watchlist-' in sickgear.IMDB_MRU:
-            kwargs.update(dict(account=sickgear.IMDB_MRU.split('-')[1]))
-            return self.watchlist_imdb(**kwargs)
-        method = getattr(self, sickgear.IMDB_MRU, None)
-        if not callable(method):
-            return self.popular_imdb(**kwargs)
-        return method(**kwargs)
+        if isinstance(sickgear.IMDB_MRU, str):
+            method = sickgear.IMDB_MRU.split('-')
+            if method[0] in ('popular', 'top_rated', 'new_shows', 'new_seasons', 'coming_soon', 'watchlist'):
+                kwargs['api_method'] = method[0]
+                if 1 < len(method):
+                    if 'watchlist' == method[0]:
+                        kwargs['account'] = method[1]
+                    else:
+                        kwargs['period'] = method[1]
+                return self.browse_imdb(**kwargs)
+        kwargs['api_method'] = 'popular'
+        return self.browse_imdb(**kwargs)
 
-    def popular_imdb(self, **kwargs):
+    def browse_imdb(self, api_method=None, browse_title=None, **kwargs):
+
+        if is_watchlist := 'watchlist' == api_method:
+            if 'add' == kwargs.get('action'):
+                return self.redirect('/config/general/#core-component-group2')
+
+            if kwargs.get('action') in ('delete', 'enable', 'disable'):
+                return self.watchlist_config(**kwargs)
+
+        if api_method not in ('popular', 'top_rated', 'new_shows', 'new_seasons', 'watchlist', 'coming_soon', 'person'):
+            return self.set_status(404)
 
         browse_type = 'IMDb'
 
         filtered = []
-        footnote = None
+        footnote = kwargs.get('footnote')
+        end_cursor, total, list_info = None, 0, None
         start_year, end_year = (dt_date.today().year - 10, dt_date.today().year + 1)
         periods = [(start_year, end_year)] + [(x - 10, x) for x in range(start_year, start_year - 40, -10)]
 
@@ -5053,42 +4952,78 @@ class AddShows(Home):
         if 1900 < start_year_in < 2050 and 2050 > end_year_in > 1900:
             start_year, end_year = (start_year_in, end_year_in)
 
-        mode = 'popular-%s,%s' % (start_year, end_year)
+        mode = api_method
 
-        page = 'more' in kwargs and '51' or ''
-        if page:
-            mode += '-more'
-        url = 'https://www.imdb.com/search/title?at=0&sort=moviemeter&' \
-              'title_type=tvSeries,tvEpisode,tvMiniSeries&year=%s,%s&start=%s' % (start_year, end_year, page)
-        html = helpers.get_url(url, headers={'Accept-Language': 'en-US'},
-                               proxy_browser=True, url_solver=sickgear.FLARESOLVERR_HOST)
-        if html:
-            show_list_found = None
+        api_kw = {}
+        extra_str = ''
+        if api_method in ('popular', 'top_rated'):
+            mode += f'-{start_year},{end_year}'
+            extra_str = f' {start_year}-{end_year}'
+            api_kw.update({'start_date': start_year, 'end_date': end_year})
+        elif 'person' == api_method:
+            api_kw['p_id'] = sg_helpers.try_int(kwargs.get('p_id'), None)
+
+        if is_watchlist:
+            accounts = dict(map_none(*[iter(sickgear.IMDB_ACCOUNTS)] * 2))
+            acc_id, list_name = (sickgear.IMDB_DEFAULT_LIST_ID, sickgear.IMDB_DEFAULT_LIST_NAME) if \
+                0 == helpers.try_int(kwargs.get('account')) or \
+                kwargs.get('account') not in accounts or \
+                accounts.get(kwargs.get('account'), '').startswith('(Off) ') else \
+                (kwargs.get('account'), accounts.get(kwargs.get('account')))
+
+            api_kw['acc_id'] = acc_id
+            list_name += ('\'s', '')['your' == list_name.replace('(Off) ', '').lower()]
+    
+            mode = f'watchlist-{acc_id}'
+
+        try:
+            filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info = self._get_imdb_data(
+                api_method, **api_kw)
+        except (BaseException, Exception):
+            error_msg = 'No items in watchlist.  Use the "Add to watchlist" button at the Trakt website'
+            if not browse_title:
+                browse_title = f'{api_method.replace("_", " ").title()}{extra_str} at IMDb'
+            return self.browse_shows(browse_type, browse_title, filtered, error_msg=error_msg, show_header=1, **kwargs)
+
+        if list_info:
+            extra_str = f' - {list_info["username"]}'
+        if not browse_title:
+            browse_title = f'{api_method.replace("_", " ").title()}{extra_str} at IMDb'
+        if list_info:
             try:
-                data = json_loads((re.findall(r'(?im)IMDb.*?Initial.*?\.push\((.*)\).*?$', html) or ['{}'])[0])
-                show_list_found = self.parse_imdb(data, filtered, kwargs)
+                s_d = dateutil.parser.parse(list_info["createdDate"])
+                browse_title += (f' <div class="grey-text" style="clear:left;margin-left:2px;font-size:0.85em">'
+                                 f'created: {SGDatetime.sbfdatetime(s_d.astimezone(network_timezones.SG_TIMEZONE))}')
+                if list_info["createdDate"] != list_info["lastModifiedDate"]:
+                    e_d = dateutil.parser.parse(list_info["lastModifiedDate"])
+                    browse_title += f', updated: {SGDatetime.sbfdatetime(e_d.astimezone(network_timezones.SG_TIMEZONE))}'
+                browse_title += '</div>'
             except (BaseException, Exception):
                 pass
-            if not show_list_found:
-                self.parse_imdb_html(html, filtered, kwargs)
-            kwargs.update(dict(mode=mode, periods=periods))
 
-            if len(filtered):
-                footnote = ('Note; Some images on this page may be cropped at source: ' +
-                            '<a target="_blank" href="%s">IMDb</a>' % helpers.anon_url(url))
+        kwargs.update(dict(mode=mode, periods=periods,oldest=oldest, newest=newest, error_msg=error_msg,
+                           use_networks=use_networks))
 
-        kwargs.update(dict(footnote=footnote))
-
-        if mode:
+        if mode != sickgear.IMDB_MRU and 'person' != mode:
             sickgear.IMDB_MRU = mode
             sickgear.save_config()
-
-        return self.browse_shows(browse_type, 'Most Popular IMDb TV', filtered, **kwargs)
+        return self.browse_shows(browse_type, browse_title, filtered, **kwargs)
 
     def info_imdb(self, ids, show_name):
-
-        return self.new_show('|'.join(['', '', '', helpers.parse_imdb_id(ids) and ' '.join([ids, show_name])]),
+        if isinstance(ids, str) and 'tt' in ids:
+            ids = helpers.parse_imdb_id(ids)
+        return self.new_show('|'.join(['', '', '', f'{ids}' and ' '.join([ids, show_name])]),
                              use_show_name=True)
+
+    def imdb_person(self, person_imdb_id=None):
+
+        return self.browse_imdb(
+            api_method='person',
+            browse_title='Person at IMDb',
+            mode='person',
+            footnote='Note; Expect default placeholder images in this list',
+            p_id=person_imdb_id
+        )
 
     def mc_default(self):
         method = getattr(self, sickgear.MC_MRU, None)
@@ -5428,8 +5363,8 @@ class AddShows(Home):
 
     @staticmethod
     def _make_char_person_list(cur_show_info):
-        # type: (TVInfoShow) -> List[Tuple[str, int, str, int]]
-        return [(ch.name.replace('"', "'"), r_t, RoleTypes.reverse[r_t], ch.episode_count)
+        # type: (TVInfoShow) -> List[Tuple[str, int, str, int, bool]]
+        return [(ch.name.replace('"', "'"), r_t, RoleTypes.reverse[r_t], ch.episode_count, ch.plays_self)
                 for r_t in cur_show_info.cast or [] for ch in cur_show_info.cast[r_t] if ch.name]
 
     @private_call
@@ -5804,7 +5739,7 @@ class AddShows(Home):
                            ('%.2f' % (cur_show_info.rating * 10)).replace('.00', '') or 0,
                     title=(cur_show_info.seriesname or '').strip(),
                     language=language,
-                    language_img=not language_en and sickgear.MEMCACHE_FLAG_IMAGES.get(language, False),
+                    language_img=sickgear.MEMCACHE_FLAG_IMAGES.get(language, False),
                     country=country,
                     country_img=sickgear.MEMCACHE_FLAG_IMAGES.get(country, False),
                     url_src_db='https://trakt.tv/shows/%s' % cur_show_info.slug,

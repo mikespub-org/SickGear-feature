@@ -5226,5 +5226,18 @@ fancybox.css Overrides
 	 -moz-border-radius:10px; -webkit-border-radius:10px; border-radius:10px
 }
 .fancybox-container .fancybox-progress{
-	background-color:#181818
+	background-color:#20c997;
+}
+
+.btn-toggle{
+    padding-left: 10px;
+    padding-right: 15px;
+    margin: 3px;
+    border-radius: 25px !important;
+}
+.btn-on{
+    background: darkgreen;
+}
+.btn-off{
+    background: darkred;
 }

@@ -3081,13 +3081,18 @@ class TVShow(TVShowBase):
 
         :param imdb_id: imdb id
         """
-        page_url = 'https://www.imdb.com/title/{0}/'.format(imdb_id)
         try:
-            response = requests.head(page_url, allow_redirects=True)
-            if response.history and any(_h for _h in response.history if 301 == _h.status_code):
-                return helpers.parse_imdb_id(response.url)
+            if (actual_id := imdbpie.Imdb().get_real_title_id(imdb_id)) != imdb_id and actual_id:
+                return actual_id
         except (BaseException, Exception):
             pass
+        # page_url = 'https://www.imdb.com/title/{0}/'.format(imdb_id)
+        # try:
+        #     response = requests.head(page_url, allow_redirects=True)
+        #     if response.history and any(_h for _h in response.history if 301 == _h.status_code):
+        #         return helpers.parse_imdb_id(response.url)
+        # except (BaseException, Exception):
+        #     pass
 
     def _get_imdb_info(self, retry=False):
         # type: (bool) -> None

@@ -765,7 +765,7 @@ def init_stage_1(console_logging):
     global USE_TRAKT, TRAKT_CONNECTED_ACCOUNT, TRAKT_ACCOUNTS, TRAKT_MRU, TRAKT_VERIFY, \
         TRAKT_USE_WATCHLIST, TRAKT_REMOVE_WATCHLIST, TRAKT_TIMEOUT, TRAKT_METHOD_ADD, TRAKT_START_PAUSED, \
         TRAKT_SYNC, TRAKT_DEFAULT_INDEXER, TRAKT_REMOVE_SERIESLIST, TRAKT_UPDATE_COLLECTION, \
-        MC_MRU, NE_MRU, TMDB_MRU, TVC_MRU, TVDB_MRU, TVM_MRU, \
+        IMDB_MRU, MC_MRU, NE_MRU, TMDB_MRU, TVC_MRU, TVDB_MRU, TVM_MRU, \
         USE_SLACK, SLACK_NOTIFY_ONSNATCH, SLACK_NOTIFY_ONDOWNLOAD, SLACK_NOTIFY_ONSUBTITLEDOWNLOAD, \
         SLACK_CHANNEL, SLACK_AS_AUTHED, SLACK_BOT_NAME, SLACK_ICON_URL, SLACK_ACCESS_TOKEN, \
         USE_DISCORD, DISCORD_NOTIFY_ONSNATCH, DISCORD_NOTIFY_ONDOWNLOAD, \
@@ -1194,6 +1194,7 @@ def init_stage_1(console_logging):
     TRAKT_ACCOUNTS = TraktAPI.read_config_string(check_setting_str(CFG, 'Trakt', 'trakt_accounts', ''))
     TRAKT_MRU = check_setting_str(CFG, 'Trakt', 'trakt_mru', '')
 
+    IMDB_MRU = check_setting_str(CFG, 'IMDB', 'imdb_mru', '')
     MC_MRU = check_setting_str(CFG, 'Metacritic', 'mc_mru', '')
     NE_MRU = check_setting_str(CFG, 'NextEpisode', 'ne_mru', '')
     TMDB_MRU = check_setting_str(CFG, 'TMDB', 'tmdb_mru', '')
@@ -2271,6 +2272,9 @@ def _save_config(force=False, **kwargs):
         ]),
         ('NextEpisode', [
             ('mru', NE_MRU)
+        ]),
+        ('IMDB', [
+            ('mru', IMDB_MRU)
         ]),
         ('TMDB', [
             ('mru', TMDB_MRU)
