@@ -546,11 +546,13 @@ $(function() {
 		</div>
 
 <h4 style="float:left;margin:0 0 0 2px">$browse_title</h4>
-    #if $kwargs and $kwargs.get('oldest')
 <div class="grey-text" style="clear:left;margin-left:2px;font-size:0.85em">
+    #if $kwargs and $kwargs.get('oldest')
 	First aired from <span id="oldest" data-oldest-dt="$kwargs.get('oldest_dt', '')">$kwargs['oldest']</span> until <span id="newest" data-newest-dt="$kwargs.get('newest_dt', '')">$kwargs['newest']</span>
-</div>
+    #else
+	&nbsp;
     #end if
+</div>
 
     #if $p_ref
 	<div id="person">
