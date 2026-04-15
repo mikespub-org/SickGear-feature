@@ -900,8 +900,9 @@ class TvdbAPIv4(TVInfoBase):
                         page_size = (links and resp.get('links', {}).get('page_size')) or 500
                         eps_count += (len(resp['data']['episodes'])) or 0
                         full_page = page_size <= len(resp['data']['episodes'])
-                        more = (links and None is not (page := self._next_page(resp, page))) or (
+                        more = (links and None is not self._next_page(resp, page)) or (
                                 links and isinstance(total_items, integer_types) and eps_count < total_items)
+                        page += 1
                         alt_page = (full_page and not links)
                         if not alt_page:
                             self._set_episodes(ti_show, resp, abs_ep_nums, alt_ep_nums, alt_ep_types)
