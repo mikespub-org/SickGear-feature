@@ -1,6 +1,7 @@
 ﻿### 3.36.0 (2026-xx-xx xx:xx:00 UTC)
 
 * Change update actions and optimise unittest
+* Update certifi 2026.02.25 to 2026.04.22
 * Update chardet packages 7.3.0 (00667a4) to 7.4.1 (9079efc)
 * Update filelock 3.20.1 (377f622) to 3.25.2 (5b9872c)
 * Update packaging 26.0 (3b77a26) to 26.1 (c1a88a3)
