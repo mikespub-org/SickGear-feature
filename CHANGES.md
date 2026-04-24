@@ -6,6 +6,7 @@
 * Update filelock 3.20.1 (377f622) to 3.25.2 (5b9872c)
 * Update packaging 26.0 (3b77a26) to 26.1 (c1a88a3)
 * Update Requests library 2.33.0 (bc04dfd) to 2.33.1 (111d2b7)
+* Update browser_ua from user-agents 2.1.38 (a78437e)
 * Update SimpleJSON 3.20.2 (10e5aaf) to 4.0.0 (1608c05)
 * Fix parsing same named show with different appended years
 * Fix tvdb_api_v4 pagination
