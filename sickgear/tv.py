@@ -4325,7 +4325,7 @@ class TVEpisode(TVEpisodeBase):
             else:
                 ep_info = cached_season[episode]  # type: TVInfoEpisode
 
-        except (BaseTVinfoEpisodenotfound, BaseTVinfoSeasonnotfound):
+        except (BaseTVinfoEpisodenotfound, BaseTVinfoSeasonnotfound, KeyError):
             logger.debug(f'Unable to find the episode on {sickgear.TVInfoAPI(self.tvid).name}...'
                          f' has it been removed? Should it be deleted from the db?')
             # if no longer on the Indexers, but once was, then delete it from the DB
