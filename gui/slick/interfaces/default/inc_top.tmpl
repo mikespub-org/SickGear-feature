@@ -204,8 +204,8 @@
 #set $imdb_mode = $imdb_modes.get($imdb_mru, 'popular decades, watchlists...')
 								<li><a href="$sbRoot/add-shows/imdb-default/" tabindex="$tab#set $tab += 1#"><i class="sgicon-imdb"></i>IMDb Cards
 									<div class="menu-item-desc opacity60">$imdb_mode$period...</div></a></li>
-#set $mc_modes = dict(mc_90days='last 90 days', mc_year='by year', mc_discussed='most discussed', mc_shared='most shared')
-#set $mc_mode = $mc_modes.get($sg_var('MC_MRU'), 'new seasons')
+#set $mc_modes = dict(mc_newshows='new shows', mc_coming='coming soon', mc_atv='atv network', mc_nf='nf network', mc_para='para network', mc_metascore='metascore', mc_userscore='userscore')
+#set $mc_mode = $mc_modes.get($sg_var('MC_MRU'), 'new shows, coming soon, or by rating')
 								<li><a href="$sbRoot/add-shows/mc-default/" tabindex="$tab#set $tab += 1#"><i class="sgicon-metac"></i>Metacritic Cards
 									<div class="menu-item-desc opacity60">$mc_mode...</div></a></li>
 #set $tvc_modes = dict(tvc_newshows='new shows', tvc_returning='returning', tvc_latest='latest')

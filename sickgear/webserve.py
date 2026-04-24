@@ -5093,28 +5093,48 @@ class AddShows(Home):
     def mc_default(self):
         method = getattr(self, sickgear.MC_MRU, None)
         if not callable(method):
-            return self.mc_newseries()
+            return self.mc_newshows()
         return method()
 
-    def mc_newseries(self, **kwargs):
+    def mc_newshows(self, **kwargs):
+        # newest
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=24&offset=0&sortBy=-releaseDate
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50&offset=0&sortBy=-releaseDate&releaseYearMin=2026&releaseYearMax=2026
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50&offset=50&sortBy=-releaseDate&releaseYearMin=2026&releaseYearMax=2026
         return self.browse_mc(
-            '/all/all/all-time/new/', 'New Series at Metacritic', mode='newseries', **kwargs)
+            'releaseDate', 'New Shows at Metacritic', mode='newshows', **kwargs)
 
-    def mc_explore(self, **kwargs):
+    def mc_coming(self, **kwargs):
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50&offset=0&sortBy=-releaseDate&releaseYearMin=2026&releaseYearMax=2026&releaseType=coming-soon
         return self.browse_mc(
-            '/', 'Explore at Metacritic', mode='explore', **kwargs)
+            'releaseDate&releaseType=coming-soon', 'Coming soon at Metacritic', mode='coming', **kwargs)
 
-    def mc_popular(self, **kwargs):
+    def mc_atv(self, **kwargs):
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50&offset=0&sortBy=-releaseDate&streamingNetworkIds=3028
         return self.browse_mc(
-            '/all/all/all-time/popular/', 'Popular at Metacritic', mode='popular', **kwargs)
+            'releaseDate&streamingNetworkIds=3028', 'ATV+ at Metacritic', mode='atv', **kwargs)
+
+    def mc_nf(self, **kwargs):
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50&offset=0&sortBy=-releaseDate&streamingNetworkIds=3028
+        return self.browse_mc(
+            'releaseDate&streamingNetworkIds=1943', 'NF at Metacritic', mode='nf', **kwargs)
+
+    def mc_para(self, **kwargs):
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50&offset=0&sortBy=-releaseDate&streamingNetworkIds=3028
+        return self.browse_mc(
+            'releaseDate&streamingNetworkIds=2450', 'Para+ at Metacritic', mode='para', **kwargs)
 
     def mc_metascore(self, **kwargs):
+        # metascore
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50&offset=0&sortBy=-metaScore&releaseYearMin=2026&releaseYearMax=2026
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50&offset=50&sortBy=-metaScore&releaseYearMin=2026&releaseYearMax=2026
         return self.browse_mc(
-            '/all/all/all-time/metascore/', 'By metascore at Metacritic', mode='metascore', **kwargs)
+            'metaScore', 'By metascore at Metacritic', mode='metascore', **kwargs)
 
     def mc_userscore(self, **kwargs):
+        # https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=24&offset=48&sortBy=-userScore&releaseYearMin=2025&releaseYearMax=2026
         return self.browse_mc(
-            '/all/all/all-time/userscore/', 'By userscore at Metacritic', mode='userscore', **kwargs)
+            'userScore', 'By userscore at Metacritic', mode='userscore', **kwargs)
 
     def browse_mc(self, url_path, browse_title, **kwargs):
 
@@ -5122,135 +5142,97 @@ class AddShows(Home):
 
         footnote = None
 
-        page = 'more' in kwargs and '&page=2' or ''
+        page = 'more' in kwargs and 50 or 0
         if page:
             kwargs['mode'] += '-more'
 
         filtered = []
 
         import browser_ua
-        this_year = dt_date.today().strftime('%Y')
-        url = f'https://www.metacritic.com/browse/tv{url_path}' \
-              f'?releaseYearMin={this_year}&releaseYearMax={this_year}{page}'
+        from json_helper import json_loads
+
+        url = f'https://backend.metacritic.com/finder/metacritic/web?mcoTypeId=1&limit=50'
+        if kwargs['mode'].replace('-more', '') not in ('atv', 'nf', 'para'):
+            max_year = dt_date.today().strftime('%Y')
+            min_year = max_year if 'user' not in url_path else int(max_year) - 1
+            url += '&releaseYearMin={min_year}&releaseYearMax={max_year}'.format(min_year=min_year, max_year=max_year)
+        url += f'&sortBy=-{url_path}&offset={page}'
+
         html = helpers.get_url(url, headers={'User-Agent': browser_ua.get_ua()})
         if html:
-            items_data = []
-            try:
-                items_html = html[6 + html.index('items:[{awards'):]
-                items_bufr = re.split(r'\btype:"', items_html)
-                for cur_item in items_bufr[1:]:  # iterates from the first true type:"show" record
-                    if not cur_item.startswith('show'):
-                        break
-                    items_data.append(f'type:"{cur_item}')
-                del items_html
-                del items_bufr
-            except (BaseException, Exception):
-                pass
+            data = json_loads(html)
+            items_data = data.get('data').get('items')
 
             try:
-                if re.findall('(c-navigationPagination_item--next)', html)[0]:
+                if data.get('links', {}).get('next').get('href'):  # test paginate for "next":{"href":null,"meta":null}
                     kwargs.update(dict(more=1))
             except (BaseException, Exception):
                 pass
 
-            with BS4Parser(html, parse_only=dict(div={'class': (lambda at: at and 'c-productListings' in at)})) as soup:
-                items = [] if not soup else soup.select('.c-finderProductCard_container')
-                oldest, newest, oldest_dt, newest_dt = None, None, 9999999, 0
-                rc_title = re.compile(r'(?i)(?::\s*season\s*\d+|\s*\((?:19|20)\d{2}\))?$')
-                rc_id = re.compile(r'(?i)[^A-Z0-9]')
-                rc_img = re.compile(r'(.*?)(/resize/[^?]+)?(/catalog/provider.*?\.(?:jpg|png)).*')
-                rc_season = re.compile(r'(\d+)(?:[.]\d*?)?$')
-                for cur_idx, cur_row in enumerate(items):
-                    try:
-                        title = rc_title.sub(
-                            '', cur_row.find('div', class_='c-finderProductCard_title').get('data-title').strip())
+            rc_title = re.compile(r'(?i)(?::\s*season\s*\d+|\s*\((?:19|20)\d{2}\))?$')
+            # rc_id = re.compile(r'(?i)[^A-Z0-9]')
+            # rc_img = re.compile(r'(.*?)(/resize/[^?]+)?(/catalog/provider.*?\.(?:jpg|png)).*')
+            # rc_season = re.compile(r'(\d+)(?:[.]\d*?)?$')
 
-                        # 2023-09-23 deprecated id at site, using title as id
-                        # ids = dict(custom=cur_row.select('input[type="checkbox"]')[0].attrs['id'], name='mc')
-                        ids = dict(custom=rc_id.sub('', title), name='mc')
+            oldest, newest, oldest_dt, newest_dt = None, None, 9999999, 0
 
-                        url_path = cur_row['href'].strip()
-                        if not url_path.startswith('/tv/'):
-                            continue
+            for item in items_data:
+                if not item["slug"]:
+                    continue
 
-                        images = None
-                        img_src = (cur_row.find('img') or {}).get('src', '').strip()
-                        if not img_src and items_data: # items_data is the sites' image method from 2024
-                            buffer_idx = None
-                            if title in items_data[cur_idx]:
-                                buffer_idx = cur_idx
-                            else:
-                                for cur_data_idx, cur_item in enumerate(items_data):
-                                    if title in cur_item:
-                                        buffer_idx = cur_data_idx
-                                        break
-                            if None is not buffer_idx:
-                                try:
-                                    img_rel = re.findall(
-                                        r'bucketPath[^:]*?:[^"]*?"([^"]+?)"',
-                                        items_data[buffer_idx], re.I)[0].encode().decode('unicode-escape')
-                                    img_src = f'https://www.metacritic.com/a/img/catalog/{img_rel.strip("/")}'
-                                except (BaseException, Exception):
-                                    pass
+                title = rc_title.sub('', item.get('title').strip())
 
-                        if img_src:
-                            img_uri = rc_img.sub(r'\1\3', img_src)
-                            images = dict(poster=dict(thumb=f'imagecache?path=browse/thumb/metac&source={img_uri}'))
-                            sickgear.CACHE_IMAGE_URL_LIST.add_url(img_uri)
+                try:
+                    ids = dict(custom=item.get('id'), name='mc')
 
-                        ord_premiered = 0
-                        str_premiered = ''
-                        started_past = False
+                    url_path = item["slug"].strip()
 
-                        dated = None
-                        rating = None
-                        rating_user = None # 2023-09-23 deprecated at site
-                        meta_tags = cur_row.find_all('div', class_='c-finderProductCard_meta')
-                        for tag in meta_tags:
-                            meta_tag = tag.find('span', class_='u-text-uppercase')
-                            if not dated and meta_tag:
-                                dated = meta_tag
-                                try:  # a bad date caused a sanitise exception here
-                                    ord_premiered, str_premiered, started_past, oldest_dt, newest_dt, oldest, newest, \
-                                        _, _, _, _ = self.sanitise_dates(dated.get_text().strip(), oldest_dt, newest_dt,
-                                                                         oldest, newest)
-                                except (BaseException, Exception):
-                                    pass
+                    images = None
+                    img_src = (item.get('image') or {}).get('bucketPath', '').strip()
+                    if img_src:
+                        img_src = f'https://www.metacritic.com/a/img/catalog/{img_src.strip("/")}'
 
-                            meta_tag = tag.find('div', class_='c-siteReviewScore')
-                            if not rating and meta_tag:
-                                rating = meta_tag
-                                rating = rating.get_text().strip()
+                        images = dict(poster=dict(thumb=f'imagecache?path=browse/thumb/metac&source={img_src}'))
+                        sickgear.CACHE_IMAGE_URL_LIST.add_url(img_src)
 
-                            if dated and rating:
-                                break
+                    ord_premiered = 0
+                    str_premiered = ''
+                    started_past = False
 
-                        overview = cur_row.find('div', class_='c-finderProductCard_description')
-                        if overview:
-                            overview = overview.get_text()
+                    try:  # a bad date caused a sanitise exception here
+                        ord_premiered, str_premiered, started_past, oldest_dt, newest_dt, oldest, newest, \
+                            _, _, _, _ = self.sanitise_dates(item.get('releaseDate').strip(), oldest_dt, newest_dt,
+                                                             oldest, newest)
+                    except (BaseException, Exception):
+                        pass
 
-                        try:
-                            season = rc_season.findall(url_path)[0]
-                        except(BaseException, Exception):
-                            season = -1
+                    genres = ', '.join(sorted(x.get('name')
+                                              for x in filter(lambda _i: _i.get('name') or '', item.get('genres') or [])
+                                              if x))
 
-                        filtered.append(dict(
-                            ord_premiered=ord_premiered,
-                            str_premiered=str_premiered,
-                            started_past=started_past,
-                            episode_season=int(season),
-                            genres='',
-                            ids=ids,
-                            images=images or '',
-                            overview=self.clean_overview(overview),
-                            rating=0 if not rating else rating or 'TBD',
-                            rating_user='tbd' if not rating_user else int(helpers.try_float(rating_user) * 10) or 'tbd',
-                            title=title,
-                            url_src_db=f'https://www.metacritic.com/{url_path.strip("/")}/',
-                            votes=None))
+                    overview = item.get('description') or ''
 
-                    except (AttributeError, IndexError, KeyError, TypeError):
-                        continue
+                    if 'userscore' not in kwargs['mode']:
+                        rating = helpers.try_int((item.get('criticScoreSummary') or {}).get('score'))
+                    else:
+                        rating = int(helpers.try_float((item.get('userScore') or {}).get('score')) * 10)
+
+                    filtered.append(dict(
+                        ord_premiered=ord_premiered,
+                        str_premiered=str_premiered,
+                        started_past=started_past,
+                        episode_season=-1,
+                        genres=genres or 'No genre yet',
+                        ids=ids,
+                        images=images or '',
+                        overview=self.clean_overview(overview),
+                        rating=0 if not rating else rating or 'TBD',
+                        title=title,
+                        url_src_db=f'https://www.metacritic.com/tv/{url_path.strip("/")}/',
+                        votes=None))
+
+                except (AttributeError, IndexError, KeyError, TypeError):
+                    continue
 
                 kwargs.update(dict(oldest=oldest, newest=newest))
 
@@ -6296,8 +6278,8 @@ class AddShows(Home):
         if text:
             result = helpers.xhtml_escape(re.sub(r'[\r\n]+', ' ', text[:250:])).strip('*').strip()
             result = re.sub(r'([!?.])(?=\w)', r'\1 ', result)
-            result = re.sub(r'([,.!][^,.!]*?)$', '...', result)
-            return result.replace('.....', '...')
+            result = re.sub(r'([,.!][^,.!]{0,6})$', '', result + '.') + '...'
+            return result.replace('.....', '...').replace('....', '...')
         return 'No overview yet'
 
     def tvi_get_showinfo(self, tvid_prodid=None, oldest_dt=9999999, newest_dt=0):

@@ -490,9 +490,11 @@ $(function() {
             #end if
         #elif 'Metacritic' == $browse_type
 		<optgroup label="Metacritic">
-			<option value="mc_newseries"#echo ('', selected)['newseries' == $mode]#>New seasons</option>
-			<option value="mc_explore"#echo ('', selected)['explore' == $mode]#>Explore</option>
-			<option value="mc_popular"#echo ('', selected)['popular' == $mode]#>Popular</option>
+			<option value="mc_newshows"#echo ('', selected)['newshows' == $mode]#>New shows</option>
+			<option value="mc_coming"#echo ('', selected)['coming' == $mode]#>Coming soon</option>
+			<option value="mc_atv"#echo ('', selected)['atv' == $mode]#>ATV+</option>
+			<option value="mc_nf"#echo ('', selected)['nf' == $mode]#>NF</option>
+			<option value="mc_para"#echo ('', selected)['para' == $mode]#>Para+</option>
 			<option value="mc_metascore"#echo ('', selected)['metascore' == $mode]#>By metascore</option>
 			<option value="mc_userscore"#echo ('', selected)['userscore' == $mode]#>By userscore</option>
             #if $kwargs and $kwargs.get('more')

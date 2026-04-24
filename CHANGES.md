@@ -21,6 +21,12 @@
 * Update chardet packages 7.4.0 (582c664) to 7.4.1 (9079efc)
 
 
+### 3.35.3 (2026-04-24 18:20:00 UTC)
+
+* Fix browse Metacritic cards to new Metacritic layout
+* Fix episode KeyError with mismatch Aired to DVD Order from TheTVDb API when updating show info
+
+
 ### 3.35.2 (2026-04-09 11:00:00 UTC)
 
 * Change add support for Python 3.14.4, 3.13.13
