@@ -7,6 +7,7 @@ from _typeshed import Incomplete
 
 PUSHOVER_SEND_TO_ALL: str
 VALIDATE_DEVICE: Incomplete
+VALIDATE_GROUP: Incomplete
 
 class PushoverPriority:
     LOW: int
@@ -62,7 +63,8 @@ class NotifyPushover(NotifyBase):
     token: Incomplete
     user_key: Incomplete
     invalid_targets: Incomplete
-    targets: Incomplete
+    devices: Incomplete
+    groups: Incomplete
     supplemental_url: Incomplete
     supplemental_url_title: Incomplete
     sound: Incomplete
@@ -81,6 +83,11 @@ class NotifyPushover(NotifyBase):
         another simliar one.
 
         Targets or end points should never be identified here.
+        """
+    def __len__(self) -> int:
+        """Returns the number of HTTP requests this instance will make.
+
+        Devices are batched into a single call; each group requires its own.
         """
     def url(self, privacy: bool = False, *args, **kwargs):
         """Returns the URL built dynamically based on specified arguments."""

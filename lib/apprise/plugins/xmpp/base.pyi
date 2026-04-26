@@ -21,6 +21,7 @@ class NotifyXMPP(NotifyBase):
     templates: Incomplete
     template_tokens: Incomplete
     template_args: Incomplete
+    xmpp_host: Incomplete
     targets: list[str, str]
     want_muc: bool
     secure_mode: Incomplete
@@ -30,7 +31,7 @@ class NotifyXMPP(NotifyBase):
     secure: bool
     name: Incomplete
     _adapter: SlixmppAdapter | None
-    def __init__(self, targets: list[str, str] | None = None, secure_mode: str | None = None, roster: bool | None = None, subject: bool | None = None, keepalive: bool | None = None, name: str | None = None, **kwargs: Any) -> None: ...
+    def __init__(self, targets: list[str, str] | None = None, secure_mode: str | None = None, roster: bool | None = None, subject: bool | None = None, keepalive: bool | None = None, name: str | None = None, xmpp_host: str | None = None, **kwargs: Any) -> None: ...
     def __del__(self) -> None:
         """Best-effort close for keepalive sessions."""
     @property
@@ -63,3 +64,8 @@ class NotifyXMPP(NotifyBase):
     @staticmethod
     def parse_url(url: str) -> dict[str, Any] | None:
         """Parse an XMPP URL into constructor arguments."""
+    @staticmethod
+    def runtime_deps():
+        """Return a tuple of top-level Python package names that this plugin
+        imported as optional runtime dependencies.
+        """

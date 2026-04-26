@@ -20,6 +20,50 @@ class RequirementsSpec(TypedDict, total=False):
 class NotifyBase(URLBase):
     """This is the base class for all notification services."""
     enabled: bool
+    @staticmethod
+    def runtime_deps():
+        """Return a tuple of top-level Python package names that this plugin
+        imported as optional runtime dependencies.
+
+        The plugin manager uses this to maintain a reference counter per
+        library.  When every plugin that declared a given library is disabled,
+        its counter reaches zero and the manager evicts the library from
+        `sys.modules`, releasing the associated Python objects from memory.
+
+        Names must be the importable top-level namespace - the same string you
+        would pass to `import` - not the pip install name:
+
+            ('paho',)        # paho-mqtt installs as 'paho'
+            ('slixmpp',)
+            ('cryptography',)
+
+        Submodules are handled automatically; declaring the top-level name is
+        sufficient.
+
+        Override this in any plugin that conditionally imports a heavy optional
+        library.  Return an empty tuple (the default) when the plugin has no
+        optional dependencies that are worth evicting.
+        """
+    @classmethod
+    def enable(self) -> None:
+        """Mark this plugin as enabled.
+
+        This is the counterpart to :meth:`disable`.  Calling this restores the
+        plugin to an active state so it will be used for notifications again.
+        Note that if the plugin's runtime dependencies were evicted from memory
+        by the plugin manager, re-enabling will restore the flag but the
+        plugin may not function until the process is restarted.
+        """
+    @classmethod
+    def disable(self) -> None:
+        """Mark this plugin as disabled.
+
+        The plugin will not be used for notifications.  The plugin manager
+        calls this when honouring `APPRISE_DENY_SERVICES` /
+        `APPRISE_ALLOW_SERVICES` and uses the result of
+        :method:`runtime_deps` to decrement its per-library reference counters,
+        potentially evicting unused libraries from `sys.modules`.
+        """
     category: str
     requirements: ClassVar[RequirementsSpec]
     service_url: Incomplete
