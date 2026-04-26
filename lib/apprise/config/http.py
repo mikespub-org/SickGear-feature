@@ -181,7 +181,6 @@ class ConfigHTTP(ConfigBase):
                 timeout=self.request_timeout,
                 stream=True,
             ) as r:
-
                 # Handle Errors
                 r.raise_for_status()
 
@@ -197,7 +196,6 @@ class ConfigHTTP(ConfigBase):
                     self.max_buffer_size > 0
                     and file_size > self.max_buffer_size
                 ):
-
                     # Provide warning of data truncation
                     self.logger.error(
                         "HTTP config response exceeds maximum buffer length "
@@ -228,7 +226,6 @@ class ConfigHTTP(ConfigBase):
                 )
                 if self.config_format is None and content_type:
                     if MIME_IS_TEXT.match(content_type) is not None:
-
                         # TEXT data detected based on header content
                         self.default_config_format = ConfigFormat.TEXT
 

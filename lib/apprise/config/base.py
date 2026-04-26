@@ -147,7 +147,8 @@ class ConfigBase(URLBase):
         if fmt:
             try:
                 self.config_format = (
-                    fmt if isinstance(fmt, common.ConfigFormat)
+                    fmt
+                    if isinstance(fmt, common.ConfigFormat)
                     else common.ConfigFormat(fmt.lower())
                 )
 
@@ -224,7 +225,6 @@ class ConfigBase(URLBase):
         # Configuration files were detected; recursively populate them
         # If we have been configured to do so
         for url in configs:
-
             if self.recursion > 0:
                 # Attempt to acquire the schema at the very least to allow
                 # our configuration based urls.
@@ -245,7 +245,7 @@ class ConfigBase(URLBase):
 
                     # Some basic validation
                     if schema not in C_MGR:
-                        ConfigBase.logger.warning(
+                        ConfigBase.logger.error(
                             f"Unsupported include schema {schema}."
                         )
                         continue
@@ -260,7 +260,7 @@ class ConfigBase(URLBase):
                 results = C_MGR[schema].parse_url(url)
                 if not results:
                     # Failed to parse the server URL
-                    self.logger.warning(
+                    self.logger.error(
                         f"Unparseable include URL {loggable_url}"
                     )
                     continue
@@ -274,7 +274,6 @@ class ConfigBase(URLBase):
                 ) or C_MGR[
                     schema
                 ].allow_cross_includes == common.ContentIncludeMode.NEVER:
-
                     # Prevent the loading if insecure base protocols
                     ConfigBase.logger.warning(
                         f"Including {schema}:// based configuration is"
@@ -304,7 +303,7 @@ class ConfigBase(URLBase):
 
                 except Exception as e:
                     # the arguments are invalid or can not be used.
-                    self.logger.warning(
+                    self.logger.error(
                         f"Could not load include URL: {loggable_url}"
                     )
                     self.logger.debug(f"Loading Exception: {e!s}")
@@ -541,7 +540,6 @@ class ConfigBase(URLBase):
         # iterate over each line of the file to attempt to detect it
         # stop the moment a the type has been determined
         for line, entry in enumerate(content, start=1):
-
             result = valid_line_re.match(entry)
             if not result:
                 # Invalid syntax
@@ -590,7 +588,8 @@ class ConfigBase(URLBase):
 
         try:
             config_format = (
-                config_format if isinstance(config_format, common.ConfigFormat)
+                config_format
+                if isinstance(config_format, common.ConfigFormat)
                 else common.ConfigFormat(config_format.lower())
             )
 
@@ -752,8 +751,9 @@ class ConfigBase(URLBase):
                 url, secure_logging=asset.secure_logging
             )
             if results is None:
-                # Failed to parse the server URL
-                ConfigBase.logger.warning(
+                # url_to_dict() already logged an error with the URL;
+                # repeat at debug level with line number for context.
+                ConfigBase.logger.debug(
                     f"Unparseable URL {loggable_url} on line {line}."
                 )
                 continue
@@ -766,11 +766,13 @@ class ConfigBase(URLBase):
             results["asset"] = asset
 
             # Store our preloaded entries
-            preloaded.append({
-                "results": results,
-                "line": line,
-                "loggable_url": loggable_url,
-            })
+            preloaded.append(
+                {
+                    "results": results,
+                    "line": line,
+                    "loggable_url": loggable_url,
+                }
+            )
 
         #
         # Normalize Tag Groups
@@ -809,7 +811,7 @@ class ConfigBase(URLBase):
 
             except Exception as e:
                 # the arguments are invalid or can not be used.
-                ConfigBase.logger.warning(
+                ConfigBase.logger.error(
                     "Could not load URL {} on line {}.".format(
                         entry["loggable_url"], entry["line"]
                     )
@@ -863,7 +865,6 @@ class ConfigBase(URLBase):
         tokens = tokens.copy()
 
         for kw, meta in N_MGR[schema].template_kwargs.items():
-
             # Determine our prefix:
             prefix = meta.get("prefix", "+")
 
@@ -911,7 +912,6 @@ class ConfigBase(URLBase):
         class_templates = plugins.details(N_MGR[schema])
 
         for key in list(tokens.keys()):
-
             if key not in class_templates["args"]:
                 # No need to handle non-arg entries
                 continue
@@ -951,7 +951,6 @@ class ConfigBase(URLBase):
             if re.search(
                 r"^(choice:)?string", meta.get("type"), re.IGNORECASE
             ) and not isinstance(value, str):
-
                 # Ensure our format is as expected
                 value = str(value)
 
