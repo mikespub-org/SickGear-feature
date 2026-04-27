@@ -5,6 +5,7 @@
 * Update certifi 2026.02.25 to 2026.04.22
 * Update chardet packages 7.3.0 (00667a4) to 7.4.1 (9079efc)
 * Update filelock 3.20.1 (377f622) to 3.25.2 (5b9872c)
+* Update idna library 3.11 (ad949ee) to 3.13 (89cdfd2)
 * Update packaging 26.0 (3b77a26) to 26.2 (84a87ee)
 * Update Requests library 2.33.0 (bc04dfd) to 2.33.1 (111d2b7)
 * Update browser_ua from user-agents 2.1.38 (a78437e)
