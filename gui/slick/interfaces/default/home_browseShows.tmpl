@@ -34,7 +34,13 @@
 		};
 <!--
 var saved_showsort_view = "$saved_showsort_view";
+var browse_cat = "$browse_cat";
+var all_tag_classes = $all_classes;
+var persistent_tag_button_states = $persistent_tag_button_states;
+var sg_root = "$sg_root";
+var browse_type = "$browse_type";
 //-->
+var browse_person = #if $p_ref#true#else#false#end if#;
 </script>
 <script type="text/javascript" src="$sg_root/js/plotTooltip.js?v=$sbPID"></script>
 <script type="text/javascript" src="$sbRoot/js/browseShows.js?v=$sbPID"></script>
@@ -254,13 +260,13 @@ $(function() {
 			option$.addClass('selected').attr('selected', !0).html('>&nbsp;' + option$.text());
 
 			if (elValue === '.notinlibrary') {
-				$('.notinlibrary').removeClass('hide-notinlibrary');
-				$('.inlibrary').addClass('hide-inlibrary');
+				$('.notinlibrary').removeClass('exclude-tag-lib-inlibrary exclude-tag-lib-notinlibrary');
+				$('.inlibrary').addClass('exclude-tag-lib-inlibrary');
 			} else if (elValue === '.inlibrary') {
-				$('.notinlibrary').addClass('hide-notinlibrary');
-				$('.inlibrary').removeClass('hide-inlibrary');
+				$('.notinlibrary').addClass('exclude-tag-lib-notinlibrary');
+				$('.inlibrary').removeClass('exclude-tag-lib-inlibrary exclude-tag-lib-notinlibrary');
 			} else if (elValue === '*') {
-				$('.inlibrary, .notinlibrary').removeClass('inlibrary').removeClass('hide-notinlibrary');
+				$('.inlibrary, .notinlibrary').removeClass('exclude-tag-lib-inlibrary exclude-tag-lib-notinlibrary');
 			}
 
 			savePrefs();
@@ -344,23 +350,24 @@ $(function() {
 		$('#search_show_name').focus();
 	}
 	llUpdate = (function(){
-		$.ll.handleScroll();
-		//updateTagCount();
+		try {
+			$.ll.handleScroll();
+		}catch (error) {}
 	});
 	$('#search_show_name').on('input', function() {
 			let = search_text = $('#search_show_name').val().trimStart();
 			let reSearch = RegExp(search_text, 'i');
 			$('.show-card').each(function () {
 				if (!search_text) {
-					$(this).removeClass('hide-text-search');
+					$(this).removeClass('exclude-tag-text-search');
 				} else {
 					let s_n = $(this).attr('data-name');
 					var result = reSearch.test(s_n);
-					console.log(s_n, result);
+					//console.log(s_n, result);
 					if (result) {
-						$(this).removeClass('hide-text-search');
+						$(this).removeClass('exclude-tag-text-search');
 					} else {
-						$(this).addClass('hide-text-search');
+						$(this).addClass('exclude-tag-text-search');
 					}
 				}
 			});
@@ -392,6 +399,7 @@ $(function() {
 		removeImageBackground(oImage);
 		scaleImage(oImage);
 	});
+	init_buttons();
 });
 
 #end raw
@@ -607,13 +615,17 @@ $(function() {
 		<div id="person-content" class="main-image">
 			<a class="thumb" href="$sbRoot/imagecache/person?pid=$p_ref&thumb=1" rel="dialog"><img class="person-bg" src="$sbRoot/imagecache/person?pid=$p_ref&thumb=0"></a>
 		</div>
+	#if $p_link
+		#set $cur_src = int(re.search(r'(\d+):', $p_ref).group(1))
+		<a href="$p_link" target="_blank"><img alt="$sickgear.TVInfoAPI($cur_src).name" height="16" width="16" src="$sbRoot/images/$sickgear.TVInfoAPI($cur_src).config['icon']"> $browse_type</a>
+	#end if
 	</div>
     #end if
 #end if
 
-#if $p_ref
+#if $all_classes.strip('{} ')
 
-<div id="tags"><h4 id="tags-container"><b>TAGs:</b> <input data-target="tag-self" type="checkbox" id="tag-self" checked="checked">&nbsp;<label for="tag-self">Self</label> <input data-target="tag-acting" type="checkbox" id="tag-acting" checked="checked">&nbsp;<label for="tag-acting">Acting</label></h4></div>
+<div id="tag-filters"><h4><button class="btn round-btn" type="button"><i class="filter-ico"></i></i><b>Filters</b></button><div id="tag-dialog"><table id="tags-table"><tbody id="tags-container"></tbody></table></div></h4></div>
 #end if
 
 <div id="container">
@@ -634,10 +646,12 @@ $(function() {
         #set $show_id = $this_show.get('show_id')
         #set $known = ('not', '')[bool($this_show.get('indb'))]
         #set $hide = ('', '%shide ' % ('', 'to-')['.hide' in $saved_showsort_view])[bool($this_show.get('hide'))]
+        #set $exclude_show = ('', 'exclude-tag-lib-inlibrary ')['.inlibrary' in $saved_showsort_view and not bool($this_show.get('indb'))]
+        #set $exclude_show = ($exclude_show, 'exclude-tag-lib-notinlibrary ')['.notinlibrary' in $saved_showsort_view and bool($this_show.get('indb'))]
         #if $use_ratings:
             #set $data_rating = $try_float($this_show['rating'])
         #end if
-	<div class="show-card $this_show.get('tag_classes', '') ${hide}${known}inlibrary" data-name="#echo re.sub(r'([\'\"])', r'', $this_show['title'])#" data-id="$show_id" data-ajax="$this_show.get('overview_ajax', '0')" data-nroles="#echo len($this_show.get('p_chars', []))#" #if $use_ratings# data-rating="$data_rating"#end if##if $use_votes# data-votes="$this_show['votes']"#end if# data-premiered="$this_show['ord_premiered']"#if $use_returning# data-returning="$this_show['ord_returning']"#end if# data-order="$this_show['order']"#if $use_network# data-network="$this_show['network']"#end if#>
+	<div class="show-card $this_show.get('tag_classes', '') ${exclude_show}${hide}${known}inlibrary" data-name="#echo re.sub(r'([\'\"])', r'', $this_show['title'])#" data-id="$show_id" data-ajax="$this_show.get('overview_ajax', '0')" data-nroles="#echo len($this_show.get('p_chars', []))#" #if $use_ratings# data-rating="$data_rating"#end if##if $use_votes# data-votes="$this_show['votes']"#end if# data-premiered="$this_show['ord_premiered']"#if $use_returning# data-returning="$this_show['ord_returning']"#end if# data-order="$this_show['order']"#if $use_network# data-network="$this_show['network']"#end if#>
 		<div class="show-card-inner">
 			<div class="browse-image">
 				<a class="browse-image" href="<%= anon_url(this_show['url_src_db']) %>" target="_blank"
@@ -651,7 +665,7 @@ $(function() {
 						<span style='font-size:0.9em;color:#888'><em>Country:#if not $this_show.get('country_img')#&nbsp;$this_show.get('country').upper()#else#<img style='margin:0 0 2px 4px;width:16px;height:11px;vertical-align:middle' title='${this_show['country']}' src='$sbRoot/images/flags/${$this_show['country'].lower()}.png' width='16' height='11'>#end if#</em></span>
             #end if
             #if $this_show.get('language')
-						<span style='font-size:0.9em;color:#888#if $this_show.get('country')#;padding-left:6px#end if#'><em>Language:#if not $this_show.get('language_img')#&nbsp;$this_show.get('language')#else#<img style='margin:0 0 2px 4px;width:16px;height:11px;vertical-align:middle' title='${this_show['language']}' src='$sbRoot/images/flags/${$this_show['language'].lower()}.png' width='16' height='11'>#end if#</em></span>
+						<span style='font-size:0.9em;color:#888#if $this_show.get('country')#;padding-left:6px#end if#'><em>Language:#if not $this_show.get('language_img')#&nbsp;$this_show.get('language')#else#<img style='margin:0 0 2px 4px;width:16px;height:11px;vertical-align:middle' title='${this_show['language']}' src='$sbRoot/images/flags/svg/lang/${$this_show['language'].lower()}.png' width='16' height='11'>#end if#</em></span>
             #end if
 					</p>
         #end if

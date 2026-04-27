@@ -921,6 +921,8 @@ home.tmpl
 }
 
 .yes,
+.placeholder,
+.filter-ico,
 .no{
 	display:inline-block;
 	vertical-align:middle;
@@ -930,6 +932,7 @@ home.tmpl
 
 .yes{background-image:url("../images/yes16.png")}
 .no{background-image:url("../images/no16.png")}
+.placeholder{background-image:url("../images/_placeholder16.png")}
 
 .container,
 #container{
@@ -5241,3 +5244,38 @@ fancybox.css Overrides
 .btn-off{
     background: darkred;
 }
+#tags-container .row-select-all{
+    background: darkgreen !important;
+    border-radius: 5px !important;
+    margin: 3px;
+}
+#tags-container .row-select-none{
+    background: #00000000 !important;
+    border-radius: 5px !important;
+    margin: 3px;
+}
+#tags-container .row-select-exclude{
+    background: darkred !important;
+    border-radius: 5px !important;
+    margin: 3px;
+}
+#tags-container .select-buttons{
+    text-align: center;
+}
+#tags-table {
+    border-collapse: separate;
+    border-spacing: 0 1em;
+}
+#tags-table .button-container{
+    vertical-align: top;
+}
+.ui-dialog {
+    z-index: 9999 !important ;
+    position:fixed !important;
+}
+.round-btn {
+    border-radius: 25px !important;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.filter-ico{background-image:url("../images/filter16.png")}

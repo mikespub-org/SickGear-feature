@@ -25,6 +25,7 @@ from lib.api_trakt import TraktAPI
 
 from _23 import urlsplit, urlunsplit
 from sg_helpers import compress_file, copy_file, remove_file_perm, scantree, try_int
+from json_helper import json_load
 from six import string_types
 
 
@@ -507,6 +508,51 @@ def backup_config():
                 remove_file_perm(direntry.path)
     except (BaseException, Exception):
         logger.error('backup config.ini error')
+
+
+def validate_btn_status_file(filename):
+    try:
+        if not os.path.isfile(filename):
+            return False
+        with open(filename, 'r') as f:
+            if isinstance(json_load(f), dict):
+               return True
+    except (BaseException, Exception):
+        pass
+    return False
+
+
+def backup_btn_status():
+    """
+    backup btn-status.json
+    """
+    logger.log('backing up btn-status.json')
+    try:
+        btn_status_file = os.path.join(sickgear.DATA_DIR, 'btn-status.json')
+        if not validate_btn_status_file(btn_status_file):
+            logger.error('btn-status.json file seems to be invalid, not backing up.')
+            return
+        now = datetime.datetime.now()
+        d = datetime.datetime.strftime(now, '%Y-%m-%d')
+        t = datetime.datetime.strftime(now, '%H-%M')
+        target_base = os.path.join(sickgear.BACKUP_DB_PATH or os.path.join(sickgear.DATA_DIR, 'backup'))
+        target = os.path.join(target_base, 'btn-status.json')
+        copy_file(btn_status_file, target)
+        if not validate_btn_status_file(target):
+            logger.error('btn-status.json file seems to be invalid, not backing up.')
+            remove_file_perm(target)
+            return
+        compress_file(target, 'btn-status.json')
+        os.rename(re.sub(r'\.json$', '.zip', target), os.path.join(target_base, f'btn-status_{d}_{t}.zip'))
+        # remove old files
+        use_count = (1, sickgear.BACKUP_DB_MAX_COUNT)[not sickgear.BACKUP_DB_ONEDAY]
+        file_list = [f for f in scantree(target_base, include='btn-status', filter_kind=False)]
+        if use_count < len(file_list):
+            file_list.sort(key=lambda _f: _f.stat(follow_symlinks=False).st_mtime, reverse=True)
+            for direntry in file_list[use_count:]:
+                remove_file_perm(direntry.path)
+    except (BaseException, Exception):
+        logger.error('backup btn-status.json error')
 
 
 class ConfigMigrator(object):

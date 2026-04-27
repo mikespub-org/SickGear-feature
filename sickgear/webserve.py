@@ -36,9 +36,9 @@ import zipfile
 
 from exceptions_helper import ex, MultipleShowObjectsException
 import exceptions_helper
-from json_helper import json_dumps, json_loads
+from json_helper import json_dumps, json_loads, json_dump, json_load
 import sg_helpers
-from sg_helpers import remove_file, scantree, is_virtualenv, strip_html_tags
+from sg_helpers import copy_file, remove_file, scantree, is_virtualenv, strip_html_tags
 
 from sg_futures import SgThreadPoolExecutor
 try:
@@ -88,6 +88,7 @@ from tornado.concurrent import run_on_executor
 from lib import requests
 from lib.urllib3.util.retry import Retry
 from lib.requests.adapters import HTTPAdapter
+from lib.iso639 import Lang
 
 from lib import subliminal
 from lib.cfscrape import CloudflareScraper
@@ -108,6 +109,7 @@ import lib.rarfile.rarfile as rarfile
 
 from _23 import decode_bytes, decode_str, getargspec, \
     map_consume, map_none, quote_plus, unquote_plus, urlparse
+from lib.sg_lang_codes import alpha3_to_alpha2, lang_to_country
 from six import binary_type, integer_types, iteritems, iterkeys, itervalues, moves, string_types
 
 # noinspection PyUnreachableCode
@@ -216,8 +218,24 @@ class BaseStaticFileHandler(StaticFileHandler):
         return super(BaseStaticFileHandler, self).write_error(status_code, **kwargs)
 
     def validate_absolute_path(self, root, absolute_path):
-        if '\\images\\flags\\' in absolute_path and not os.path.isfile(absolute_path):
-            absolute_path = re.sub(r'\\[^\\]+\.png$', '\\\\unknown.png', absolute_path)
+        if '\\images\\flags\\' in absolute_path:
+            lang_match_regex = re.compile(r'^(.+\\)([^\\]+)(\.(?:png|svg))$', flags=re.I)
+            lang_match = lang_match_regex.search(absolute_path)
+            if lang_match:
+                cur_lang = lang_match.group(2)
+                if '\\images\\flags\\svg\\lang\\' in absolute_path:
+                    cur_lang = lang_to_country.get(cur_lang.lower(), cur_lang)
+                    absolute_path = re.sub(r'\.png$', '.svg', absolute_path.replace(
+                        '\\images\\flags\\svg\\lang\\', '\\images\\flags\\svg\\'))
+                else:
+                    absolute_path = re.sub(r'(\\[^\\]+)\.png$', r'\\svg\1.svg', absolute_path)
+                if (new_lang := alpha3_to_alpha2.get(cur_lang, cur_lang)):
+                    absolute_path = lang_match_regex.sub(f'\\1{new_lang}\\3', absolute_path)
+                if not os.path.isfile(absolute_path) and absolute_path.endswith('.svg'):
+                    absolute_path = re.sub(r'svg\\([^\\]+)\.svg', '\\1.png', absolute_path)
+            if not os.path.isfile(absolute_path):
+                absolute_path = re.sub(r'\\images\\flags.+\.(?:png|svg)$',
+                                       r'\\images\\flags\\svg\\unknown.svg', absolute_path)
         return super(BaseStaticFileHandler, self).validate_absolute_path(root, absolute_path)
 
     def data_received(self, *args):
@@ -4064,6 +4082,9 @@ class HomeProcessMedia(Home):
         sickgear.MEMCACHE['DEPRECATE_PP_LEGACY'] = True
 
 class AddShows(Home):
+    _btn_tag_names = []
+    _browse_cat = ''
+    _persitent_tag_button_states = {}
 
     def get(self, route, *args, **kwargs):
         route = route.strip('/')
@@ -4322,7 +4343,9 @@ class AddShows(Home):
                         and SGDatetime.sbfdate(_parse_date(show['firstaired'])) or ''),
                        show.get('network', '') or '',  # 11
                        (show.get('genres', '') or show.get('genre', '') or '').replace('|', ', '),  # 12
-                       show.get('language', ''), show.get('language_country_code') or '',  # 13 - 14
+                       show.get('language', ''),  # 13
+                       (isinstance(show.get('origin_countries'), list) and show['origin_countries'] and
+                        show['origin_countries'][0]) or '',  # 14
                        re.sub(r'([,.!][^,.!]*?)$', '...',
                               re.sub(r'([.!?])(?=\w)', r'\1 ',
                                      helpers.xhtml_escape((show.get('overview', '') or '')[:250:].strip()))),  # 15
@@ -4755,8 +4778,8 @@ class AddShows(Home):
             list_info = None
 
             try:
-                filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info = self._get_imdb_data(
-                    'watchlist', acc_id=acc_id)
+                filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info, \
+                        all_classes = self._get_imdb_data('watchlist', acc_id=acc_id)
             except (BaseException, Exception):
                 error_msg = 'No items in watchlist.  Use the "Add to watchlist" button at the IMDb website'
                 logger.debug(error_msg)
@@ -4845,6 +4868,7 @@ class AddShows(Home):
 
         oldest, newest, oldest_dt, newest_dt, dedupe = None, None, 9999999, 0, []
         use_networks = False
+        all_classes = set()
         for cur_show_info in items:  # type: TVInfoShow
             if cur_show_info.id in dedupe or not cur_show_info.seriesname:
                 continue
@@ -4874,7 +4898,10 @@ class AddShows(Home):
                 images = dict(poster=dict(thumb='imagecache?path=browse/thumb/imdb&source=%s' % img_uri))
                 sickgear.CACHE_IMAGE_URL_LIST.add_url(img_uri)
 
+                tag_classes, class_list = self._make_tag_classes(cur_show_info, bool(p_ref))
+                all_classes.update(class_list)
                 filtered.append(dict(
+                    tag_classes=tag_classes,
                     ord_premiered=ord_premiered,
                     str_premiered=str_premiered,
                     ord_returning=ord_returning,
@@ -4901,17 +4928,16 @@ class AddShows(Home):
                 ))
                 if p_ref:
                     p_chars = self._make_char_person_list(cur_show_info)
-                    tag_classes = ' '.join({('tag-acting', 'tag-self')[_s[4]] for _s in p_chars} or [])
                     filtered[-1].update(dict(
                         p_name=p_item.name,
                         p_ref=p_ref,
-                        tag_classes=tag_classes,
-                        p_chars=p_chars
+                        p_chars=p_chars,
+                        p_link=f'https://www.imdb.com/name/nm{p_item.id:07d}/#credits'
                     ))
             except (BaseException, Exception):
                 pass
 
-        return filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info
+        return filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info, all_classes
 
     def imdb_default(self, **kwargs):
         if isinstance(sickgear.IMDB_MRU, str):
@@ -4942,6 +4968,7 @@ class AddShows(Home):
         browse_type = 'IMDb'
 
         filtered = []
+        all_classes = set()
         footnote = kwargs.get('footnote')
         end_cursor, total, list_info = None, 0, None
         start_year, end_year = (dt_date.today().year - 10, dt_date.today().year + 1)
@@ -4977,8 +5004,8 @@ class AddShows(Home):
             mode = f'watchlist-{acc_id}'
 
         try:
-            filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info = self._get_imdb_data(
-                api_method, **api_kw)
+            filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info, \
+                all_classes = self._get_imdb_data(api_method, **api_kw)
         except (BaseException, Exception):
             error_msg = 'No items in watchlist.  Use the "Add to watchlist" button at the Trakt website'
             if not browse_title:
@@ -5007,7 +5034,7 @@ class AddShows(Home):
         if mode != sickgear.IMDB_MRU and 'person' != mode:
             sickgear.IMDB_MRU = mode
             sickgear.save_config()
-        return self.browse_shows(browse_type, browse_title, filtered, **kwargs)
+        return self.browse_shows(browse_type, browse_title, filtered, all_classes=all_classes, **kwargs)
 
     def info_imdb(self, ids, show_name):
         if isinstance(ids, str) and 'tt' in ids:
@@ -5362,6 +5389,43 @@ class AddShows(Home):
         return self.new_show('|'.join(['', '', '', show_name]), use_show_name=True)
 
     @staticmethod
+    def _make_tag_classes(cur_show_info, incl_person=True):
+        # type: (TVInfoShow) -> Tuple[str,set]
+        class_list = set()
+        if incl_person:
+            p_chars = [(r_t, ch.plays_self) for r_t in cur_show_info.cast or [] for ch in cur_show_info.cast[r_t] if ch.name]
+            class_list.update({('tag-trait-acting', 'tag-trait-self')[bool(_s[1])] for _s in p_chars})
+            char_rt = {_t[0] for _t in p_chars}
+            class_list.update({f'tag-cast-{RoleTypes.reverse[_n].lower().replace(" ", "_")}' for _n in char_rt})
+        replace_regex = re.compile(r'[^a-zA-Z0-9]')
+        genres = {f'tag-genre-{replace_regex.sub("_", _g.replace("&", "and"))}' for _g in cur_show_info.genre_list or []}
+        if not genres:
+            if cur_show_info.show_type:
+                genres = {f'tag-genre-{replace_regex.sub("_", _g.replace("&", "and"))}' for _g in
+                          cur_show_info.show_type or []}
+            if not genres:
+                genres = {'tag-genre-no_genre'}
+        class_list.update(genres)
+        countires = {f'tag-country-{replace_regex.sub("_", c).upper()}' for c in cur_show_info.origin_countries or
+                     (cur_show_info.network_country_code and [cur_show_info.network_country_code]) or
+                     (cur_show_info.network_country and [cur_show_info.network_country]) or []}
+        if not countires:
+            countires = {'tag-country-UNKNOWN'}
+        class_list.update(countires)
+        lang_list = {c for c in cur_show_info.spoken_languages
+                     or (cur_show_info.language and [cur_show_info.language]) or []}
+        if lang_list and any(len(l) > 3 for l in lang_list):
+            try:
+                lang_list = {Lang(l).pt1 for l in lang_list}
+            except (BaseException, Exception):
+                pass
+        languages = {f'tag-language-{replace_regex.sub("_", c).upper()}' for c in lang_list}
+        if not languages:
+            languages = {f'tag-language-UNKNOWN'}
+        class_list.update(languages)
+        return ' '.join(class_list), class_list
+
+    @staticmethod
     def _make_char_person_list(cur_show_info):
         # type: (TVInfoShow) -> List[Tuple[str, int, str, int, bool]]
         return [(ch.name.replace('"', "'"), r_t, RoleTypes.reverse[r_t], ch.episode_count, ch.plays_self)
@@ -5443,6 +5507,7 @@ class AddShows(Home):
 
         oldest, newest, oldest_dt, newest_dt, dedupe = None, None, 9999999, 0, []
         use_networks = False
+        all_classes = set()
         parseinfo = dateutil.parser.parserinfo(dayfirst=False, yearfirst=True)
         base_url = sickgear.TVInfoAPI(TVINFO_TMDB).config['show_url']
         for cur_show_info in items:
@@ -5472,7 +5537,10 @@ class AddShows(Home):
 
                 language = ((cur_show_info.language and 'jap' in cur_show_info.language.lower())
                             and 'jp' or 'en')
+                tag_classes, class_list = self._make_tag_classes(cur_show_info, bool(p_ref))
+                all_classes.update(class_list)
                 filtered.append(dict(
+                    tag_classes=tag_classes,
                     ord_premiered=ord_premiered,
                     str_premiered=str_premiered,
                     started_past=started_past,
@@ -5512,7 +5580,7 @@ class AddShows(Home):
             if callable(getattr(self, func, None)):
                 sickgear.TMDB_MRU = func
                 sickgear.save_config()
-        return self.browse_shows(browse_type, browse_title, filtered, **kwargs)
+        return self.browse_shows(browse_type, browse_title, filtered, all_classes=all_classes, **kwargs)
 
     # noinspection PyUnusedLocal
     def info_tmdb(self, ids, show_name):
@@ -5682,6 +5750,7 @@ class AddShows(Home):
 
         oldest, newest, oldest_dt, newest_dt, dedupe = None, None, 9999999, 0, []
         use_networks = False
+        all_classes = set()
         rx_ignore = re.compile(r'''
         ((bbc|channel\s*?5.*?|itv)\s*?(drama|documentaries))|bbc\s*?(comedy|music)|music\s*?specials|tedtalks
                 ''', re.I | re.X)
@@ -5720,7 +5789,10 @@ class AddShows(Home):
                 image = self._make_cache_image_url(tvid, cur_show_info)
                 images = {} if not image else dict(poster=dict(thumb=image))
 
+                tag_classes, class_list = self._make_tag_classes(cur_show_info, bool(p_ref))
+                all_classes.update(class_list)
                 filtered.append(dict(
+                    tag_classes=tag_classes,
                     ord_premiered=ord_premiered,
                     str_premiered=str_premiered,
                     ord_returning=ord_returning,
@@ -5758,7 +5830,7 @@ class AddShows(Home):
                 pass
 
         if 'web_ui' in kwargs:
-            return filtered, oldest, newest, use_networks, error_msg
+            return filtered, oldest, newest, use_networks, error_msg, all_classes
 
         return filtered, oldest, newest
 
@@ -5777,6 +5849,7 @@ class AddShows(Home):
         browse_type = 'Trakt'
         mode = kwargs.get('mode', '')
         filtered = []
+        all_classes = set()
 
         if not sickgear.USE_TRAKT \
                 and ('recommended' in mode or 'watchlist' in mode):
@@ -5784,7 +5857,8 @@ class AddShows(Home):
             return self.browse_shows(browse_type, browse_title, filtered, error_msg=error_msg, show_header=1, **kwargs)
 
         try:
-            filtered, oldest, newest, use_networks, error_msg = self.get_trakt_data(api_method, web_ui=True, **kwargs)
+            filtered, oldest, newest, use_networks, error_msg, \
+                all_classes = self.get_trakt_data(api_method, web_ui=True, **kwargs)
         except (BaseException, Exception):
             error_msg = 'No items in watchlist.  Use the "Add to watchlist" button at the Trakt website'
             return self.browse_shows(browse_type, browse_title, filtered, error_msg=error_msg, show_header=1, **kwargs)
@@ -5800,7 +5874,7 @@ class AddShows(Home):
                         '?period=' + mode[1]
                     sickgear.TRAKT_MRU = '%s%s' % (func, param)
                     sickgear.save_config()
-        return self.browse_shows(browse_type, browse_title, filtered, **kwargs)
+        return self.browse_shows(browse_type, browse_title, filtered, all_classes=all_classes, **kwargs)
 
     def info_trakt(self, ids, show_name):
 
@@ -6100,6 +6174,7 @@ class AddShows(Home):
                        enumerate(sorted([cur_show_info.rating or 0 for cur_show_info in items], reverse=True)))
         oldest, newest, oldest_dt, newest_dt, dedupe = None, None, 9999999, 0, []
         use_networks = False
+        all_classes = set()
         parseinfo = dateutil.parser.parserinfo(dayfirst=False, yearfirst=True)
         base_url = sickgear.TVInfoAPI(TVINFO_TVDB).config['show_url']
         for cur_show_info in items:
@@ -6132,7 +6207,10 @@ class AddShows(Home):
                 language = ((cur_show_info.language and 'jap' in cur_show_info.language.lower())
                             and 'jp' or 'en')
 
+                tag_classes, class_list = self._make_tag_classes(cur_show_info, bool(p_ref))
+                all_classes.update(class_list)
                 filtered.append(dict(
+                    tag_classes=tag_classes,
                     ord_premiered=ord_premiered,
                     str_premiered=str_premiered,
                     started_past=started_past,
@@ -6179,7 +6257,7 @@ class AddShows(Home):
             if callable(getattr(self, func, None)):
                 sickgear.TVDB_MRU = func
                 sickgear.save_config()
-        return self.browse_shows(browse_type, browse_title, filtered, **kwargs)
+        return self.browse_shows(browse_type, browse_title, filtered, all_classes=all_classes, **kwargs)
 
     # noinspection PyUnusedLocal
     def info_tvdb(self, ids, show_name):
@@ -6296,6 +6374,7 @@ class AddShows(Home):
 
         oldest, newest, oldest_dt, newest_dt, dedupe = None, None, 9999999, 0, []
         use_networks = False
+        all_classes = set()
         base_url = sickgear.TVInfoAPI(tvid).config['show_url']
         for cur_show_info in items:
             if cur_show_info.id in dedupe or not cur_show_info.seriesname:
@@ -6332,7 +6411,10 @@ class AddShows(Home):
                 overview_ajax = ("No overview yet" == overview
                                  and p_ref and not bool(cur_show_info.cast[RoleTypes.ActorMain]))
 
+                tag_classes, class_list = self._make_tag_classes(cur_show_info, bool(p_ref))
+                all_classes.update(class_list)
                 filtered.append(dict(
+                    tag_classes=tag_classes,
                     ord_premiered=ord_premiered,
                     str_premiered=str_premiered,
                     ord_returning=ord_returning,
@@ -6379,7 +6461,7 @@ class AddShows(Home):
             if callable(getattr(self, func, None)):
                 sickgear.TVM_MRU = func
                 sickgear.save_config()
-        return self.browse_shows(browse_type, browse_title, filtered, **kwargs)
+        return self.browse_shows(browse_type, browse_title, filtered, all_classes=all_classes, **kwargs)
 
     # noinspection PyUnusedLocal
     def info_tvmaze(self, ids, show_name):
@@ -6464,7 +6546,70 @@ class AddShows(Home):
             sickgear.save_config()
         return json_dumps({'success': save_config})
 
-    def browse_shows(self, browse_type, browse_title, shows, **kwargs):
+    @staticmethod
+    def _make_browse_classes(class_list):
+        # type: (Union[list,set]) -> str
+        class_group_re = re.compile(r'^tag-(.+)-.+')
+        # preset order as shown on page (empty or less then 2 values are removed)
+        class_dict = {'genre': [], 'country': [], 'language': [], 'cast': [], 'trait': []}
+        for _c in class_list:
+            if (_cg := class_group_re.search(_c)):
+                class_dict.setdefault(_cg.group(1), []).append(_c)
+        # filter out any groups that have only 1 option
+        class_dict = {k: sorted(v) for k,v in class_dict.items() if 1 < len(v)}
+        return json_dumps(class_dict)
+
+    @property
+    def _get_persistent_btn_states(self):
+        if not AddShows._persitent_tag_button_states:
+            res = {}
+            try:
+                btn_settings = os.path.join(sickgear.DATA_DIR, 'btn-status.json')
+                with open(btn_settings, 'r') as f:
+                    res = json_load(f)
+                if isinstance(res, dict):
+                    AddShows._persitent_tag_button_states = res
+            except (BaseException, Exception):
+                pass
+        return AddShows._persitent_tag_button_states
+
+    def set_persistent_btn_status(self, button_states=None, **kwargs):
+        if button_states:
+            button_states = json_loads(button_states)
+            if isinstance(button_states, dict):
+                # validate data
+                button_states = {mk: {k:v for k,v in mv.items() if v in ('include', 'none', 'exclude') and k in AddShows._btn_tag_names} for mk,mv in button_states.items() if mk == AddShows._browse_cat}
+                AddShows._persitent_tag_button_states.setdefault(AddShows._browse_cat, {}).update(button_states[AddShows._browse_cat])
+                try:
+                    btn_settings = os.path.join(sickgear.DATA_DIR, 'btn-status.json')
+                    bak_file = None
+                    if os.path.isfile(btn_settings):
+                        bak_file = re.sub('\.json$', '.bak', btn_settings)
+                        copy_file(btn_settings, bak_file)
+                    with open(btn_settings, 'w') as f:
+                        json_dump(AddShows._persitent_tag_button_states, f)
+                    if not os.path.isfile(btn_settings):
+                        return json_dumps({'result': 'failed'})
+                    with open(btn_settings, 'r') as f:
+                        if not isinstance(json_load(f), dict):
+                            try:
+                                remove_file(btn_settings)
+                            except (BaseException, Exception):
+                                pass
+                            if bak_file:
+                                copy_file(bak_file, btn_settings)
+                            return json_dumps({'result': 'failed'})
+                    if bak_file:
+                        try:
+                            remove_file(bak_file)
+                        except (BaseException, Exception):
+                            pass
+                except (BaseException, Exception) as e:
+                    return json_dumps({'result': 'failed'})
+                return json_dumps({'result': 'success'})
+        return json_dumps({'result': 'failed'})
+
+    def browse_shows(self, browse_type, browse_title, shows, all_classes=None, **kwargs):
         """
         Display the new show page which collects a tvdb id, folder, and extra options and
         posts them to add_new_show
@@ -6475,6 +6620,7 @@ class AddShows(Home):
         t.browse_title = browse_title if ('person' != kwargs.get('mode') or not shows) \
             else f'{shows[0].get("p_name", "")} (Person) on {browse_type}'
         t.p_ref = (0 < len(shows) and shows[0].get('p_ref')) or None
+        t.p_link = (0 < len(shows) and shows[0].get('p_link')) or None
         t.saved_showfilter = sickgear.BROWSELIST_MRU.get(browse_type, {}).get('showfilter', '')
         t.saved_showsort = sickgear.BROWSELIST_MRU.get(browse_type, {}).get('showsort', '*,asc,by_order')
         showsort = t.saved_showsort.split(',')
@@ -6484,6 +6630,13 @@ class AddShows(Home):
         t.is_showsort_desc = ('desc' == (2 <= len(showsort) and showsort[1] or 'asc')) and not t.reset_showsort_sortby
         t.saved_showsort_view = 1 <= len(showsort) and showsort[0] or '*'
         t.all_shows = []
+        all_classes = all_classes or set()
+        AddShows._btn_tag_names = all_classes
+        AddShows._browse_cat = browse_type + ('', '-person')[bool(t.p_ref)]
+        t.all_classes = self._make_browse_classes(all_classes)
+        t.persistent_tag_button_states = {
+            AddShows._browse_cat: self._get_persistent_btn_states.get(AddShows._browse_cat, {})}
+        t.browse_cat = AddShows._browse_cat
         t.kwargs = kwargs
         if None is t.kwargs.get('footnote') and kwargs.get('mode', 'nomode') in ('upcoming',):
             t.kwargs['footnote'] = 'Note; Expect default placeholder images in this list'

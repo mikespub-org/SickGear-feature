@@ -6,11 +6,11 @@
 $(document).ready(function () {
 
 	function htmlFlag(lang) {
-		return ' class="flag" style="background-image:url(' + $.SickGear.Root + '/images/flags/' + lang + '.png)"'
+		return ' class="flag" style="background-image:url(' + $.SickGear.Root + '/images/flags/svg/lang/' + lang + '.png)"'
 	}
 
 	function uriFlag(lang) {
-		return $.SickGear.Root + '/images/flags/' + lang + '.png'
+		return $.SickGear.Root + '/images/flags/svg/lang/' + lang + '.png'
 	}
 
 	function populateLangSelect() {
