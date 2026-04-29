@@ -1,4 +1,9 @@
-﻿### 3.35.3 (2026-04-24 18:20:00 UTC)
+﻿### 3.35.4 (2026-04-30 00:25:00 UTC)
+
+* Update UnRar x64 for Windows 7.20 to 7.21
+
+
+### 3.35.3 (2026-04-24 18:20:00 UTC)
 
 * Fix browse Metacritic cards to new Metacritic layout
 * Fix episode KeyError with mismatch Aired to DVD Order from TheTVDb API when updating show info
