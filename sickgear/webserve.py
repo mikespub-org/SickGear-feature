@@ -4327,6 +4327,17 @@ class AddShows(Home):
             except (BaseException, Exception):
                 return ''
 
+        def _lang_cc(lang_name):
+            cc = ''
+            if lang_name:
+                try:
+                    cc = Lang(lang_name).pt1 or ''
+                    if cc:
+                        cc = lang_to_country(cc.lower())
+                except(BaseException, Exception):
+                    pass
+            return cc
+
         # noinspection PyUnboundLocalVariable
         map_consume(final_results.extend,
                     [[[id_names[tvid], in_db(*((tvid, int(show['id'])),
@@ -4345,7 +4356,7 @@ class AddShows(Home):
                        (show.get('genres', '') or show.get('genre', '') or '').replace('|', ', '),  # 12
                        show.get('language', ''),  # 13
                        (isinstance(show.get('origin_countries'), list) and show['origin_countries'] and
-                        show['origin_countries'][0]) or '',  # 14
+                        show['origin_countries'][0]) or _lang_cc(show.get('language')),  # 14
                        re.sub(r'([,.!][^,.!]*?)$', '...',
                               re.sub(r'([.!?])(?=\w)', r'\1 ',
                                      helpers.xhtml_escape((show.get('overview', '') or '')[:250:].strip()))),  # 15
@@ -4778,8 +4789,8 @@ class AddShows(Home):
             list_info = None
 
             try:
-                filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info, \
-                        all_classes = self._get_imdb_data('watchlist', acc_id=acc_id)
+                _, _, _, _, error_msg, _, _, list_info, _ = self._get_imdb_data(
+                    'watchlist', acc_id=acc_id)
             except (BaseException, Exception):
                 error_msg = 'No items in watchlist.  Use the "Add to watchlist" button at the IMDb website'
                 logger.debug(error_msg)
@@ -4895,7 +4906,7 @@ class AddShows(Home):
                     = self.sanitise_dates(cur_show_info.firstaired, oldest_dt, newest_dt, oldest, newest, episode_info)
 
                 img_uri = cur_show_info.poster_thumb
-                images = dict(poster=dict(thumb='imagecache?path=browse/thumb/imdb&source=%s' % img_uri))
+                images = dict(poster=dict(thumb=f'imagecache?path=browse/thumb/imdb&source={img_uri}'))
                 sickgear.CACHE_IMAGE_URL_LIST.add_url(img_uri)
 
                 tag_classes, class_list = self._make_tag_classes(cur_show_info, bool(p_ref))
@@ -4911,7 +4922,7 @@ class AddShows(Home):
                     episode_number=episode_info.episodenumber,
                     episode_overview=self.clean_overview(episode_info),
                     episode_season=getattr(episode_info.season, 'number', 1),
-                    genres=(', '.join(['%s' % v for v in cur_show_info.genre_list])),
+                    genres=(', '.join([f'{v}' for v in cur_show_info.genre_list])),
                     ids=cur_show_info.ids.__dict__,
                     images=images,
                     network=network_name,
@@ -5004,8 +5015,8 @@ class AddShows(Home):
             mode = f'watchlist-{acc_id}'
 
         try:
-            filtered, oldest, newest, use_networks, error_msg, end_cursor, total, list_info, \
-                all_classes = self._get_imdb_data(api_method, **api_kw)
+            filtered, oldest, newest, use_networks, error_msg, _, _, list_info, all_classes = self._get_imdb_data(
+                api_method, **api_kw)
         except (BaseException, Exception):
             error_msg = 'No items in watchlist.  Use the "Add to watchlist" button at the Trakt website'
             if not browse_title:
@@ -5019,12 +5030,10 @@ class AddShows(Home):
         if list_info:
             try:
                 s_d = dateutil.parser.parse(list_info["createdDate"])
-                browse_title += (f' <div class="grey-text" style="clear:left;margin-left:2px;font-size:0.85em">'
-                                 f'created: {SGDatetime.sbfdatetime(s_d.astimezone(network_timezones.SG_TIMEZONE))}')
+                kwargs['footnote'] = f'List created: {SGDatetime.sbfdatetime(s_d.astimezone(network_timezones.SG_TIMEZONE))}'
                 if list_info["createdDate"] != list_info["lastModifiedDate"]:
                     e_d = dateutil.parser.parse(list_info["lastModifiedDate"])
-                    browse_title += f', updated: {SGDatetime.sbfdatetime(e_d.astimezone(network_timezones.SG_TIMEZONE))}'
-                browse_title += '</div>'
+                    kwargs['footnote'] += f', updated: {SGDatetime.sbfdatetime(e_d.astimezone(network_timezones.SG_TIMEZONE))}'
             except (BaseException, Exception):
                 pass
 
@@ -5398,20 +5407,17 @@ class AddShows(Home):
             char_rt = {_t[0] for _t in p_chars}
             class_list.update({f'tag-cast-{RoleTypes.reverse[_n].lower().replace(" ", "_")}' for _n in char_rt})
         replace_regex = re.compile(r'[^a-zA-Z0-9]')
-        genres = {f'tag-genre-{replace_regex.sub("_", _g.replace("&", "and"))}' for _g in cur_show_info.genre_list or []}
+        genres = {f'tag-genre-{replace_regex.sub("_", _g.replace("&", "and"))}' for _g in cur_show_info.genre_list
+                                                                                        or cur_show_info.show_type or []}
         if not genres:
-            if cur_show_info.show_type:
-                genres = {f'tag-genre-{replace_regex.sub("_", _g.replace("&", "and"))}' for _g in
-                          cur_show_info.show_type or []}
-            if not genres:
-                genres = {'tag-genre-no_genre'}
+            genres = {'tag-genre-no_genre'}
         class_list.update(genres)
-        countires = {f'tag-country-{replace_regex.sub("_", c).upper()}' for c in cur_show_info.origin_countries or
+        countries = {f'tag-country-{replace_regex.sub("_", c).upper()}' for c in cur_show_info.origin_countries or
                      (cur_show_info.network_country_code and [cur_show_info.network_country_code]) or
                      (cur_show_info.network_country and [cur_show_info.network_country]) or []}
-        if not countires:
-            countires = {'tag-country-UNKNOWN'}
-        class_list.update(countires)
+        if not countries:
+            countries = {'tag-country-UNKNOWN'}
+        class_list.update(countries)
         lang_list = {c for c in cur_show_info.spoken_languages
                      or (cur_show_info.language and [cur_show_info.language]) or []}
         if lang_list and any(len(l) > 3 for l in lang_list):
@@ -6584,7 +6590,7 @@ class AddShows(Home):
                     btn_settings = os.path.join(sickgear.DATA_DIR, 'btn-status.json')
                     bak_file = None
                     if os.path.isfile(btn_settings):
-                        bak_file = re.sub('\.json$', '.bak', btn_settings)
+                        bak_file = re.sub(r'\.json$', '.bak', btn_settings)
                         copy_file(btn_settings, bak_file)
                     with open(btn_settings, 'w') as f:
                         json_dump(AddShows._persitent_tag_button_states, f)

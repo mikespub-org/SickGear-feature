@@ -2448,6 +2448,16 @@ td.col-search{
 	width:639px
 }
 
+#edit-show #idmapping-options .component-desc label{
+	white-space:nowrap
+}
+#edit-show #idmapping-options .component-desc label p{
+	padding-left:19px;
+	margin-right:24px
+}
+#edit-show #idmapping-options .field-pair{
+	padding:0;
+}
 /* =======================================================================
 episodeView.tmpl
 ========================================================================== */
@@ -3802,7 +3812,53 @@ option.flag{
 #select2-infosrc-lang-select-results .flag{
 	padding-left:25px;
 	background-repeat:no-repeat;
-	background-position:0 50%
+	background-position:0 0;
+	background-size:20px 16px;
+}
+
+.browse-shows-result .flag,
+.add-shows-popup .flag,
+#addShowForm #search-results .flag{
+	background-size:24px 20px;
+	display: inline-block;
+	width: 24px;
+	height: 20px;
+	vertical-align: middle;
+}
+
+.add-shows-popup .flag,
+#addShowForm #search-results .flag{
+	margin: 0 6px 0px 0px;
+}
+
+.browse-shows-result .flag{
+	margin:0 0 2px 3px;
+}
+
+.browse-shows-result{
+	line-height:15px;
+	margin-bottom:2px
+}
+
+.add-shows-popup .add-shows-lang,
+.add-shows-popup .add-shows-network{
+	font-weight:bold;
+	font-size:0.9em;
+}
+.add-shows-popup .add-shows-genre{
+	font-weight:bold
+}
+.add-shows-popup .add-shows-image{
+	float:right;
+	margin-left:3px;
+	max-height:150px;
+}
+.add-shows-popup .add-shows-overview{
+	margin:0 0 2px;
+}
+.add-shows-popup .add-shows-cta{
+	float:right;
+	clear:both
 }
 
 /* Anime section for editShow */
@@ -5063,8 +5119,14 @@ li.token-input-token input{
 	float:left
 }
 
+div.token-input-dropdown ul li,
 li.token-input-token p{
 	line-height:2.0 !important
+}
+
+li.token-input-token p{
+	display:inline-block;
+	float:none !important;
 }
 
 li.token-input-input-token input{
@@ -5093,15 +5155,13 @@ span.token-input-delete-token{
 	margin:0 1px
 }
 
-li.token-input-token img{
-	padding:5px 4px 0 0;
-	float:left
-}
-
+li.token-input-token img,
 li.token-input-dropdown-item img,
 li.token-input-dropdown-item2 img{
-	padding:2px 4px 0 0;
-	float:left
+	display:inline-block;
+	padding:0 4px 0 0;
+	width:28px;
+	height:24px
 }
 
 /* =======================================================================
@@ -5226,56 +5286,70 @@ fancybox.css Overrides
 	background-color:rgba(0, 0, 0, 0.4)
 }
 .fancybox-image{
-	 -moz-border-radius:10px; -webkit-border-radius:10px; border-radius:10px
+	-moz-border-radius:10px; -webkit-border-radius:10px; border-radius:10px
 }
 .fancybox-container .fancybox-progress{
 	background-color:#20c997;
 }
 
 .btn-toggle{
-    padding-left: 10px;
-    padding-right: 15px;
-    margin: 3px;
-    border-radius: 25px !important;
+	padding-left: 10px;
+	padding-right: 15px;
+	margin: 3px;
+	border-radius: 25px !important;
 }
 .btn-on{
-    background: darkgreen;
+	background: darkgreen;
 }
 .btn-off{
-    background: darkred;
+	background: darkred;
 }
+
 #tags-container .row-select-all{
-    background: darkgreen !important;
-    border-radius: 5px !important;
-    margin: 3px;
+	background: darkgreen !important;
+	border-radius: 5px !important;
+	margin: 3px;
 }
 #tags-container .row-select-none{
-    background: #00000000 !important;
-    border-radius: 5px !important;
-    margin: 3px;
+	background: #00000000 !important;
+	border-radius: 5px !important;
+	margin: 3px;
 }
 #tags-container .row-select-exclude{
-    background: darkred !important;
-    border-radius: 5px !important;
-    margin: 3px;
+	background: darkred !important;
+	border-radius: 5px !important;
+	margin: 3px;
 }
 #tags-container .select-buttons{
-    text-align: center;
+	text-align: center;
 }
 #tags-table {
-    border-collapse: separate;
-    border-spacing: 0 1em;
+	border-collapse: separate;
+	border-spacing: 0 1em;
 }
 #tags-table .button-container{
-    vertical-align: top;
+	vertical-align: top;
 }
 .ui-dialog {
-    z-index: 9999 !important ;
-    position:fixed !important;
+	z-index: 9999 !important ;
+	position:fixed !important;
 }
-.round-btn {
-    border-radius: 25px !important;
-    padding-left: 10px;
-    padding-right: 10px;
+
+#tag-filters .filter-ico{
+	background-image:url("../images/filter16.png");
+	margin-right: 4px;
 }
-.filter-ico{background-image:url("../images/filter16.png")}
+#tag-dialog{
+	display: inline-block
+}
+
+.person-hdr{
+	float:left;margin:0 0 0 2px
+}
+.person-hdr .tvsrc{
+	display: inline-block;
+	padding-left: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 16px;
+}

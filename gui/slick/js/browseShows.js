@@ -66,7 +66,7 @@ var multi_button_ico = {
 // button classes
 var multi_button_class = {
 	'include': 'btn-on',
-	'none': 'btn-none',
+	'none': 'btn-none grey-text',
 	'exclude': 'btn-off'
 }
 
@@ -249,8 +249,6 @@ function init_buttons(){
 		return changed;
 	}
 
-	let = tag_el = $('#tags-container').find('[id^="tag-"]');  //'#tag-self, #tag-acting');
-
 	function change_button_status (button_el, button_type, new_state) {
 		if (new_state !== $(button_el).data('state')) {
 			let new_state_name = multi_button_styles[button_type][new_state];
@@ -321,6 +319,8 @@ function init_buttons(){
 			}
 		});
 	}
+
+	let tag_el = $('#tags-container').find('[id^="tag-"]');  //'#tag-self, #tag-acting');
 	function set_tag_filters () {
 		let changed = false;
 		$(tag_el).each(function(){

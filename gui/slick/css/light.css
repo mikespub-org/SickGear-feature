@@ -1585,3 +1585,21 @@ jquery.confirm.css
 #confirmBox .red:hover{
 	background-color:#a13331
 }
+
+/* =======================================================================
+add-shows qtip
+========================================================================== */
+.qtip-bootstrap{
+	background-color: #eee;
+	color: #333;
+}
+.add-shows-popup .add-shows-title{
+	color:rgb(66, 139, 202);
+}
+.add-shows-popup .add-shows-lang,
+.add-shows-popup .add-shows-network{
+	color:#888;
+}
+.add-shows-popup .add-shows-image{
+	border: 1px solid #282828;
+}

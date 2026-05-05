@@ -8,7 +8,7 @@ from .exceptions import IMDbGQLError
 logger = logging.getLogger(__name__)
 
 
-class IMDbGQL(object):
+class IMDb(object):
 
     def __init__(self, locale=None, *args, **kwargs):
         self.locale = locale or 'en_US'

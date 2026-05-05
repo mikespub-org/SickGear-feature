@@ -355,7 +355,7 @@ $(function() {
 		}catch (error) {}
 	});
 	$('#search_show_name').on('input', function() {
-			let = search_text = $('#search_show_name').val().trimStart();
+			let search_text = $('#search_show_name').val().trimStart();
 			let reSearch = RegExp(search_text, 'i');
 			$('.show-card').each(function () {
 				if (!search_text) {
@@ -524,7 +524,7 @@ $(function() {
 		</optgroup>
 		<optgroup label="Others">
 			<option value="browse_imdb?api_method=new_shows"#echo ('', selected)['shows' in $mode]#>New Shows</option>
-			<option value="browse_imdb?api_method=new_seasons"#echo ('', selected)['seasons' in $mode]#>New Season</option>
+			<option value="browse_imdb?api_method=new_seasons"#echo ('', selected)['seasons' in $mode]#>New Seasons</option>
 			<option value="browse_imdb?api_method=coming_soon"#echo ('', selected)['coming' in $mode]#>Coming Soon</option>
 		</optgroup>
             #end if
@@ -596,12 +596,26 @@ $(function() {
 	</select>
     #end if
 </div>
+
 		<div class="pull-right" style="clear:right">
+    #if $all_classes.strip('{} ')
+			<span id="tag-filters"><button class="btn btn-inline" type="button"><i class="filter-ico"></i></i><b>Filters</b></button><div id="tag-dialog"><table id="tags-table"><tbody id="tags-container"></tbody></table></div></span>&nbsp;
+    #end if
 			<input id="search_show_name" class="search form-control form-control-inline input-sm input200" type="search" placeholder="Filter Show Name#if $use_network#/Network#end if#">
 			&nbsp;<button type="button" class="resetshows btn btn-inline">Reset Filter</button>
 		</div>
 
-<h4 style="float:left;margin:0 0 0 2px">$browse_title</h4>
+<h4 class="person-hdr">#slurp#
+	#if $p_link
+		#set $cur_src = int(re.search(r'(\d+):', $p_ref).group(1))
+#set $title_pre = $browse_title.split($sickgear.TVInfoAPI($cur_src).name)[0]
+#set $title_post = $browse_title.split($sickgear.TVInfoAPI($cur_src).name)[1]
+$title_pre<a href="$p_link" target="_blank"><span class="tvsrc" style="background:url($sbRoot/images/$sickgear.TVInfoAPI($cur_src).config['icon']) no-repeat 0 0">&nbsp;$browse_type</span></a> $title_post#slurp#
+	#else
+$browse_title
+	#end if
+</h4>
+
 <div class="grey-text" style="clear:left;margin-left:2px;font-size:0.85em">
     #if $kwargs and $kwargs.get('oldest')
 	First aired from <span id="oldest" data-oldest-dt="$kwargs.get('oldest_dt', '')">$kwargs['oldest']</span> until <span id="newest" data-newest-dt="$kwargs.get('newest_dt', '')">$kwargs['newest']</span>
@@ -615,17 +629,8 @@ $(function() {
 		<div id="person-content" class="main-image">
 			<a class="thumb" href="$sbRoot/imagecache/person?pid=$p_ref&thumb=1" rel="dialog"><img class="person-bg" src="$sbRoot/imagecache/person?pid=$p_ref&thumb=0"></a>
 		</div>
-	#if $p_link
-		#set $cur_src = int(re.search(r'(\d+):', $p_ref).group(1))
-		<a href="$p_link" target="_blank"><img alt="$sickgear.TVInfoAPI($cur_src).name" height="16" width="16" src="$sbRoot/images/$sickgear.TVInfoAPI($cur_src).config['icon']"> $browse_type</a>
-	#end if
 	</div>
     #end if
-#end if
-
-#if $all_classes.strip('{} ')
-
-<div id="tag-filters"><h4><button class="btn round-btn" type="button"><i class="filter-ico"></i></i><b>Filters</b></button><div id="tag-dialog"><table id="tags-table"><tbody id="tags-container"></tbody></table></div></h4></div>
 #end if
 
 <div id="container">
@@ -655,17 +660,17 @@ $(function() {
 		<div class="show-card-inner">
 			<div class="browse-image">
 				<a class="browse-image" href="<%= anon_url(this_show['url_src_db']) %>" target="_blank"
-					title="<span style='color: #226baa'>$re.sub(r'(?m)\s+\((?:19|20)\d\d\)\s*$', '', $title_html)</span>
+					title="<span class='browse-title'>$re.sub(r'(?m)\s+\((?:19|20)\d\d\)\s*$', '', $title_html)</span>
 
 					<div class='genre' style='display:#echo ('none', 'block')[bool($this_show['genres'])]#;font-weight:bold'>(<em>$this_show['genres']</em>)</div>
 					#if $kwargs and $use_returning#<span style='display:block;clear:both;font-weight:bold;font-size:0.9em;color:#888'><em>Season $this_show['episode_season'] return#echo ('s', 'ed')[$this_show['return_past']]# $this_show['str_returning']</em></span>#end if#
         #if $this_show.get('country') or $this_show.get('language')
-					 <p style='line-height:15px;margin-bottom:2px'>
+					<p class='browse-shows-result'>
             #if $this_show.get('country')
-						<span style='font-size:0.9em;color:#888'><em>Country:#if not $this_show.get('country_img')#&nbsp;$this_show.get('country').upper()#else#<img style='margin:0 0 2px 4px;width:16px;height:11px;vertical-align:middle' title='${this_show['country']}' src='$sbRoot/images/flags/${$this_show['country'].lower()}.png' width='16' height='11'>#end if#</em></span>
+						<span style='font-size:0.9em;color:#888'><em>Country:#if not $this_show.get('country_img')#&nbsp;$this_show.get('country').upper()#else#<img  class='flag' title='${this_show['country']}' src='$sbRoot/images/flags/${$this_show['country'].lower()}.png' width='20' height='16'>#end if#</em></span>
             #end if
             #if $this_show.get('language')
-						<span style='font-size:0.9em;color:#888#if $this_show.get('country')#;padding-left:6px#end if#'><em>Language:#if not $this_show.get('language_img')#&nbsp;$this_show.get('language')#else#<img style='margin:0 0 2px 4px;width:16px;height:11px;vertical-align:middle' title='${this_show['language']}' src='$sbRoot/images/flags/svg/lang/${$this_show['language'].lower()}.png' width='16' height='11'>#end if#</em></span>
+						<span style='font-size:0.9em;color:#888#if $this_show.get('country')#;padding-left:6px#end if#'><em>Language:#if not $this_show.get('language_img')#&nbsp;$this_show.get('language')#else#<img class='flag' title='${this_show['language']}' src='$sbRoot/images/flags/svg/lang/${$this_show['language'].lower()}.png' width='20' height='16'>#end if#</em></span>
             #end if
 					</p>
         #end if

@@ -604,7 +604,7 @@ class IMDbIndexer(TVInfoBase):
             raise BaseTVinfoError(f'Invalid name id: {p_id}')
         result = None
         try:
-            imdb_obj = imdbgql.IMDbGQL()
+            imdb_obj = imdbgql.IMDb()
             res = self._get_graphql_data(
                 imdb_obj.get_full_filmography,
                 name_id=p_id, type_categories=['tv'], tv_limit=9999, credits_limit=9999)
@@ -630,7 +630,7 @@ class IMDbIndexer(TVInfoBase):
         res = ([], None, 0)
         result = []
         try:
-            imdb_obj = imdbgql.IMDbGQL()
+            imdb_obj = imdbgql.IMDb()
             res = self._get_graphql_data(
                 imdb_obj.search_by_filters,
                 languages='en', limit=result_count, title_type=["tvSeries", "tvMiniSeries"], min_date=start_date,
@@ -667,7 +667,7 @@ class IMDbIndexer(TVInfoBase):
         res = ([], None, 0)
         result = []
         try:
-            imdb_obj = imdbgql.IMDbGQL()
+            imdb_obj = imdbgql.IMDb()
             res = self._get_graphql_data(
                 imdb_obj.search_by_filters,
                 languages='en', limit=result_count, title_type=["tvSeries", "tvMiniSeries"], min_date=start_date,
@@ -703,7 +703,7 @@ class IMDbIndexer(TVInfoBase):
         result = []
         res = [], None, 0
         try:
-            imdb_obj = imdbgql.IMDbGQL()
+            imdb_obj = imdbgql.IMDb()
             de_dupe = []
             res = self._get_graphql_data(
                 imdb_obj.search_by_filters,
@@ -770,7 +770,7 @@ class IMDbIndexer(TVInfoBase):
         res = ([], None)
         result = []
         try:
-            imdb_obj = imdbgql.IMDbGQL()
+            imdb_obj = imdbgql.IMDb()
             res = self._get_graphql_data(
                 imdb_obj.get_coming_soon,
                 limit=result_count, title_type='TV', min_date=start_date,
@@ -803,7 +803,7 @@ class IMDbIndexer(TVInfoBase):
         res = ([], None, 0, {})
         result = []
         try:
-            imdb_obj = imdbgql.IMDbGQL()
+            imdb_obj = imdbgql.IMDb()
             res = self._get_graphql_data(
                 imdb_obj.get_watchlist,
                 user_id, limit=result_count, title_type=["tvSeries", "tvMiniSeries", "tvEpisode"], loc=None,

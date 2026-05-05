@@ -31,8 +31,8 @@
 							',\r\n'.join('{id: "' + lang + '", name: "' + subtitles.get_language_name(lang) + '"}' for lang in sickgear.SUBTITLES_LANGUAGES) if sickgear.SUBTITLES_LANGUAGES != '' else ''
 						%>
 					],
-					resultsFormatter: function(item){ return '<li><img src="$sbRoot/images/flags/' + item['id'] + '.png"> ' + item[this.propertyToSearch] + '</li>' },
-					tokenFormatter: function(item) { return '<li><img src="$sbRoot/images/flags/' + item['id'] + '.png"> <p>' + item[this.propertyToSearch] + '</p></li>' },
+					resultsFormatter: function(item){ return '<li><img src="$sbRoot/images/flags/svg/lang/' + item['id'] + '.svg"> ' + item[this.propertyToSearch] + '</li>' },
+					tokenFormatter: function(item) { return '<li><img src="$sbRoot/images/flags/svg/lang/' + item['id'] + '.svg"> <p>' + item[this.propertyToSearch] + '</p></li>' },
 					flag: 'flag',
 
 				}
