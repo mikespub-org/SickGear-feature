@@ -11,6 +11,7 @@
 * Update browser_ua from user-agents 2.1.38 (a78437e)
 * Update SimpleJSON 3.20.2 (10e5aaf) to 4.0.0 (1608c05)
 * Update zoneinfo 2025c to 2026b (fallback)
+* Add network logos
 * Fix parsing same named show with different appended years
 * Fix tvdb_api_v4 pagination
 * Fix browsing IMDb cards where there is no year fetched
