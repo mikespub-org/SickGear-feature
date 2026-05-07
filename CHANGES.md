@@ -10,6 +10,7 @@
 * Update Requests library 2.33.0 (bc04dfd) to 2.33.1 (111d2b7)
 * Update browser_ua from user-agents 2.1.38 (a78437e)
 * Update SimpleJSON 3.20.2 (10e5aaf) to 4.0.0 (1608c05)
+* Update urllib3 2.6.3 (0248277) to 2.7.0 (9a950b9)
 * Update zoneinfo 2025c to 2026b (fallback)
 * Add network logos
 * Fix parsing same named show with different appended years
