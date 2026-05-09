@@ -18,11 +18,12 @@
 # noinspection PyProtectedMember
 from datetime import date as dt_date, datetime, time as dt_time, timedelta, timezone
 from mimetypes import MimeTypes
-from urllib.parse import urljoin
+from urllib.parse import urljoin, quote as url_quote
 
 import base64
 import copy
 import glob
+import gzip
 import hashlib
 import io
 import os
@@ -111,13 +112,14 @@ from _23 import decode_bytes, decode_str, getargspec, \
     map_consume, map_none, quote_plus, unquote_plus, urlparse
 from lib.sg_lang_codes import alpha3_to_alpha2, lang_to_country
 from six import binary_type, integer_types, iteritems, iterkeys, itervalues, moves, string_types
+from lib.tvinfo_base import TVInfoShow
 
 # noinspection PyUnreachableCode
 if False:
     from typing import Any, AnyStr, Dict, List, Optional, Set, Tuple, Union
     from sickgear.providers.generic import TorrentProvider
     # prevent pyc TVInfoBase resolution by typing the derived used class to TVInfoAPI instantiation
-    from lib.tvinfo_base import TVInfoBase, TVInfoCharacter, TVInfoPerson, TVInfoShow
+    from lib.tvinfo_base import TVInfoBase, TVInfoCharacter, TVInfoPerson
     # from api_imdb.imdb_api import IMDbIndexer
     from api_tmdb.tmdb_api import TmdbIndexer
     from api_trakt.indexerapiinterface import TraktIndexer
@@ -4082,8 +4084,7 @@ class HomeProcessMedia(Home):
         sickgear.MEMCACHE['DEPRECATE_PP_LEGACY'] = True
 
 class AddShows(Home):
-    _btn_tag_names = []
-    _browse_cat = ''
+    _btn_tag_names = {}
     _persitent_tag_button_states = {}
 
     def get(self, route, *args, **kwargs):
@@ -4260,6 +4261,19 @@ class AddShows(Home):
         final_results = []
         sources_to_search = id_srcs + [s for s in [TVINFO_TRAKT] + searchable if s not in id_srcs]
         ids_search_used = ids_to_search.copy()
+        trakt_only_search = all(True for i in ids_to_search if i in (TVINFO_TRAKT, TVINFO_TRAKT_SLUG))
+
+        def _parse_date_year(_res):
+            if isinstance(_res, int) and 1900 <= _res <= 2100:
+                return _res
+            try:
+                return dateutil.parser.parse(_res).year
+            except (BaseException, Exception):
+                if isinstance(_res, str) and 4 == len(_res):
+                    year = sg_helpers.try_int(_res, '')
+                    if 1900 <= year <= 2100:
+                        return year
+                return ''
 
         for cur_tvid in sources_to_search:
             tvinfo_config = sickgear.TVInfoAPI(cur_tvid).api_params.copy()
@@ -4295,7 +4309,10 @@ class AddShows(Home):
                                                     if v and k not in iterkeys(ids_to_search)})
                         results[cur_tvid][tv_src_id]['rename_suggest'] = '' \
                             if not results[cur_tvid][tv_src_id]['firstaired'] \
-                            else dateutil.parser.parse(results[cur_tvid][tv_src_id]['firstaired']).year
+                            else _parse_date_year(results[cur_tvid][tv_src_id]['firstaired'])
+                    if trakt_only_search and TVINFO_TRAKT == cur_tvid:
+                        ids_search_used.update({k: v for k, v in iteritems(cur_result.get('ids', {}))
+                                                if v and k not in iterkeys(ids_to_search)})
                     if not text_search_used and cur_tvid in ids_to_search and tv_src_id == ids_to_search.get(cur_tvid):
                         used_search_term.update(self._generate_search_text_list(cur_result['seriesname']))
                         if not term:
@@ -5118,6 +5135,7 @@ class AddShows(Home):
             kwargs['mode'] += '-more'
 
         filtered = []
+        all_classes = set()
 
         import browser_ua
         from json_helper import json_loads
@@ -5177,9 +5195,9 @@ class AddShows(Home):
                     except (BaseException, Exception):
                         pass
 
-                    genres = ', '.join(sorted(x.get('name')
-                                              for x in filter(lambda _i: _i.get('name') or '', item.get('genres') or [])
-                                              if x))
+                    genre_list = sorted(
+                        x.get('name') for x in filter(lambda _i: _i.get('name') or '', item.get('genres') or []) if x)
+                    genres = ', '.join(genre_list)
 
                     overview = item.get('description') or ''
 
@@ -5187,8 +5205,14 @@ class AddShows(Home):
                         rating = helpers.try_int((item.get('criticScoreSummary') or {}).get('score'))
                     else:
                         rating = int(helpers.try_float((item.get('userScore') or {}).get('score')) * 10)
+                    cur_show_info = TVInfoShow()
+                    cur_show_info.genre_list = genre_list
+                    cur_show_info.genre = genres
+                    tag_classes, class_list = self._make_tag_classes(cur_show_info, False)
+                    all_classes.update(class_list)
 
                     filtered.append(dict(
+                        tag_classes=tag_classes,
                         ord_premiered=ord_premiered,
                         str_premiered=str_premiered,
                         started_past=started_past,
@@ -5215,7 +5239,7 @@ class AddShows(Home):
             if callable(getattr(self, func, None)):
                 sickgear.MC_MRU = func
                 sickgear.save_config()
-        return self.browse_shows(browse_type, browse_title, filtered, **kwargs)
+        return self.browse_shows(browse_type, browse_title, filtered, all_classes=all_classes, **kwargs)
 
     # noinspection PyUnusedLocal
     def info_metacritic(self, ids, show_name):
@@ -5398,7 +5422,11 @@ class AddShows(Home):
         return self.new_show('|'.join(['', '', '', show_name]), use_show_name=True)
 
     @staticmethod
-    def _make_tag_classes(cur_show_info, incl_person=True):
+    def _encode_class_name(class_name):
+        return "".join(char if char.isalnum() or '%' == char  else "%{0:0>2x}".format(ord(char))
+                       for char in url_quote(class_name, safe='')).replace('%', '_')
+
+    def _make_tag_classes(self,cur_show_info, incl_person=True):
         # type: (TVInfoShow) -> Tuple[str,set]
         class_list = set()
         if incl_person:
@@ -5406,7 +5434,7 @@ class AddShows(Home):
             class_list.update({('tag-trait-acting', 'tag-trait-self')[bool(_s[1])] for _s in p_chars})
             char_rt = {_t[0] for _t in p_chars}
             class_list.update({f'tag-cast-{RoleTypes.reverse[_n].lower().replace(" ", "_")}' for _n in char_rt})
-        replace_regex = re.compile(r'[^a-zA-Z0-9]')
+        replace_regex = re.compile(r'[^\w.+]', flags=re.U)
         genres = {f'tag-genre-{replace_regex.sub("_", _g.replace("&", "and"))}' for _g in cur_show_info.genre_list
                                                                                         or cur_show_info.show_type or []}
         if not genres:
@@ -5429,6 +5457,12 @@ class AddShows(Home):
         if not languages:
             languages = {f'tag-language-UNKNOWN'}
         class_list.update(languages)
+        networks = set()
+        networks = {f'tag-networks-{self._encode_class_name(c)}' for c in cur_show_info.networks or
+                    (cur_show_info.network and [cur_show_info.network]) or []}
+        if not networks:
+            networks = {f'tag-networks-UNKNOWN'}
+        class_list.update(networks)
         return ' '.join(class_list), class_list
 
     @staticmethod
@@ -6415,7 +6449,7 @@ class AddShows(Home):
 
                 overview = self.clean_overview(cur_show_info)
                 overview_ajax = ("No overview yet" == overview
-                                 and p_ref and not bool(cur_show_info.cast[RoleTypes.ActorMain]))
+                                 and bool(p_ref) and not bool(cur_show_info.cast[RoleTypes.ActorMain]))
 
                 tag_classes, class_list = self._make_tag_classes(cur_show_info, bool(p_ref))
                 all_classes.update(class_list)
@@ -6570,8 +6604,9 @@ class AddShows(Home):
         if not AddShows._persitent_tag_button_states:
             res = {}
             try:
-                btn_settings = os.path.join(sickgear.DATA_DIR, 'btn-status.json')
-                with open(btn_settings, 'r') as f:
+                # with open(sickgear.BTN_SETTINGS_FILE, 'r') as f:
+                #     res = json_load(f)
+                with gzip.GzipFile(sickgear.BTN_SETTINGS_FILE, 'r') as f:
                     res = json_load(f)
                 if isinstance(res, dict):
                     AddShows._persitent_tag_button_states = res
@@ -6579,31 +6614,47 @@ class AddShows(Home):
                 pass
         return AddShows._persitent_tag_button_states
 
-    def set_persistent_btn_status(self, button_states=None, **kwargs):
+    def get_btn_profile_states(self, browse_cat=None):
+        if browse_cat in (c_p := self._get_persistent_btn_states):
+            return json_dumps(c_p[browse_cat])
+        return json_dumps({})
+
+    def set_persistent_btn_status(self, button_states=None, browse_cat=None, **kwargs):
         if button_states:
             button_states = json_loads(button_states)
             if isinstance(button_states, dict):
                 # validate data
-                button_states = {mk: {k:v for k,v in mv.items() if v in ('include', 'none', 'exclude') and k in AddShows._btn_tag_names} for mk,mv in button_states.items() if mk == AddShows._browse_cat}
-                AddShows._persitent_tag_button_states.setdefault(AddShows._browse_cat, {}).update(button_states[AddShows._browse_cat])
+                profile_numbers = [f'{i}' for i in range(1, 11)]
+                profile_names = {p: n for p,n in button_states[browse_cat].get('names', {}).items()
+                                 if p in profile_numbers and isinstance(n, str) and 3 <= len(n) <= 30}
+                button_states = {mk: {p: {k:v for k,v in pv.items() if v in ('include', 'none', 'exclude')
+                                          and k in AddShows._btn_tag_names[browse_cat]} for p,pv in mv.items()
+                                      if p in ['current'] + profile_numbers}
+                                 for mk,mv in button_states.items() if mk == browse_cat}
+                button_states[browse_cat]['names'] = profile_names
+                for p, pv in button_states[browse_cat].items():
+                    AddShows._persitent_tag_button_states.setdefault(browse_cat, {}).setdefault(p, {}).update(pv)
+                # (AddShows._persitent_tag_button_states.setdefault(browse_cat, {}).setdefault('current', {}).update(button_states[browse_cat]))
                 try:
-                    btn_settings = os.path.join(sickgear.DATA_DIR, 'btn-status.json')
                     bak_file = None
-                    if os.path.isfile(btn_settings):
-                        bak_file = re.sub(r'\.json$', '.bak', btn_settings)
-                        copy_file(btn_settings, bak_file)
-                    with open(btn_settings, 'w') as f:
+                    if os.path.isfile(sickgear.BTN_SETTINGS_FILE):
+                        bak_file = re.sub(r'\.json$', '.bak', sickgear.BTN_SETTINGS_FILE)
+                        copy_file(sickgear.BTN_SETTINGS_FILE, bak_file)
+                    # with open(sickgear.BTN_SETTINGS_FILE, 'w') as f:
+                    #     json_dump(AddShows._persitent_tag_button_states, f)
+                    with gzip.GzipFile(sickgear.BTN_SETTINGS_FILE, 'w') as f:
                         json_dump(AddShows._persitent_tag_button_states, f)
-                    if not os.path.isfile(btn_settings):
+                    if not os.path.isfile(sickgear.BTN_SETTINGS_FILE):
                         return json_dumps({'result': 'failed'})
-                    with open(btn_settings, 'r') as f:
+                    # with open(sickgear.BTN_SETTINGS_FILE, 'r') as f:
+                    with gzip.GzipFile(sickgear.BTN_SETTINGS_FILE, 'r') as f:
                         if not isinstance(json_load(f), dict):
                             try:
-                                remove_file(btn_settings)
+                                remove_file(sickgear.BTN_SETTINGS_FILE)
                             except (BaseException, Exception):
                                 pass
                             if bak_file:
-                                copy_file(bak_file, btn_settings)
+                                copy_file(bak_file, sickgear.BTN_SETTINGS_FILE)
                             return json_dumps({'result': 'failed'})
                     if bak_file:
                         try:
@@ -6637,12 +6688,12 @@ class AddShows(Home):
         t.saved_showsort_view = 1 <= len(showsort) and showsort[0] or '*'
         t.all_shows = []
         all_classes = all_classes or set()
-        AddShows._btn_tag_names = all_classes
-        AddShows._browse_cat = browse_type + ('', '-person')[bool(t.p_ref)]
+        _browse_cat = browse_type + ('', '-person')[bool(t.p_ref)]
+        AddShows._btn_tag_names.setdefault(_browse_cat, set()).update(all_classes)
         t.all_classes = self._make_browse_classes(all_classes)
         t.persistent_tag_button_states = {
-            AddShows._browse_cat: self._get_persistent_btn_states.get(AddShows._browse_cat, {})}
-        t.browse_cat = AddShows._browse_cat
+            _browse_cat: {'current': self._get_persistent_btn_states.get(_browse_cat, {}).get('current', {})}}
+        t.browse_cat = _browse_cat
         t.kwargs = kwargs
         if None is t.kwargs.get('footnote') and kwargs.get('mode', 'nomode') in ('upcoming',):
             t.kwargs['footnote'] = 'Note; Expect default placeholder images in this list'

@@ -44,6 +44,8 @@ var browse_person = #if $p_ref#true#else#false#end if#;
 </script>
 <script type="text/javascript" src="$sg_root/js/plotTooltip.js?v=$sbPID"></script>
 <script type="text/javascript" src="$sbRoot/js/browseShows.js?v=$sbPID"></script>
+<link rel="stylesheet" type="text/css" href="$sg_root/css/lib/jquery.toast.min.css?v=$sbPID">
+<script type="text/javascript" src="$sg_root/js/lib/jquery.toast.min.js?v=$sbPID"></script>
 
 <script type="text/javascript" charset="utf-8">
 <!--
@@ -599,7 +601,31 @@ $(function() {
 
 		<div class="pull-right" style="clear:right">
     #if $all_classes.strip('{} ')
-			<span id="tag-filters"><button class="btn btn-inline" type="button"><i class="filter-ico"></i></i><b>Filters</b></button><div id="tag-dialog"><table id="tags-table"><tbody id="tags-container"></tbody></table></div></span>&nbsp;
+			<div id="tag-filters">
+				<div id="tag-dialog">
+#set $profile_count = 11
+				<div id="tag-menu-container">
+					<span>$browse_cat: </span><div class="profile-menu" id="load_menu_button"><i class="ui-icon ui-icon-folder-open"></i>Load...
+					<ul id="load_menu" class="profile-menu-items">
+#for $i in $range(1, $profile_count)
+						<li class="profile_load" value="$i"><div>Profile $i</div></li>
+#end for
+					</ul></div>
+					<div class="profile-menu" id="save_menu_button"><i class="ui-icon ui-icon-disk"></i>Save...
+					<ul id="save_menu" class="profile-menu-items">
+#for $i in $range(1, $profile_count)
+						<li class="profile_save" value="$i"><div>Profile $i</div></li>
+#end for
+					</ul></div>
+					<div class="profile-menu" id="rename_menu_button"><i class="ui-icon ui-icon-pencil"></i>Rename...
+					<ul id="rename_menu" class="profile-menu-items">
+#for $i in $range(1, $profile_count)
+						<li class="profile_rename" value="$i"><div>Profile $i</div></li>
+#end for
+					</ul></div>
+				</div>
+				<table id="tags-table"><tbody id="tags-container"></tbody></table></div></div>&nbsp;
+			<button id="filter_button" class="btn btn-inline" type="button"><i class="filter-ico"></i></i><b>Filters</b></button>&nbsp;
     #end if
 			<input id="search_show_name" class="search form-control form-control-inline input-sm input200" type="search" placeholder="Filter Show Name#if $use_network#/Network#end if#">
 			&nbsp;<button type="button" class="resetshows btn btn-inline">Reset Filter</button>

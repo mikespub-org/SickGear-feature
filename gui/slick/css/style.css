@@ -379,7 +379,7 @@ inc_top.tmpl
 	filter:alpha(opacity=35);
 	-webkit-border-radius:8px;
 	   -moz-border-radius:8px;
-		    border-radius:8px;
+			border-radius:8px;
 	background:#000 url("../css/lib/images/ui-bg_flat_0_000000_40x100.png") 50% 50% repeat-x
 }
 
@@ -5331,8 +5331,29 @@ fancybox.css Overrides
 	vertical-align: top;
 }
 .ui-dialog {
-	z-index: 9999 !important ;
+	z-index: 8000 !important ;
 	position:fixed !important;
+}
+
+.profile-menu {
+	display:inline;
+	margin: 10px;
+	padding-left: 5px;
+	padding-right: 10px;
+	border:1px solid black;
+	cursor: pointer;
+	border-radius: 10px;
+}
+.profile-menu-items {
+	display:none;
+	position: absolute;
+	background-color: #fff;
+	z-index:8010;
+	list-style-type: none;
+	padding: 0 10px 0 10px;
+}
+#tag-menu-container {
+	text-align:center;
 }
 
 #tag-filters .filter-ico{
@@ -5352,4 +5373,9 @@ fancybox.css Overrides
 	width: 16px;
 	height: 16px;
 	line-height: 16px;
+}
+#tag-menu {
+	position:relative;
+	left:0px;
+	width:10em;
 }

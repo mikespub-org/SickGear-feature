@@ -159,9 +159,29 @@ function updateTagCount() {
 }
 
 function init_buttons(){
+	//let tag_menu = $('#tag-menu');
 	if (persistent_tag_button_states[browse_cat] === undefined) {
-		persistent_tag_button_states[browse_cat] = {}
+		persistent_tag_button_states[browse_cat] = {'current': {}, 'names': {}}
 	}
+	if (persistent_tag_button_states[browse_cat]['names'] === undefined) {
+		persistent_tag_button_states[browse_cat]['names'] = {}
+	}
+	$.get($.SickGear.Root + '/add-shows/get-btn-profile-states',
+	{'browse_cat': browse_cat}).done(
+		function (data) {
+			if (data) {
+				try {
+					data = JSON.parse(data);
+					persistent_tag_button_states[browse_cat] = data;
+					if (persistent_tag_button_states[browse_cat]['names']) {
+						$.each(persistent_tag_button_states[browse_cat]['names'], function (index, value) {
+							$('.profile_load[value="' + index + '"], .profile_save[value="' + index + '"], .profile_rename[value="' + index + '"]').children('div').text(value);
+						});
+					}
+				} catch {}
+			}
+		}
+	);
 	iso_showcards = $('.show-card');
 	function gen_tag_checkboxes(value, parent_obj, category, extra_remove, button_count) {
 	   let new_checkbox = $('<input type="checkbox">');
@@ -169,9 +189,16 @@ function init_buttons(){
 		if (extra_remove) {
 			tag_name = tag_name.replace(extra_remove, '');
 		}
+		let button_title = '';
+		if ('networks' === category){
+			try {
+			button_title = decodeURIComponent(tag_name.replaceAll('_', '%'));} catch {}
+		} else {
+			button_title = str_title(tag_name.replaceAll('-', ' ').replaceAll('_', ' '));
+		}
 		$(new_checkbox).attr('data-button-count', button_count).attr('id', value).data('target', value).prop('checked', true);
 		let new_label = $('<label></label>');
-		$(new_label).attr('for', value).text(str_title(tag_name.replaceAll('-', ' ').replaceAll('_', ' ')));
+		$(new_label).attr('for', value).text(button_title);
 		if (('country' === category || 'language' === category)/* && 'unknown' !== tag_name.toLowerCase()*/) {
 			let is_lang = 'language' === category;
 			let extra_lang = is_lang ? 'svg/lang/' : '';
@@ -230,7 +257,7 @@ function init_buttons(){
 		$.iso.isotope({ filter: iso_filter_func });
 	}
 
-	function change_tag_btn(target_btn) {
+	function change_tag_btn(target_btn, profile_nb) {
 		let changed = false;
 		let tag_target = $(target_btn).data('target');
 		let btn_status = $(target_btn).val();
@@ -242,8 +269,11 @@ function init_buttons(){
 		} else {
 			$('.' + tag_target).removeClass(remove_classes).addClass('exclude-' + tag_target);
 		}
-		if (persistent_tag_button_states[browse_cat][tag_target] !== btn_status){
-			persistent_tag_button_states[browse_cat][tag_target] = btn_status;
+		if (persistent_tag_button_states[browse_cat][profile_nb || 'current'] === undefined){
+			persistent_tag_button_states[browse_cat][profile_nb || 'current'] = {}
+		}
+		if (persistent_tag_button_states[browse_cat][profile_nb || 'current'][tag_target] !== btn_status){
+			persistent_tag_button_states[browse_cat][profile_nb || 'current'][tag_target] = btn_status;
 			changed = true;
 		}
 		return changed;
@@ -257,7 +287,7 @@ function init_buttons(){
 	}
 
 	function checkbox2button(selector) {
-		const button = $('<button type="button"></button>')
+		const button = $('<button type="button"></button>');
 		$(selector).find('input[type="checkbox"]').each(function (){
 			let cur_parent = $(this).parent();
 			let button_count = $(this).data('button-count');
@@ -309,8 +339,8 @@ function init_buttons(){
 	);
 	iso_tag_container = $('#tags-container .btn-toggle');
 	updateTagCount();
-	if (persistent_tag_button_states[browse_cat]){
-		$.each(persistent_tag_button_states[browse_cat], function (index, value) {
+	if (persistent_tag_button_states[browse_cat] && persistent_tag_button_states[browse_cat]['current']){
+		$.each(persistent_tag_button_states[browse_cat]['current'], function (index, value) {
 			let btn_el = $('#' + index);
 			if (btn_el.length){
 				let button_type = $(btn_el).data('num-max-state');
@@ -321,10 +351,10 @@ function init_buttons(){
 	}
 
 	let tag_el = $('#tags-container').find('[id^="tag-"]');  //'#tag-self, #tag-acting');
-	function set_tag_filters () {
+	function set_tag_filters (profile_nb) {
 		let changed = false;
 		$(tag_el).each(function(){
-			let ch = change_tag_btn(this);
+			let ch = change_tag_btn(this, profile_nb);
 			changed ||= ch;
 		});
 		if (changed){
@@ -334,23 +364,55 @@ function init_buttons(){
 	}
 
 	function tag_dialog_close ( event, ui ) {
-		if (set_tag_filters()) {
+		save_profile(null, null, false);
+		llUpdate();
+	}
+	function save_profile (profile_nb, force_save, save_msg) {
+		if (set_tag_filters(profile_nb) || force_save) {
 			$.post($.SickGear.Root + '/add-shows/set-persistent-btn-status',
 				{
 					_xsrf: Cookies.get('_xsrf'),
+					'browse_cat': browse_cat,
 					button_states: JSON.stringify(persistent_tag_button_states),
 				},
 				function(data){
 					let result = $.parseJSON(data);
 					if ('success' === result['result']) {
-						console.log('saved')
+						//console.log('saved');
+						if (save_msg !== false){
+							$.toast({
+								heading: 'Information',
+								icon: 'success',
+								text: 'Profile saved!',
+								showHideTransition: 'slide',
+								allowToastClose: true,
+								position: 'bottom-left',
+								hideAfter: 5000   // in milli seconds
+							});
+							}
+					} else {
+						if (save_msg !== false){
+							$.toast({
+								heading: 'Error',
+								icon: 'error',
+								hideAfter: false,
+								text: 'Profile failed to save!',
+								showHideTransition: 'slide',
+								allowToastClose: true,
+								position: 'bottom-left'
+							});
+						}
 					}
 				}
 			);
 		}
 	}
-	$('#tag-filters').click(function () {
+	$('#filter_button').click(function () {
 		$('#tag-dialog').dialog( "open" );
+	});
+	$(window).resize(function() {
+		$('#tag-dialog').dialog("option", "width", $(window).width());
+		$('#tag-dialog').dialog("option", "height", $(window).height());
 	});
 	$('#tag-dialog').dialog(    {
 		title: 'Filters',
@@ -364,11 +426,81 @@ function init_buttons(){
 		create: disableScroll,
 		close: enableScroll,
 		open: function(){
-			$(this).dialog( "option", "height", $(window).height() );
+			$(this).dialog("option", "height", $(window).height());
+			$(this).dialog("option", "width", $(window).width());
 		},
 	});
 	set_tag_filters();
+	try {
+	initLazyload();} catch {}
 	iso_filter_update();
+	$('div.profile-menu').hover(
+		function () {
+			let pos = $(this).position();
+			let width = $(this).outerWidth();
+			$(this).children('.profile-menu-items').css({
+				top: pos.bottom,
+				left: pos.left,
+				'min-width': width,
+				position:'absolute'
+				}).slideDown(0);
+		},
+		function () {
+			$(this).children('.profile-menu-items').slideUp(0);
+		}
+	);
+
+	$('.profile_load').click(function (){
+		$(this).parents('.profile-menu-items').slideUp(0);
+		let value = $(this).val();
+		let new_vals = persistent_tag_button_states[browse_cat][value] || {};
+		$('button.btn-toggle').each(function (){
+			let button_id = $(this).attr('id');
+			let val = new_vals[button_id] || 'include';
+			let button_type = $(this).data('num-max-state');
+			let new_state = multi_button_styles_rev[button_type][val];
+			change_button_status($(this), button_type, new_state);
+		});
+		set_tag_filters();
+		save_profile(null, true, false);
+		$.toast({
+			heading: 'Information',
+			icon: 'success',
+			text: 'Profile loaded!',
+			showHideTransition: 'slide',
+			allowToastClose: true,
+			position: 'bottom-left',
+			hideAfter: 3000   // in milli seconds
+		});
+	});
+	$('.profile_save').click(function (){
+		$(this).parents('.profile-menu-items').slideUp(0);
+		let value = $(this).val();
+		save_profile(value, true);
+	});
+	$('.profile_rename').click(function (){
+		$(this).parents('.profile-menu-items').slideUp(0);
+		let value = $(this).val();
+		let pro_text_el = $(this).children('div');
+		let pro_name= $(pro_text_el).text();
+		let new_name = prompt('Enter new name (min 3 Char)', pro_name);
+		if (new_name && 3 <= new_name.length && new_name.length <= 30) {
+			persistent_tag_button_states[browse_cat]['names'][value] = new_name;
+			$(pro_text_el).text(new_name);
+			$('.profile_load[value="' + value +'"], .profile_save[value="' + value +'"]').children('div').text(new_name);
+			save_profile(null, true, false);
+		} else if (new_name !== null) {
+			$.toast({
+				heading: 'Warning',
+				icon: 'warning',
+				text: 'Profile name needs to be between 3 and 30 characters!',
+				showHideTransition: 'slide',
+				allowToastClose: true,
+				position: 'bottom-left',
+				hideAfter: 10000   // in milli seconds
+			});
+		}
+	});
 }
 
 // scroll prevention

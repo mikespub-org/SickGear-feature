@@ -17,6 +17,7 @@
 import datetime
 import os.path
 import re
+import gzip
 
 import sickgear
 import sickgear.providers
@@ -514,7 +515,8 @@ def validate_btn_status_file(filename):
     try:
         if not os.path.isfile(filename):
             return False
-        with open(filename, 'r') as f:
+        # with open(filename, 'r') as f:
+        with gzip.GzipFile(filename, 'r') as f:
             if isinstance(json_load(f), dict):
                return True
     except (BaseException, Exception):
@@ -528,8 +530,7 @@ def backup_btn_status():
     """
     logger.log('backing up btn-status.json')
     try:
-        btn_status_file = os.path.join(sickgear.DATA_DIR, 'btn-status.json')
-        if not validate_btn_status_file(btn_status_file):
+        if not validate_btn_status_file(sickgear.BTN_SETTINGS_FILE):
             logger.error('btn-status.json file seems to be invalid, not backing up.')
             return
         now = datetime.datetime.now()
@@ -537,7 +538,7 @@ def backup_btn_status():
         t = datetime.datetime.strftime(now, '%H-%M')
         target_base = os.path.join(sickgear.BACKUP_DB_PATH or os.path.join(sickgear.DATA_DIR, 'backup'))
         target = os.path.join(target_base, 'btn-status.json')
-        copy_file(btn_status_file, target)
+        copy_file(sickgear.BTN_SETTINGS_FILE, target)
         if not validate_btn_status_file(target):
             logger.error('btn-status.json file seems to be invalid, not backing up.')
             remove_file_perm(target)
