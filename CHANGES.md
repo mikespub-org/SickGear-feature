@@ -1,4 +1,9 @@
-﻿### 3.35.4 (2026-04-30 00:25:00 UTC)
+﻿### 3.35.5 (2026-05-10 20:25:00 UTC)
+
+* Change add support for Python 3.14.5
+
+
+### 3.35.4 (2026-04-30 00:25:00 UTC)
 
 * Update UnRar x64 for Windows 7.20 to 7.21
 
