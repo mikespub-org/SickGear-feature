@@ -4,7 +4,7 @@
 * Update apprise 1.9.9 (4639799) to 1.10.0 (343c960)
 * Update certifi 2026.02.25 to 2026.04.22
 * Update chardet packages 7.3.0 (00667a4) to 7.4.1 (9079efc)
-* Update filelock 3.20.1 (377f622) to 3.25.2 (5b9872c)
+* Update filelock 3.20.1 (377f622) to 3.29.0 (469b47f)
 * Update idna library 3.11 (ad949ee) to 3.14 (37b6b74)
 * Update packaging 26.0 (3b77a26) to 26.2 (84a87ee)
 * Update Requests library 2.33.0 (bc04dfd) to 2.34.0 (0b401c7)
@@ -23,6 +23,7 @@
 [develop]
 * Change disable check_same_thread for sqllite connection to make sure that finalize __del__ doesn't throw exceptions
 * Update chardet packages 7.4.0 (582c664) to 7.4.1 (9079efc)
+* Update filelock 3.25.2 (5b9872c) to 3.29.0 (469b47f)
 * Update idna library 3.13 (89cdfd2) to 3.14 (37b6b74)
 * Update packaging 26.1 (c1a88a3) to 26.2 (84a87ee)
 * Update Requests library 2.33.1 (111d2b7) to 2.34.0 (0b401c7)
