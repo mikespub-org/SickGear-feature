@@ -13,7 +13,7 @@ import requests
 import time
 import traceback
 
-# from .imdb_exceptions import *
+from .imdb_exceptions import *
 # from bs4_parser import BS4Parser
 from exceptions_helper import ex
 from lib import imdbpie, imdbgql
@@ -462,12 +462,14 @@ class IMDbIndexer(TVInfoBase):
         cache_graphql_key = f'graphql-{data_md5}'
         is_none, d = self._get_cache_entry(cache_graphql_key)
         if None is d and not is_none:
-            if 'watchlist' in endpoint.__name__.lower():
+            if any(_ep in endpoint.__name__.lower() for _ep in ('watchlist', 'get_favorite_people')):
                 expire = 60 * 15
             else:
                 expire = 60 * 60 * 18
             try:
                 d = endpoint(*args, **kwargs)
+            except imdbgql.IMDbGQLPersonNotFound:
+                raise IMDbPersonNotFound(f'Person id {kwargs.get("name_id", "")} not found')
             except (BaseException, Exception):
                 d = None
             if isinstance(d, tuple) and d[0]:
@@ -508,22 +510,22 @@ class IMDbIndexer(TVInfoBase):
             thumb_url = None
             images = []
         bio = (p_data['bio'] and p_data['bio']['text']['plainText']) or None
-        if p_data['birthDate'] and (bd := p_data['birthDate'].get('dateComponents')) \
+        if p_data.get('birthDate') and (bd := p_data['birthDate'].get('dateComponents')) \
                 and all(bd.get(_f) for _f in ('year', 'month', 'day')):
             birthdate = datetime.date(bd['year'], bd['month'], bd['day'])
         else:
             birthdate = None
-        if p_data['deathDate'] and (bd := p_data['deathDate'].get('dateComponents')) \
+        if p_data.get('deathDate') and (bd := p_data['deathDate'].get('dateComponents')) \
                 and all(bd.get(_f) for _f in ('year', 'month', 'day')):
             deathdate = datetime.date(bd['year'], bd['month'], bd['day'])
         else:
             deathdate = None
-        if p_data['birthLocation']:
+        if p_data.get('birthLocation'):
             birthplace = p_data['birthLocation']['text']
         else:
             birthplace = None
         ids = TVInfoIDs(imdb=p_id)
-        if p_data['height']:
+        if p_data.get('height'):
             value = p_data['height']['measurement']['value']
             unit = p_data['height']['measurement']['unit']
             if 'centimeter' == (unit or '').lower():
@@ -533,7 +535,7 @@ class IMDbIndexer(TVInfoBase):
         else:
             height = None
         akas = set()
-        if p_data['akas']:
+        if p_data.get('akas'):
             akas = {_a['node']['text'] for _a in p_data['akas']['edges']}
         person_obj = TVInfoPerson(
             p_id=p_id, name=p_naem, image=image, thumb_url=thumb_url, images=images, bio=bio, birthdate=birthdate,
@@ -611,6 +613,8 @@ class IMDbIndexer(TVInfoBase):
             tv_shows = [_s for _s in res[1]
                         if _s['title']['titleType']['id'] in ["tvSeries", "tvMiniSeries", "tvEpisode"]]
             result = self._convert_graphql_person(res[0], tv_shows)
+        except IMDbPersonNotFound as e:
+            raise e
         except (BaseException, Exception) as e:
             log.error(f'Person full filmography error: {e}')
         return result
@@ -813,6 +817,37 @@ class IMDbIndexer(TVInfoBase):
                 if ti_show:
                     result.append(ti_show)
         except (BaseException, Exception) as e:
-            log.error(f'Trending error: {e}')
+            log.error(f'Watchlist error: {e}')
+            res = ([], None, 0, {})
+        return result, res[1], res[2], res[3]
+
+    def get_favorite_actors(self, user_id, result_count=1000, sort_by='LIST_ORDER', sort_order='ASC',
+                            after_cursor=None, **kwargs):
+        # type: (...) -> Tuple[List[TVInfoPerson],str,int,dict]
+        """
+        get favorite actors
+
+        :param user_id: the number part of the user id: ur12345678
+        :param result_count: count of results to return (optional)
+        :param sort_by: sort by
+        :param sort_order: sort order
+        :param after_cursor: for pagination: end_cursor of previous call
+        :return: Tuple of List of TVInfoPerson, end_cursor, total count of results, List info dict
+        """
+        res = ([], None, 0, {})
+        result = []
+        try:
+            imdb_obj = imdbgql.IMDb()
+            res = self._get_graphql_data(
+                imdb_obj.get_favorite_people,
+                user_id, limit=result_count, sort_by=sort_by, sort_order=sort_order, after_cursor=after_cursor)
+            for _p_d in res[0]:
+                if not any(_p['category']['text'] in ('Actress', 'Actor') for _p in _p_d['primaryProfessions']):
+                    continue
+                ti_person = self._convert_graphql_person(_p_d, [])
+                if ti_person:
+                    result.append(ti_person)
+        except (BaseException, Exception) as e:
+            log.error(f'Favorite actors error: {e}')
             res = ([], None, 0, {})
         return result, res[1], res[2], res[3]

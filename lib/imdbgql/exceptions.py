@@ -4,3 +4,7 @@ class IMDbGQLException(Exception):
 
 class IMDbGQLError(IMDbGQLException):
     pass
+
+
+class IMDbGQLPersonNotFound(IMDbGQLException):
+    pass

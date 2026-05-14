@@ -1037,6 +1037,31 @@ home.tmpl
 	border-radius:0
 }
 
+.person-title-text{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow:hidden;
+	white-space:nowrap;
+	font-size:16px;
+	font-weight: bold;
+	margin:4px 4px 0 4px;
+	cursor: help;
+}
+
+.person-age{
+	float:left;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow:hidden;
+	white-space:nowrap;
+	font-size:13px;
+	font-weight: bold;
+	margin:4px 4px 0 4px;
+	cursor: default;
+}
+
 .show-title{
 	position:relative;
 	overflow:hidden;
@@ -1485,6 +1510,21 @@ home_browseShows.tmpl
 	overflow:hidden;
 	height:273px;
 	width:186px;
+	border-top-left-radius:5px;
+	border-top-right-radius:5px;
+	border-bottom:1px solid #111;
+	background-position:50% 50%;
+	text-decoration: none !important;
+	background-image:url("../images/poster-dark.jpg")
+}
+
+.browse-person-image{
+	display:block;
+	margin-left: 50%;
+	transform: translateX(-50%);
+	overflow:hidden;
+	height:273px;
+	/*width:186px;*/
 	border-top-left-radius:5px;
 	border-top-right-radius:5px;
 	border-bottom:1px solid #111;

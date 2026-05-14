@@ -387,3 +387,139 @@ filmography_types = {
 }
 
 filmography_types = {_k: _compact_data(_v) for _k, _v in filmography_types.items()}
+
+
+UserListListItemMetadata = """ on List {
+        author {
+            username {
+                text
+            }
+            userId
+        }
+        id
+        name {
+            originalText
+        }
+        listType {
+            id
+        }
+        listClass {
+            id
+            name {
+                text
+            }
+        }
+        description {
+            originalText {
+                plaidHtml(showLineBreak: true)
+                markdown
+                plainText
+            }
+        }
+        items(first: 0) {
+            total
+        }
+        createdDate
+        lastModifiedDate
+        primaryImage {
+            image {
+                id
+                caption {
+                    plainText
+                }
+                height
+                width
+                url
+            }
+        }
+        visibility {
+            id
+        }
+    }
+"""
+
+NameListItemMetadata = """ on Name {
+        id
+        primaryImage {
+            url
+            caption {
+                plainText
+            }
+            width
+            height
+        }
+        nameText {
+            text
+        }
+        primaryProfessions {
+            category {
+                text
+            }
+        }
+        professions {
+            profession {
+                text
+            }
+        }
+        birthDate {
+            dateComponents {
+                day
+                month
+                year
+            }
+        }
+        deathDate {
+            dateComponents {
+                day
+                month
+                year
+            }
+        }
+        birthLocation {
+            text
+        }
+        knownForV2(limit: 1) {
+            credits {
+                title {
+                    id
+                    originalTitleText {
+                        text
+                    }
+                    titleText {
+                        text
+                    }
+                    titleType {
+                        canHaveEpisodes
+                    }
+                    releaseYear {
+                        year
+                        endYear
+                    }
+                }
+                episodeCredits(first: 0) {
+                    yearRange {
+                        year
+                        endYear
+                    }
+                }
+            }
+        }
+        bio {
+            text {
+                plainText
+            }
+        }
+    }
+"""
+
+ListSearchItemMetadata = """ on ListItemSearchNode {
+        itemId
+        absolutePosition
+        createdDate
+        description {
+            originalText {
+                plaidHtml(showLineBreak: true)
+            }
+        }
+    }
+"""

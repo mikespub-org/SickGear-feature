@@ -2,8 +2,8 @@
 import logging
 
 from .graphql import fetch_person_page, _search_by_filters, _trending, _coming_soon, _most_popular, _get_watchlist, \
-    _get_person_filmography
-from .exceptions import IMDbGQLError
+    _get_person_filmography, _get_favorite_people
+from .exceptions import IMDbGQLError, IMDbGQLPersonNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,8 @@ class IMDb(object):
         res = _get_person_filmography(
             name_id=name_id, limits=limits, type_categories=type_categories, tv_limit=tv_limit,
             credits_limit=credits_limit)
+        if None is res['data']['name']['nameText']:
+            raise IMDbGQLPersonNotFound(f'Person not found with id: {name_id}')
         credit_types = ['Actress', 'Actor', 'Self']
         result = [t['node'] for r in res['data']['name']['tv']['edges'] for t in r['node']['credits']['edges']
                   if any(_c in r['node']['grouping']['text'] for _c in credit_types)]
@@ -155,3 +157,22 @@ class IMDb(object):
             return data['data']['name']['bio']['text']['plainText']
         except (BaseException, Exception) as e:
             IMDbGQLError(f'Error fetching biography for {imdb_id}: {e}')
+
+    def get_favorite_people(self, user_id, limit=250, jump_pos=1, loc="en-US", sort_by='LIST_ORDER', sort_order='ASC',
+                            after_cursor=None):
+        self._check_sort_params(sort_by, sort_order, ['LIST_ORDER', 'DATE_ADDED'])
+
+        res = _get_favorite_people(limit=limit, jump_pos=jump_pos, user_id=user_id, loc=loc,
+                                   sort_by=sort_by, sort_order=sort_order, after_cursor=after_cursor)
+        if 'nameListItemSearch' not in res['data']['predefinedList']:
+            return None, None, None, None
+        res_list = [r['listItem'] for r in res['data']['predefinedList']['nameListItemSearch']['edges']]
+        list_info = {
+            'list_id': res['data']['predefinedList']['id'],
+            'username': res['data']['predefinedList']['author']['username']['text'],
+            'createdDate': res['data']['predefinedList']['createdDate'],
+            'lastModifiedDate': res['data']['predefinedList']['lastModifiedDate'],
+            'visibility': res['data']['predefinedList']['visibility']['id']
+        }
+        return res_list, self._get_after_cursor(res['data']['predefinedList']['nameListItemSearch']['pageInfo']), \
+            res['data']['predefinedList']['nameListItemSearch']['total'], list_info

@@ -430,6 +430,7 @@ $(function() {
 	<select id="showsort" class="form-control form-control-inline input-sm">
     #set $num_all = len($all_shows)
     #set $selected = ' class="selected" selected="selected"'
+	#if 'favorite_actors' not in $mode
 		<optgroup label="View">
 			<option value="*"#if '*' in $saved_showsort_view#$selected>>&nbsp;#else#>#end if#All (#echo ('', '%s/' % ($num_all - $num_hidden))[0 < $num_hidden]#$num_all)</option>
 			<option value=".notinlibrary"#if '.notinlibrary' in $saved_showsort_view#$selected>>&nbsp;#else#>#end if#Not In Library (#echo $num_all - $num_inlibrary#)</option>
@@ -438,6 +439,7 @@ $(function() {
 			<option value=".hide"#if '.hide' in $saved_showsort_view#$selected>>&nbsp;#else#>#end if#Hidden ($num_hidden)</option>
     #end if
 		</optgroup>
+	#end if
 		<optgroup label="Sort order">
 			<option value="asc"#if not $is_showsort_desc#$selected>>&nbsp;#else#>#end if#Asc</option>
 			<option value="desc"#if $is_showsort_desc#$selected>>&nbsp;#else#>#end if#Desc</option>
@@ -448,7 +450,9 @@ $(function() {
     #if 'TVmaze' not in $browse_type
 			<option value="by_order"#if 'by_order' in $saved_showsort_sortby or $reset_showsort_sortby#$selected>>&nbsp;#else#>#end if#Original</option>
     #end if
+	#if 'favorite_actors' not in $mode
 			<option value="by_premiered"#if 'by_premiered' in $saved_showsort_sortby and not $reset_showsort_sortby#$selected>>&nbsp;#else#>#end if#First aired</option>
+	#end if
 	#if $use_returning
 			<option value="by_returning"#if 'by_returning' in $saved_showsort_sortby and not $reset_showsort_sortby#$selected>>&nbsp;#else#>#end if#Returning</option>
 	#end if
@@ -542,6 +546,17 @@ $(function() {
                     #end for
                 #end if
 			<option value="browse_imdb?api_method=watchlist&action=add"><< Add lists >></option>
+		</optgroup>
+		<optgroup label="IMDb Favorite Actors">
+                #if any($sg_var('IMDB_ACCOUNTS', []))
+                    #for $i, $v in $enumerate($sg_var('IMDB_ACCOUNTS'))
+                        #if not $i % 2
+                            #set $id = $v
+                        #elif not $v.startswith('(Off) ')
+			<option value="browse_imdb?api_method=favorite_actors&account=$id"#echo ('', selected)[('favorite_actors-%s' % $id) == $mode]#>#echo '%s%s' % ($v, ('\'s', '')['your' == $v.replace('(Off) ', '').lower()])# list</option>
+                        #end if
+                    #end for
+                #end if
 		</optgroup>
             #end if
         #elif 'Metacritic' == $browse_type
@@ -653,7 +668,11 @@ $browse_title
     #if $p_ref
 	<div id="person">
 		<div id="person-content" class="main-image">
+		#if $direct_img
+			<a class="thumb" href="$sbRoot/imagecache?path=browse/thumb/imdb&source=$direct_img" rel="dialog"><img class="person-bg" src="$sbRoot/imagecache?path=browse/thumb/imdb&source=$direct_img"></a>
+		#else
 			<a class="thumb" href="$sbRoot/imagecache/person?pid=$p_ref&thumb=1" rel="dialog"><img class="person-bg" src="$sbRoot/imagecache/person?pid=$p_ref&thumb=0"></a>
+		#end if
 		</div>
 	</div>
     #end if
@@ -682,6 +701,7 @@ $browse_title
         #if $use_ratings:
             #set $data_rating = $try_float($this_show['rating'])
         #end if
+	#if 'favorite_actors' not in $mode
 	<div class="show-card $this_show.get('tag_classes', '') ${exclude_show}${hide}${known}inlibrary" data-name="#echo re.sub(r'([\'\"])', r'', $this_show['title'])#" data-id="$show_id" data-ajax="$this_show.get('overview_ajax', '0')" data-nroles="#echo len($this_show.get('p_chars', []))#" #if $use_ratings# data-rating="$data_rating"#end if##if $use_votes# data-votes="$this_show['votes']"#end if# data-premiered="$this_show['ord_premiered']"#if $use_returning# data-returning="$this_show['ord_returning']"#end if# data-order="$this_show['order']"#if $use_network# data-network="$this_show['network']"#end if#>
 		<div class="show-card-inner">
 			<div class="browse-image">
@@ -762,6 +782,36 @@ $browse_title
 			<div style="width:102%" class="ui-progressbar-value ui-widget-header ui-corner-left ui-corner-right $state></div>
 		</div>
 	</div>
+	#else
+	<div class="show-card" data-name="$this_show['title']" data-order="$this_show['order']">
+		<div class="show-card-inner">
+			<div class="browse-image">
+				<a class="browse-image" href="$this_show['url_src_db']" target="_blank"
+					title="<span class='browse-title'>$re.sub(r'(?m)\s+\((?:19|20)\d\d\)\s*$', '', $title_html)</span>
+					<div class='genre age' style='display:#echo ('none', 'block')[bool($this_show['age'])]#;font-weight:bold'><em>Age:&nbsp;$this_show['age']</em></div>
+					<p class='overview' style='margin:0 0 2px'>$overview</p>
+				">
+        #if 'poster' in $this_show['images']
+            #set $image = $this_show['images']['poster']['thumb']
+					<img id="poster-$poster_id" alt="" class="browse-person-image" data-original="#if $image and 'http' != $image[:4]#$sg_root/#end if#$image" />
+					<span id="loading-poster-$poster_id" class="lazy-loading-image"><i class="spinner"></i></span>
+        #else
+					<span>&nbsp;</span>
+        #end if
+				</a>
+			</div>
+			<div class="person-title">
+				<span class="person-title-text" title="$this_show['title']">$this_show['title']</span>
+			</div>
+			<div class="clearfix">
+				<div class="person-age" style='display:#echo ('none', 'block')[bool($this_show['age'])]#;'><em>Age:&nbsp;$this_show['age']</em></div>
+				<div class="browse-add-show-holder">
+					<a href="$this_show['url_src_db']" target="_blank" class="btn btn-xs">Search Shows</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	#end if
     #end for
 </div>
     #if $kwargs and $kwargs.get('footnote')

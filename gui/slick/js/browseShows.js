@@ -33,6 +33,7 @@ let cc_alpha3_to_alpha2 = {
 	'xwg': 'West Germany',
 }
 
+var nbsp_code = '\xa0';
 var iso_show_hidden_filter = false;
 var iso_showcards = null;
 var iso_tag_container = null;
@@ -172,11 +173,16 @@ function init_buttons(){
 			if (data) {
 				try {
 					data = JSON.parse(data);
-					persistent_tag_button_states[browse_cat] = data;
-					if (persistent_tag_button_states[browse_cat]['names']) {
-						$.each(persistent_tag_button_states[browse_cat]['names'], function (index, value) {
-							$('.profile_load[value="' + index + '"], .profile_save[value="' + index + '"], .profile_rename[value="' + index + '"]').children('div').text(value);
-						});
+					if (data !== undefined && data.constructor == Object) {
+						persistent_tag_button_states[browse_cat] = data;
+						if (persistent_tag_button_states[browse_cat]['names'] === undefined) {
+							persistent_tag_button_states[browse_cat]['names'] = {}
+						}
+						if (persistent_tag_button_states[browse_cat]['names']) {
+							$.each(persistent_tag_button_states[browse_cat]['names'], function (index, value) {
+								$('.profile_load[value="' + index + '"], .profile_save[value="' + index + '"], .profile_rename[value="' + index + '"]').children('div').text(value);
+							});
+						}
 					}
 				} catch {}
 			}
@@ -190,11 +196,11 @@ function init_buttons(){
 			tag_name = tag_name.replace(extra_remove, '');
 		}
 		let button_title = '';
-		if ('networks' === category){
+		if ('networks' === category || 'content_rating' === category){
 			try {
-			button_title = decodeURIComponent(tag_name.replaceAll('_', '%'));} catch {}
+			button_title = decodeURIComponent(tag_name.replaceAll('_', '%')).replaceAll(' ', nbsp_code);} catch {}
 		} else {
-			button_title = str_title(tag_name.replaceAll('-', ' ').replaceAll('_', ' '));
+			button_title = str_title(tag_name.replaceAll('-', ' ').replaceAll('_', nbsp_code));
 		}
 		$(new_checkbox).attr('data-button-count', button_count).attr('id', value).data('target', value).prop('checked', true);
 		let new_label = $('<label></label>');
@@ -224,7 +230,7 @@ function init_buttons(){
 			let btn_type = 3;
 			let button_contain_el = $('<td class="button-container"></td>').data('num-max-state', btn_type);
 			let label_el = $('<td class="label-container"></td>');
-			$(label_el).text(str_title(index) + ':');
+			$(label_el).text(str_title(index.replaceAll('_', nbsp_code)) + ':');
 			let select_el = $('<td class="select-buttons"></td>');
 			$(select_el).append($('<button type="button" value="include" class="btn row-select-all">Include All</button><br><button type="button" value="exclude" class="btn row-select-exclude">Exclude All</button>'));
 			if (2 < btn_type){

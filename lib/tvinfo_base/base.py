@@ -1551,6 +1551,13 @@ class TVInfoBase(object):
         """
         return []
 
+    def get_favorite_actors(self, user_id, result_count=100, **kwargs):
+        # type: (...) -> List[TVInfoPerson]
+        """
+        get favorite actors
+        """
+        return []
+
     def discover(self, result_count=100, get_extra_images=False, **kwargs):
         # type: (...) -> List[TVInfoShow]
         return []

@@ -635,3 +635,70 @@ def _get_watchlist(limit=250, jump_pos=1, user_id=None, target_genre=None, min_r
 
     res = _get_response(payload)
     return res
+
+
+def _get_favorite_people(limit=250, jump_pos=1, user_id=None, loc="en-US", sort_by='LIST_ORDER', sort_order='ASC',
+                         after_cursor=None):
+    variables = {
+        "first": limit,
+        "jumpToPosition": jump_pos,
+        "sort": {"by": f"{sort_by}", "order": sort_order},
+        "urConst": f"ur{user_id}",
+    }
+
+    constraints = {}
+
+    if after_cursor:
+        variables["after"] = after_cursor
+
+    payload = {
+        "query": """query FavoritePeoplePage(
+        $urConst: ID!
+        $first: Int!
+        $sort: NameListSearchSort
+        $jumpToPosition: Int
+    ) {
+        predefinedList(classType: FAVORITE_ACTORS, userId: $urConst) {
+            ...""" + UserListListItemMetadata + """
+            author {
+                primaryImage {
+                    image {
+                        id
+                        url
+                        height
+                        width
+                        caption {
+                            plainText
+                        }
+                    }
+                }
+            }
+            nameListItemSearch(
+                first: $first
+                jumpToPosition: $jumpToPosition
+                sort: $sort
+            ) {
+                total
+                pageInfo {
+                    hasNextPage
+                    hasPreviousPage
+                    endCursor
+                }
+                edges {
+                    listItem: name {
+                        ...""" + NameListItemMetadata + """
+                    }
+                    node {
+                        ...""" + ListSearchItemMetadata + """
+                    }
+                }
+            }
+        }
+    }
+""",
+        "variables": variables,
+        'operationName': 'FavoritePeoplePage',
+    }
+
+    res = _get_response(payload)
+    return res
