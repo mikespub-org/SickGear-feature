@@ -67,7 +67,7 @@ var multi_button_ico = {
 // button classes
 var multi_button_class = {
 	'include': 'btn-on',
-	'none': 'btn-none grey-text',
+	'none': 'btn-none deselect-text',
 	'exclude': 'btn-off'
 }
 
@@ -318,7 +318,7 @@ function init_buttons(){
 			$(new_ico).addClass(multi_button_ico[multi_button_styles[button_type][new_state]]);
 			$(new_button).val(multi_button_styles[button_type][new_state]).data('state', new_state).data('num-max-state', button_type).prop('checked', cur_checked).attr('id', cur_checkbox_id).addClass('btn-toggle').addClass(cur_checked ? 'btn-on' : 'btn-off').attr('data-target', cur_target).append(text_span).prepend(new_ico).append(count_el);
 			if (0 < cur_img.length) {
-				$(cur_img).css('width', '24px').css('height', '16px');
+				$(cur_img).css('width', '24px').css('height', '20px');
 				let title = $(cur_img).attr('title');
 				$(new_button).attr('title', title).children('i').after(cur_img);
 				$(new_button).children('.button-label-text').text('');

@@ -1767,3 +1767,28 @@ a{
 a:focus, a:hover {
 	color:var(--link-hover)	/* LightBlue; */
 }
+
+.profile-menu,
+.profile-menu-items {
+	border: 1px solid #666;
+	color: var(--text) !important;
+	background-color: #282828;
+}
+.profile-menu-items .menu-item:hover {
+	background-color: #777;
+}
+.row-select-all,
+.btn-on{
+	background: darkgreen;
+}
+.row-select-exclude,
+.btn-off{
+	background: darkred;
+}
+.row-select-none,
+.btn-none{
+	background: #000000;
+}
+.deselect-text{
+	color:var(--text);
+}

@@ -1,3 +1,9 @@
+:root{
+	--link:#222;
+	--link-hover:#09a2ff;
+	--text:#000;
+	--deselect-text:#eee;
+}
 /* =======================================================================
 inc_top.tmpl
 ========================================================================== */
@@ -1602,4 +1608,39 @@ add-shows qtip
 }
 .add-shows-popup .add-shows-image{
 	border: 1px solid #282828;
+}
+
+.profile-menu,
+.profile-menu-items{
+	border:1px solid black;
+}
+.profile-menu-items {
+	background-color: #fff;
+}
+.profile-menu-items .menu-item:hover {
+	background-color: #777;
+}
+
+.btn-on,
+.btn-off,
+.btn-none,
+.row-select-all,
+.row-select-exclude,
+.row-select-none{
+	color:#eee;
+}
+.row-select-all,
+.btn-on{
+	background: darkgreen;
+}
+.row-select-exclude,
+.btn-off{
+	background: #411;
+}
+.row-select-none,
+.btn-none{
+	background: #000000;
+}
+.deselect-text{
+	color:var(--deselect-text);
 }

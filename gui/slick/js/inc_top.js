@@ -44,6 +44,53 @@ function initActions() {
 	menu$.find('a:contains("Update show in Emby")').addClass('btn').html('<i class="sgicon-emby"></i>Emby Update Show');
 	menu$.find('a:contains("Update show in Kodi")').addClass('btn').html('<i class="sgicon-kodi"></i>Kodi Update Show ');
 	// menu$.find('a:contains("Update show in XBMC")').addClass('btn').html('<i class="sgicon-xbmc"></i>Update show in XBMC');
+
+	$(window).on('resize', updateMenus).resize(); // also executes func immediately on load
+}
+
+function updateMenus(){
+	const items = ['home', 'manage', 'config', 'tools'];
+	for (let i = 0; i < items.length; i++) {
+		updateMenu(items[i]);
+	}
+}
+
+function updateMenu(menuHeader) {
+	const dev = !1,
+		window$ = $(window),
+		menu$ = $(`#NAV${menuHeader}`).find('.dropdown-menu'),
+		menu = menu$[0],
+		ms = menu.style,
+		visibleHeight = window$.height() - 50,
+		scrollbarWidth = window.innerWidth - window$.width();
+		
+	const originalStyles = {position: ms.position, opacity: ms.opacity, visibility: ms.visibility, display: ms.display};
+	// make menu element non visible but allow it into the page flow
+	menu$.css({'position': 'absolute', 'opacity': '0', 'visibility': 'hidden'});
+	menu$.css({'display': 'block'}); 	
+	const menuRect = menu.getBoundingClientRect();  // position and dimensions
+	menu$.css(originalStyles);
+
+	dev && console.log('menu=', menu, 'winh=', visibleHeight, 'barw=', scrollbarWidth, 'menuw', parseInt(ms.minWidth, 10));
+	dev && console.log('menuRect', menuRect);
+
+	// store menu width once* on DOM load
+	if (/undefined/.test(menu$.data('initial-width'))) {
+		menu$.attr('data-initial-width', menuRect.width);
+		menu$.attr('data-initial-height', menuRect.height);
+	}
+
+	let width = parseInt(menu$.data('initial-width'), 10),
+		height = parseInt(menu$.data('initial-height'), 10);
+	dev && console.log("menuRect.height > visibleHeight = ", menuRect.height > visibleHeight, "height > visibleHeight", height > visibleHeight);
+	if (visibleHeight > 0 && (menuRect.height > visibleHeight || height > visibleHeight)) {
+		width = width + scrollbarWidth;
+	}
+	menu$.css({
+		'min-width': `${width}px`,
+		'max-height': `${visibleHeight}px`,
+		'overflow-y': 'auto'
+	});
 }
 
 $(function(){

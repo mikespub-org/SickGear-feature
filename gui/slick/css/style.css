@@ -1037,31 +1037,7 @@ home.tmpl
 	border-radius:0
 }
 
-.person-title-text{
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	overflow:hidden;
-	white-space:nowrap;
-	font-size:16px;
-	font-weight: bold;
-	margin:4px 4px 0 4px;
-	cursor: help;
-}
-
-.person-age{
-	float:left;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	overflow:hidden;
-	white-space:nowrap;
-	font-size:13px;
-	font-weight: bold;
-	margin:4px 4px 0 4px;
-	cursor: default;
-}
-
+.person-title,
 .show-title{
 	position:relative;
 	overflow:hidden;
@@ -1523,7 +1499,7 @@ home_browseShows.tmpl
 	margin-left: 50%;
 	transform: translateX(-50%);
 	overflow:hidden;
-	height:273px;
+	height:275px;  /* +1 to hide the random white line */
 	/*width:186px;*/
 	border-top-left-radius:5px;
 	border-top-right-radius:5px;
@@ -3850,10 +3826,10 @@ option.flag{
 
 #select2-infosrc-lang-select-container .flag,
 #select2-infosrc-lang-select-results .flag{
-	padding-left:25px;
+	padding: 2px 0 0 28px;
 	background-repeat:no-repeat;
 	background-position:0 0;
-	background-size:20px 16px;
+	background-size:24px 20px;
 }
 
 .browse-shows-result .flag,
@@ -5338,67 +5314,52 @@ fancybox.css Overrides
 	margin: 3px;
 	border-radius: 25px !important;
 }
-.btn-on{
-	background: darkgreen;
-}
-.btn-off{
-	background: darkred;
-}
 
 #tags-container .row-select-all{
-	background: darkgreen !important;
 	border-radius: 5px !important;
 	margin: 3px;
 }
 #tags-container .row-select-none{
-	background: #00000000 !important;
 	border-radius: 5px !important;
 	margin: 3px;
 }
 #tags-container .row-select-exclude{
-	background: darkred !important;
 	border-radius: 5px !important;
 	margin: 3px;
 }
 #tags-container .select-buttons{
 	text-align: center;
 }
+#tags-container button i{
+	margin:-4px 2px 0 0
+}
 #tags-table {
 	border-collapse: separate;
 	border-spacing: 0 1em;
 }
+#tags-table .label-container{
+	display:table-cell;
+	vertical-align: middle;
+	padding-right: 10px;
+}
 #tags-table .button-container{
-	vertical-align: top;
+	vertical-align: middle;
 }
 .ui-dialog {
 	z-index: 8000 !important ;
 	position:fixed !important;
 }
 
-.profile-menu {
-	display:inline;
-	margin: 10px;
-	padding-left: 5px;
-	padding-right: 10px;
-	border:1px solid black;
-	cursor: pointer;
-	border-radius: 10px;
-}
-.profile-menu-items {
-	display:none;
-	position: absolute;
-	background-color: #fff;
-	z-index:8010;
-	list-style-type: none;
-	padding: 0 10px 0 10px;
-}
 #tag-menu-container {
 	text-align:center;
 }
 
-#tag-filters .filter-ico{
+#filter_button .filter-ico{
 	background-image:url("../images/filter16.png");
 	margin-right: 4px;
+}
+#tag-filters{
+	display: none
 }
 #tag-dialog{
 	display: inline-block
@@ -5414,8 +5375,27 @@ fancybox.css Overrides
 	height: 16px;
 	line-height: 16px;
 }
-#tag-menu {
-	position:relative;
-	left:0px;
-	width:10em;
+
+.profile-menu {
+	display:inline;
+	margin: 10px;
+	padding: 4px 10px 5px 10px;
+	cursor: pointer;
+	border-radius: 10px;
+}
+.profile-menu-items {
+	display:none;
+	position: absolute;
+	z-index:8010;
+	list-style-type: none;
+	padding: 0;
+	margin: 0 10px;
+}
+.profile-menu-items .menu-item {
+	padding:0 10px;
+}
+
+.profile-menu .ui-icon{
+	margin-right: 5px;
+	transform: scale(1.5);
 }

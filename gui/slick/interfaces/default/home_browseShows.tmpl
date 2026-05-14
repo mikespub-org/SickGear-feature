@@ -430,16 +430,16 @@ $(function() {
 	<select id="showsort" class="form-control form-control-inline input-sm">
     #set $num_all = len($all_shows)
     #set $selected = ' class="selected" selected="selected"'
-	#if 'favorite_actors' not in $mode
+    #if 'favorite_actors' not in $mode
 		<optgroup label="View">
 			<option value="*"#if '*' in $saved_showsort_view#$selected>>&nbsp;#else#>#end if#All (#echo ('', '%s/' % ($num_all - $num_hidden))[0 < $num_hidden]#$num_all)</option>
 			<option value=".notinlibrary"#if '.notinlibrary' in $saved_showsort_view#$selected>>&nbsp;#else#>#end if#Not In Library (#echo $num_all - $num_inlibrary#)</option>
 			<option value=".inlibrary"#if '.inlibrary' in $saved_showsort_view#$selected>>&nbsp;#else#>#end if#In Library ($num_inlibrary)</option>
-    #if 'Ani' not in $browse_type
+        #if 'Ani' not in $browse_type
 			<option value=".hide"#if '.hide' in $saved_showsort_view#$selected>>&nbsp;#else#>#end if#Hidden ($num_hidden)</option>
-    #end if
+        #end if
 		</optgroup>
-	#end if
+    #end if
 		<optgroup label="Sort order">
 			<option value="asc"#if not $is_showsort_desc#$selected>>&nbsp;#else#>#end if#Asc</option>
 			<option value="desc"#if $is_showsort_desc#$selected>>&nbsp;#else#>#end if#Desc</option>
@@ -489,7 +489,7 @@ $(function() {
 			<option value="trakt_played?period=year"#echo ('', selected)['played-year' == $mode]#>Most Played</option>
 			<option value="trakt_collected?period=year"#echo ('', selected)['collected-year' == $mode]#>Most Collected</option>
 		</optgroup>
-    		#if any($sg_var('TRAKT_ACCOUNTS', []))
+            #if any($sg_var('TRAKT_ACCOUNTS', []))
 		<optgroup label="Trakt recommended">
                 #for $account in $sg_var('TRAKT_ACCOUNTS')
                     #if $sg_var('TRAKT_ACCOUNTS').get($account).active and $sg_var('TRAKT_ACCOUNTS').get($account).name
@@ -501,7 +501,7 @@ $(function() {
 			<option value="trakt_recommended?action=add">Enable Trakt here</option>
             #end if
 		</optgroup>
-    		#if any($sg_var('TRAKT_ACCOUNTS', []))
+            #if any($sg_var('TRAKT_ACCOUNTS', []))
 		<optgroup label="Trakt watchlisted">
                 #for $account in $sg_var('TRAKT_ACCOUNTS')
                     #if $sg_var('TRAKT_ACCOUNTS').get($account).active and $sg_var('TRAKT_ACCOUNTS').get($account).name
@@ -614,47 +614,52 @@ $(function() {
     #end if
 </div>
 
-		<div class="pull-right" style="clear:right">
+<div class="pull-right" style="clear:right">
     #if $all_classes.strip('{} ')
-			<div id="tag-filters">
-				<div id="tag-dialog">
-#set $profile_count = 11
-				<div id="tag-menu-container">
-					<span>$browse_cat: </span><div class="profile-menu" id="load_menu_button"><i class="ui-icon ui-icon-folder-open"></i>Load...
+	<div id="tag-filters">
+		<div id="tag-dialog">
+        #set $profile_count = 11
+			<div id="tag-menu-container">
+				<span>$browse_cat: </span><div class="profile-menu" id="load_menu_button"><i class="ui-icon ui-icon-folder-open"></i>Load...
 					<ul id="load_menu" class="profile-menu-items">
-#for $i in $range(1, $profile_count)
-						<li class="profile_load" value="$i"><div>Profile $i</div></li>
-#end for
-					</ul></div>
-					<div class="profile-menu" id="save_menu_button"><i class="ui-icon ui-icon-disk"></i>Save...
-					<ul id="save_menu" class="profile-menu-items">
-#for $i in $range(1, $profile_count)
-						<li class="profile_save" value="$i"><div>Profile $i</div></li>
-#end for
-					</ul></div>
-					<div class="profile-menu" id="rename_menu_button"><i class="ui-icon ui-icon-pencil"></i>Rename...
-					<ul id="rename_menu" class="profile-menu-items">
-#for $i in $range(1, $profile_count)
-						<li class="profile_rename" value="$i"><div>Profile $i</div></li>
-#end for
-					</ul></div>
+        #for $i in $range(1, $profile_count)
+						<li class="profile_load menu-item" value="$i"><div>Profile $i</div></li>
+        #end for
+					</ul>
 				</div>
-				<table id="tags-table"><tbody id="tags-container"></tbody></table></div></div>&nbsp;
-			<button id="filter_button" class="btn btn-inline" type="button"><i class="filter-ico"></i></i><b>Filters</b></button>&nbsp;
-    #end if
-			<input id="search_show_name" class="search form-control form-control-inline input-sm input200" type="search" placeholder="Filter Show Name#if $use_network#/Network#end if#">
-			&nbsp;<button type="button" class="resetshows btn btn-inline">Reset Filter</button>
+				<div class="profile-menu" id="save_menu_button"><i class="ui-icon ui-icon-disk"></i>Save...
+					<ul id="save_menu" class="profile-menu-items">
+        #for $i in $range(1, $profile_count)
+						<li class="profile_save menu-item" value="$i"><div>Profile $i</div></li>
+        #end for
+					</ul>
+				</div>
+				<div class="profile-menu" id="rename_menu_button"><i class="ui-icon ui-icon-pencil"></i>Rename...
+					<ul id="rename_menu" class="profile-menu-items">
+        #for $i in $range(1, $profile_count)
+						<li class="profile_rename menu-item" value="$i"><div>Profile $i</div></li>
+        #end for
+					</ul>
+				</div>
+			</div>
+			<table id="tags-table"><tbody id="tags-container"></tbody></table>
 		</div>
+	</div>&nbsp;
+	<button id="filter_button" class="btn btn-inline" type="button"><i class="filter-ico"></i></i><b>Filters</b></button>&nbsp;
+    #end if
+	<input id="search_show_name" class="search form-control form-control-inline input-sm input200" type="search" placeholder="Filter Show Name#if $use_network#/Network#end if#">
+	&nbsp;<button type="button" class="resetshows btn btn-inline">Reset Filter</button>
+</div>
 
 <h4 class="person-hdr">#slurp#
-	#if $p_link
-		#set $cur_src = int(re.search(r'(\d+):', $p_ref).group(1))
-#set $title_pre = $browse_title.split($sickgear.TVInfoAPI($cur_src).name)[0]
-#set $title_post = $browse_title.split($sickgear.TVInfoAPI($cur_src).name)[1]
+    #if $p_link
+        #set $cur_src = int(re.search(r'(\d+):', $p_ref).group(1))
+        #set $title_pre = $browse_title.split($sickgear.TVInfoAPI($cur_src).name)[0]
+        #set $title_post = $browse_title.split($sickgear.TVInfoAPI($cur_src).name)[1]
 $title_pre<a href="$p_link" target="_blank"><span class="tvsrc" style="background:url($sbRoot/images/$sickgear.TVInfoAPI($cur_src).config['icon']) no-repeat 0 0">&nbsp;$browse_type</span></a> $title_post#slurp#
-	#else
+    #else
 $browse_title
-	#end if
+    #end if
 </h4>
 
 <div class="grey-text" style="clear:left;margin-left:2px;font-size:0.85em">
@@ -701,7 +706,7 @@ $browse_title
         #if $use_ratings:
             #set $data_rating = $try_float($this_show['rating'])
         #end if
-	#if 'favorite_actors' not in $mode
+        #if 'favorite_actors' not in $mode
 	<div class="show-card $this_show.get('tag_classes', '') ${exclude_show}${hide}${known}inlibrary" data-name="#echo re.sub(r'([\'\"])', r'', $this_show['title'])#" data-id="$show_id" data-ajax="$this_show.get('overview_ajax', '0')" data-nroles="#echo len($this_show.get('p_chars', []))#" #if $use_ratings# data-rating="$data_rating"#end if##if $use_votes# data-votes="$this_show['votes']"#end if# data-premiered="$this_show['ord_premiered']"#if $use_returning# data-returning="$this_show['ord_returning']"#end if# data-order="$this_show['order']"#if $use_network# data-network="$this_show['network']"#end if#>
 		<div class="show-card-inner">
 			<div class="browse-image">
@@ -710,79 +715,79 @@ $browse_title
 
 					<div class='genre' style='display:#echo ('none', 'block')[bool($this_show['genres'])]#;font-weight:bold'>(<em>$this_show['genres']</em>)</div>
 					#if $kwargs and $use_returning#<span style='display:block;clear:both;font-weight:bold;font-size:0.9em;color:#888'><em>Season $this_show['episode_season'] return#echo ('s', 'ed')[$this_show['return_past']]# $this_show['str_returning']</em></span>#end if#
-        #if $this_show.get('country') or $this_show.get('language')
+            #if $this_show.get('country') or $this_show.get('language')
 					<p class='browse-shows-result'>
-            #if $this_show.get('country')
+                #if $this_show.get('country')
 						<span style='font-size:0.9em;color:#888'><em>Country:#if not $this_show.get('country_img')#&nbsp;$this_show.get('country').upper()#else#<img  class='flag' title='${this_show['country']}' src='$sbRoot/images/flags/${$this_show['country'].lower()}.png' width='20' height='16'>#end if#</em></span>
-            #end if
-            #if $this_show.get('language')
+                #end if
+                #if $this_show.get('language')
 						<span style='font-size:0.9em;color:#888#if $this_show.get('country')#;padding-left:6px#end if#'><em>Language:#if not $this_show.get('language_img')#&nbsp;$this_show.get('language')#else#<img class='flag' title='${this_show['language']}' src='$sbRoot/images/flags/svg/lang/${$this_show['language'].lower()}.png' width='20' height='16'>#end if#</em></span>
+                #end if
+					</p>
             #end if
-					</p>
-        #end if
-        #if $this_show.get('p_chars')
+            #if $this_show.get('p_chars')
 					<p style='overflow-y:auto;max-height:152px'>
-            #for $char in $this_show['p_chars']
-	            #if 'IMDb' == $browse_type#
-	                #set $cast_type = '(' + str($char[3]) + ' eps)'
-	            #elif $RoleTypes.ActorMain != $char[1]
-	                 #set $cast_type =  '(' + str($char[2]) + '/' + str($char[3]) + ' eps)'
-	             #else
-	                 #set $cast_type =  ''
-	             #end if
+                #for $char in $this_show['p_chars']
+                    #if 'IMDb' == $browse_type#
+                        #set $cast_type = '(' + str($char[3]) + ' eps)'
+                    #elif $RoleTypes.ActorMain != $char[1]
+                        #set $cast_type =  '(' + str($char[2]) + '/' + str($char[3]) + ' eps)'
+                    #else
+                        #set $cast_type =  ''
+                    #end if
 						<span style='display:block;clear:both;font-weight:bold;font-size:0.9em;color:#393'>as $char[0] $cast_type</span>
-            #end for
+                #end for
 					</p>
-        #end if
+            #end if
 					<p class='overview' style='margin:0 0 2px'>$overview</p>
 					<p class='premiere'>#if $this_show['str_premiered']#<span style='font-weight:bold;font-size:0.9em;color:#888'><em>#if 'Trakt' == $browse_type and $kwargs and 'returning' == $mode#Air#else#First air#end if##echo ('s', 'ed')[$this_show['started_past']]#: $this_show['str_premiered']</em></span>#end if#
 					#if $this_show.get('ended_str')# - <span style='font-weight:bold;font-size:0.9em;color:#888'><em>Ended: $this_show['ended_str']</em></span>#end if#
 					#if $this_show.get('network')#<span style='display:block;clear:both;font-weight:bold;font-size:0.9em;color:#888'><em>On: $this_show['network']</em></span>#end if#
 					</p>
 					<span style='float:right'>Click for more at <span class='boldest'>$browse_type</span></span>">
-        #if 'poster' in $this_show['images']
-            #set $image = $this_show['images']['poster']['thumb']
+            #if 'poster' in $this_show['images']
+                #set $image = $this_show['images']['poster']['thumb']
 					<img id="poster-$poster_id" alt="" class="browse-image" data-original="#if $image and 'http' != $image[:4]#$sg_root/#end if#$image" />
 					<span id="loading-poster-$poster_id" class="lazy-loading-image"><i class="spinner"></i></span>
-        #else
+            #else
 					<span>&nbsp;</span>
-        #end if
+            #end if
 				</a>
 			</div>
 
 			<div class="show-title">
 				#echo ((re.sub(r'^((?:A(?!\s+to)n?)|The)\s(\w)', r'<span class="article">\1</span> \2', $this_show['title']), $this_show['title'])[$sg_var('SORT_ARTICLE')], '<span>&nbsp;</span>')['' == $this_show['title']]#
 			</div>
-        #if 'Ani' not in $browse_type
+            #if 'Ani' not in $browse_type
 			<a class="show-toggle-hide" href="$sg_root/add-shows/show-toggle-hide?ids=$show_id" title="#echo ('H', 'Unh')[any($hide)]#ide"><i class="sgicon-delete"></i></a>
-        #end if
+            #end if
 			<div class="clearfix">
-        #if $use_ratings or $use_votes
+            #if $use_ratings or $use_votes
 				<p>#if $this_show.get('rank')#&#x23;$this_show.get('rank') #end if##if $use_ratings#<span class="rating">$this_show['rating']#if $re.search(r'^\d+(\.\d+)?$', (str($this_show['rating'])))#%</span>#end if##end if##if $use_votes#<i class="heart icon-glyph"></i><i>$this_show['votes'] $term_vote.lower()</i>#end if#</p>#slurp#
-        #else
+            #else
 				<p>&nbsp;</p>
-        #end if
-        #if 'url_tvdb' in $this_show and $this_show['url_tvdb']
+            #end if
+            #if 'url_tvdb' in $this_show and $this_show['url_tvdb']
 				<a class="service" href="<%= anon_url(this_show['url_tvdb']) %>" onclick="window.open(this.href, '_blank'); return false;"
 				title="View <span class='boldest'>tvdb</span> detail for <span style='color: rgb(66, 139, 202)'>$title_html</span>">
 				<i><img style="margin-top:5px" alt="tvdb" height="16" width="16" src="$sg_root/images/$sickgear.TVInfoAPI($sickgear.indexers.indexer_config.TVINFO_TVDB).config['icon']" /></i></a>
-        #end if
+            #end if
 
 				<div class="browse-add-show-holder">
-        #if bool($this_show.get('indb'))
+            #if bool($this_show.get('indb'))
 					<p style="line-height:1.5;padding:2px 5px 3px" title="#echo '%s added' % $this_show.get('indb')#">In library</p>
-        #else
+            #else
 					<a href="$sg_root/add-shows/info-${browse_type.lower()}?ids=${this_show['show_id']}&amp;show_name=${quote($this_show['title'].encode("utf-8"))}" class="btn btn-xs">Add Show</a>
-        #end if
+            #end if
 				</div>
 			</div>
 		</div>
 		<div class="ui-progressbar ui-widget ui-widget-content ui-corner-all">
-        #set $state = 'progress-%s0" title="%s"' % (('2', 'Upcoming'), ('8', 'Started'))[$this_show['started_past']]
+            #set $state = 'progress-%s0" title="%s"' % (('2', 'Upcoming'), ('8', 'Started'))[$this_show['started_past']]
 			<div style="width:102%" class="ui-progressbar-value ui-widget-header ui-corner-left ui-corner-right $state></div>
 		</div>
 	</div>
-	#else
+        #else
 	<div class="show-card" data-name="$this_show['title']" data-order="$this_show['order']">
 		<div class="show-card-inner">
 			<div class="browse-image">
@@ -791,27 +796,27 @@ $browse_title
 					<div class='genre age' style='display:#echo ('none', 'block')[bool($this_show['age'])]#;font-weight:bold'><em>Age:&nbsp;$this_show['age']</em></div>
 					<p class='overview' style='margin:0 0 2px'>$overview</p>
 				">
-        #if 'poster' in $this_show['images']
-            #set $image = $this_show['images']['poster']['thumb']
+            #if 'poster' in $this_show['images']
+                #set $image = $this_show['images']['poster']['thumb']
 					<img id="poster-$poster_id" alt="" class="browse-person-image" data-original="#if $image and 'http' != $image[:4]#$sg_root/#end if#$image" />
 					<span id="loading-poster-$poster_id" class="lazy-loading-image"><i class="spinner"></i></span>
-        #else
+            #else
 					<span>&nbsp;</span>
-        #end if
+            #end if
 				</a>
 			</div>
 			<div class="person-title">
 				<span class="person-title-text" title="$this_show['title']">$this_show['title']</span>
 			</div>
 			<div class="clearfix">
-				<div class="person-age" style='display:#echo ('none', 'block')[bool($this_show['age'])]#;'><em>Age:&nbsp;$this_show['age']</em></div>
+				<p class="person-age">#if $this_show['age']#<em>Age:&nbsp;$this_show['age']</em>#else#&nbsp;#end if#</p>
 				<div class="browse-add-show-holder">
 					<a href="$this_show['url_src_db']" target="_blank" class="btn btn-xs">Search Shows</a>
 				</div>
 			</div>
 		</div>
 	</div>
-	#end if
+        #end if
     #end for
 </div>
     #if $kwargs and $kwargs.get('footnote')
@@ -824,7 +829,7 @@ $browse_title
 		<p class="red-text">
     #if $kwargs and $kwargs.get('error_msg')
 			$kwargs['error_msg']
-	#else
+    #else
 			$browse_type did not return results, this can happen from time to time.
 			<br><br>This view should auto refresh every 10 mins.
 
@@ -833,7 +838,7 @@ $browse_title
 window.setInterval('location.reload(true)', 600000); // Refresh every 10 minutes
 //-->
 </script>
-	#end if
+    #end if
 		</p>
 	</div>
 </div>

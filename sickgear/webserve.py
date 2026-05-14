@@ -4085,7 +4085,7 @@ class HomeProcessMedia(Home):
 
 class AddShows(Home):
     _btn_tag_names = {}
-    _persitent_tag_button_states = {}
+    _persistent_tag_button_states = {}
 
     def get(self, route, *args, **kwargs):
         route = route.strip('/')
@@ -4369,14 +4369,14 @@ class AddShows(Home):
                        show['seriesname'], helpers.xhtml_escape(show['seriesname']), show['firstaired'],
                        (isinstance(show['firstaired'], string_types) and show['firstaired']
                         and SGDatetime.sbfdate(_parse_date(show['firstaired'])) or ''),
-                       show.get('network', '') or '',  # 11
-                       (show.get('genres', '') or show.get('genre', '') or '').replace('|', ', '),  # 12
-                       show.get('language', ''),  # 13
+                       show.get('network') or '',  # 11
+                       (show.get('genres') or show.get('genre') or '').replace('|', ', '),  # 12
+                       show.get('language') or '',  # 13
                        (isinstance(show.get('origin_countries'), list) and show['origin_countries'] and
                         show['origin_countries'][0]) or _lang_cc(show.get('language')),  # 14
                        re.sub(r'([,.!][^,.!]*?)$', '...',
                               re.sub(r'([.!?])(?=\w)', r'\1 ',
-                                     helpers.xhtml_escape((show.get('overview', '') or '')[:250:].strip()))),  # 15
+                                     helpers.xhtml_escape((show.get('overview') or '')[:250:].strip()))),  # 15
                        self._make_cache_image_url(tvid, show, default_transparent_img=False),  # 16
                        100 - ((show['direct_id'] and 100)
                               or self.get_uw_ratio(term, show['seriesname'], show.get('aliases') or [],
@@ -4900,6 +4900,8 @@ class AddShows(Home):
                                 age = f'{age}&nbsp;&dagger;'
                             filtered.append(dict(
                                 order=order,
+                                ord_premiered=0,
+                                str_premiered='',
                                 ids=cur_person.ids.__dict__,
                                 age=age,
                                 images=images,
@@ -6694,7 +6696,7 @@ class AddShows(Home):
 
     @property
     def _get_persistent_btn_states(self):
-        if not AddShows._persitent_tag_button_states:
+        if not AddShows._persistent_tag_button_states:
             res = {}
             try:
                 # with open(sickgear.BTN_SETTINGS_FILE, 'r') as f:
@@ -6702,10 +6704,10 @@ class AddShows(Home):
                 with gzip.GzipFile(sickgear.BTN_SETTINGS_FILE, 'r') as f:
                     res = json_load(f)
                 if isinstance(res, dict):
-                    AddShows._persitent_tag_button_states = res
+                    AddShows._persistent_tag_button_states = res
             except (BaseException, Exception):
                 pass
-        return AddShows._persitent_tag_button_states
+        return AddShows._persistent_tag_button_states
 
     def get_btn_profile_states(self, browse_cat=None):
         if browse_cat in (c_p := self._get_persistent_btn_states):
@@ -6726,17 +6728,17 @@ class AddShows(Home):
                                  for mk,mv in button_states.items() if mk == browse_cat}
                 button_states[browse_cat]['names'] = profile_names
                 for p, pv in button_states[browse_cat].items():
-                    AddShows._persitent_tag_button_states.setdefault(browse_cat, {}).setdefault(p, {}).update(pv)
-                # (AddShows._persitent_tag_button_states.setdefault(browse_cat, {}).setdefault('current', {}).update(button_states[browse_cat]))
+                    AddShows._persistent_tag_button_states.setdefault(browse_cat, {}).setdefault(p, {}).update(pv)
+                # (AddShows._persistent_tag_button_states.setdefault(browse_cat, {}).setdefault('current', {}).update(button_states[browse_cat]))
                 try:
                     bak_file = None
                     if os.path.isfile(sickgear.BTN_SETTINGS_FILE):
                         bak_file = re.sub(r'\.json$', '.bak', sickgear.BTN_SETTINGS_FILE)
                         copy_file(sickgear.BTN_SETTINGS_FILE, bak_file)
                     # with open(sickgear.BTN_SETTINGS_FILE, 'w') as f:
-                    #     json_dump(AddShows._persitent_tag_button_states, f)
+                    #     json_dump(AddShows._persistent_tag_button_states, f)
                     with gzip.GzipFile(sickgear.BTN_SETTINGS_FILE, 'w') as f:
-                        json_dump(AddShows._persitent_tag_button_states, f)
+                        json_dump(AddShows._persistent_tag_button_states, f)
                     if not os.path.isfile(sickgear.BTN_SETTINGS_FILE):
                         return json_dumps({'result': 'failed'})
                     # with open(sickgear.BTN_SETTINGS_FILE, 'r') as f:

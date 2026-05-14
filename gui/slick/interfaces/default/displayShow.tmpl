@@ -269,7 +269,7 @@
 							<span class="space-right">#echo ($startyear, 'Unknown')[None is $startyear]#</span>
     #if $flags
         #for $country in $show_obj.imdb_info['country_codes'].split('|')
-							<img class="flag space-right" src="$sbRoot/images/flags/${$country.lower()}.png" width="16" height="11" />
+							<img class="flag space-right" src="$sbRoot/images/flags/${$country.lower()}.png" width="24" height="20" />
         #end for
     #end if
 						</span>
@@ -431,7 +431,7 @@ def param(visible=True, rid=None, cache_person=None, cache_char=None, person=Non
 					</div>
 
 					<div id="details-bottom">
-						<span class="label addQTip" title="Info language, $show_obj.lang"><img src="$sbRoot/images/flags/svg/lang/${show_obj.lang}.png" width="16" height="11" alt="" style="margin-top:-1px" /></span>
+						<span class="label addQTip" title="Info language, $show_obj.lang"><img src="$sbRoot/images/flags/svg/lang/${show_obj.lang}.png" width="24" height="20" alt="" style="margin-top:-1px" /></span>
 						<span class="label addQTip" title="Location#echo (' no longer exists" style="background-color:#8f1515"', '"')[$showLoc[1]]#>$showLoc[0]</span>
 						<span id="data-size" class="label" style="cursor:help">$human($get_size($showLoc[0]))</span>
 #set $filecount = sum([$c for $k, $c in $ep_counts['videos'].items()])
