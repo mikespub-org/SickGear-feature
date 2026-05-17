@@ -93,17 +93,11 @@ class ShowUpdater(Job):
                 logger.debug('error loading webdl_types')
 
             # update xem id lists
-            try:
-                sickgear.scene_exceptions.ReleaseMap().fetch_xem_ids()
-            except (BaseException, Exception):
-                logger.error('xem id list update error')
-                logger.error(traceback.format_exc())
-
             # update scene exceptions
             try:
-                sickgear.scene_exceptions.ReleaseMap().fetch_exceptions()
+                sickgear.update_release_mappings_scheduler.force_run()
             except (BaseException, Exception):
-                logger.error('scene exceptions update error')
+                logger.error('xem/exceptions id list update error')
                 logger.error(traceback.format_exc())
 
             # clear the data of unused providers

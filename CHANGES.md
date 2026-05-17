@@ -18,6 +18,7 @@
 * Fix browsing IMDb cards where there is no year fetched
 * Change close DBConnection connection when object is destroyed
 * Change add "NA" as potential non-named episode name
+* Fix potential race condition between SHOWMAPSUPDATE and STARTUP-FORCE-SHOW-UPDATE tasks
 
 
 [develop]

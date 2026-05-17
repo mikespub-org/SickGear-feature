@@ -8668,7 +8668,8 @@ class ConfigGeneral(Config):
     def update_alt():
         """ Load scene exceptions """
 
-        changed_exceptions, cnt_updated_numbers, min_remain_iv = scene_exceptions.ReleaseMap().fetch_exceptions()
+        changed_exceptions, cnt_updated_numbers, min_remain_iv = (
+            sickgear.update_release_mappings_scheduler.action.fetch_exceptions())
 
         return json_dumps(dict(names=int(changed_exceptions), numbers=cnt_updated_numbers, min_remain_iv=min_remain_iv))
 
