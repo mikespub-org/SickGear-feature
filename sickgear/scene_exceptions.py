@@ -48,7 +48,7 @@ MEMCACHE = {}
 
 class ReleaseMap(Job):
     def __init__(self):
-        super(ReleaseMap, self).__init__(self.job_run, thread_lock=True, kwargs={})
+        super(ReleaseMap, self).__init__(self.job_run, reentrant_lock=True, kwargs={})
 
         MEMCACHE.setdefault('release_map', {})
         MEMCACHE.setdefault('release_map_season', {})
@@ -56,11 +56,27 @@ class ReleaseMap(Job):
 
     def job_run(self):
 
-        # update xem id lists
-        self.fetch_xem_ids()
+        if self.lock.acquire(blocking=False):
+            log_msg = ''
+            try:
+                # update xem id lists
+                self.fetch_xem_ids()
+            except (BaseException, Exception) as e:
+                log_msg = f'Error fetching xem ids: {ex(e)}'
 
-        # update release exceptions
-        self.fetch_exceptions()
+            if not log_msg:
+                try:
+                    # update release exceptions
+                    self.fetch_exceptions()
+                except (BaseException, Exception) as e:
+                    log_msg = f'Error fetching exceptions: {ex(e)}'
+
+            if log_msg:
+                try:
+                    logger.debug(log_msg)
+                except (BaseException, Exception):
+                    pass
+            self.lock.release()
 
     def fetch_xem_ids(self):
 
@@ -158,59 +174,62 @@ class ReleaseMap(Job):
         Looks up release exceptions on GitHub, Xem, and Anidb, parses them into a dict, and inserts them into the
         scene_exceptions table in cache.db. Finally, clears the scene name cache.
         """
+
         def _merge_exceptions(source, dest):
             for cur_ex in source:
                 dest[cur_ex] = source[cur_ex] + ([] if cur_ex not in dest else dest[cur_ex])
 
-        exceptions = self._xem_exceptions_fetcher()  # XEM scene exceptions
-        _merge_exceptions(self._anidb_exceptions_fetcher(), exceptions)  # AniDB scene exceptions
-        _merge_exceptions(self._github_exceptions_fetcher(), exceptions)  # GitHub stored release exceptions
+        with self.lock:
 
-        exceptions_custom, count_updated_numbers, min_remain_iv = self._custom_exceptions_fetcher()
-        _merge_exceptions(exceptions_custom, exceptions)  # Custom exceptions
+            exceptions = self._xem_exceptions_fetcher()  # XEM scene exceptions
+            _merge_exceptions(self._anidb_exceptions_fetcher(), exceptions)  # AniDB scene exceptions
+            _merge_exceptions(self._github_exceptions_fetcher(), exceptions)  # GitHub stored release exceptions
 
-        is_changed_exceptions = False
+            exceptions_custom, count_updated_numbers, min_remain_iv = self._custom_exceptions_fetcher()
+            _merge_exceptions(exceptions_custom, exceptions)  # Custom exceptions
 
-        # write all the exceptions we got off the net into the database
-        my_db = db.DBConnection()
-        cl = []
-        for cur_tvid_prodid in exceptions:
+            is_changed_exceptions = False
 
-            # get a list of the existing exceptions for this ID
-            existing_exceptions = [{_x['show_name']: _x['season']} for _x in
-                                   my_db.select('SELECT show_name, season'
-                                                ' FROM [scene_exceptions]'
-                                                ' WHERE indexer = ? AND indexer_id = ?',
-                                                list(cur_tvid_prodid))]
+            # write all the exceptions we got off the net into the database
+            my_db = db.DBConnection()
+            cl = []
+            for cur_tvid_prodid in exceptions:
 
-            # if this exception isn't already in the DB then add it
-            for cur_ex_dict in filter(lambda e: e not in existing_exceptions, exceptions[cur_tvid_prodid]):
-                try:
-                    exception, season = next(iteritems(cur_ex_dict))
-                except (BaseException, Exception):
-                    logger.error('release exception error')
-                    logger.error(traceback.format_exc())
-                    continue
+                # get a list of the existing exceptions for this ID
+                existing_exceptions = [{_x['show_name']: _x['season']} for _x in
+                                       my_db.select('SELECT show_name, season'
+                                                    ' FROM [scene_exceptions]'
+                                                    ' WHERE indexer = ? AND indexer_id = ?',
+                                                    list(cur_tvid_prodid))]
 
-                cl.append(['INSERT INTO [scene_exceptions]'
-                           ' (indexer, indexer_id, show_name, season) VALUES (?,?,?,?)',
-                           list(cur_tvid_prodid) + [exception, season]])
-                is_changed_exceptions = True
+                # if this exception isn't already in the DB then add it
+                for cur_ex_dict in filter(lambda e: e not in existing_exceptions, exceptions[cur_tvid_prodid]):
+                    try:
+                        exception, season = next(iteritems(cur_ex_dict))
+                    except (BaseException, Exception):
+                        logger.error('release exception error')
+                        logger.error(traceback.format_exc())
+                        continue
 
-        if cl:
-            my_db.mass_action(cl)
-            name_cache.build_name_cache(update_only_scene=True)
+                    cl.append(['INSERT INTO [scene_exceptions]'
+                               ' (indexer, indexer_id, show_name, season) VALUES (?,?,?,?)',
+                               list(cur_tvid_prodid) + [exception, season]])
+                    is_changed_exceptions = True
 
-        # since this could invalidate the results of the cache we clear it out after updating
-        if is_changed_exceptions:
-            logger.log('Updated release exceptions')
-        else:
-            logger.log('No release exceptions update needed')
+            if cl:
+                my_db.mass_action(cl)
+                name_cache.build_name_cache(update_only_scene=True)
 
-        # cleanup
-        exceptions.clear()
+            # since this could invalidate the results of the cache we clear it out after updating
+            if is_changed_exceptions:
+                logger.log('Updated release exceptions')
+            else:
+                logger.log('No release exceptions update needed')
 
-        return is_changed_exceptions, count_updated_numbers, min_remain_iv
+            # cleanup
+            exceptions.clear()
+
+            return is_changed_exceptions, count_updated_numbers, min_remain_iv
 
     def _github_exceptions_fetcher(self):
         """
