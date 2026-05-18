@@ -19,6 +19,7 @@
 * Change close DBConnection connection when object is destroyed
 * Change add "NA" as potential non-named episode name
 * Fix potential race condition between SHOWMAPSUPDATE and STARTUP-FORCE-SHOW-UPDATE tasks
+* Fix issue with alt.json cache file handling
 
 
 [develop]
