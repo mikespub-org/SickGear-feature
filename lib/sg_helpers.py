@@ -847,7 +847,12 @@ def get_url(url,  # type: AnyStr
     # reuse or instantiate request session
     resp_sess = kwargs.pop('resp_sess', None)
     if None is session:
-        session = CloudflareScraper.create_scraper()
+        if (kwargs.get('url_solver') or '').strip():
+            session = CloudflareScraper.create_scraper()
+        else:
+            # in case of an empty argument
+            kwargs.pop('url_solver', None)
+            session = requests.Session()
         session.headers.update({'User-Agent': USER_AGENT})
 
     proxy_browser = kwargs.get('proxy_browser')

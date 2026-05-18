@@ -308,6 +308,9 @@ class ReleaseMap(Job):
 
             helpers.remove_file(tmppath, tree=True)
 
+            if os.path.isfile(file_cache) and 0 < os.path.getsize(file_cache):
+                helpers.set_file_timestamp(file_cache, min_age=0)
+
         if refresh:
             self._set_last_refresh(src_id)
 
