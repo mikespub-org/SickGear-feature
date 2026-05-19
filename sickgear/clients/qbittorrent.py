@@ -21,6 +21,7 @@ from .generic import GenericClient
 from .. import logger
 from ..helpers import get_url, try_int
 from ..sgdatetime import SGDatetime
+from json_helper import json_loads
 import sickgear
 
 from requests.exceptions import HTTPError
@@ -43,6 +44,7 @@ class QbittorrentAPI(GenericClient):
         self.url = self.host
         self.session.headers.update({'Origin': self.host})
         self.api_ns = None
+        self.api_json = False
 
     def _active_state(self, ids=None):
         # type: (Optional[AnyStr, list]) -> list
@@ -380,12 +382,24 @@ class QbittorrentAPI(GenericClient):
                     return data.hash
                 time.sleep(s)
             return True
+        elif self.api_json:
+            try:
+                data = json_loads(response)
+                #logger.log(f'qB torrents/add: {data} {type(data)}')
+                #  e.g. '{"added_torrent_ids":["0533792df26431e4ba2cf5f40a9b7af122dbe22f"],"failure_count":0,"pending_count":0,"success_count":1}'
+                return data["added_torrent_ids"][0] # hash
+            except (BaseException, Exception):
+                pass
+            
 
     def api_found(self):
 
         try:
             v = self._client_request('app/webapiVersion').split('.')
-            return (2, 0) < tuple([try_int(x) for x in '.'.join(v + ['0'] * (4 - len(v))).split('.')])
+            version = tuple([try_int(x) for x in '.'.join(v + ['0'] * (4 - len(v))).split('.')])
+            # logger.log(f'qBitorrent ver: {version}')
+            self.api_json = (2, 14, 0, 0) <= version
+            return (2, 0) < version
         except AttributeError:
             return 6 < try_int(self._client_request('version/api'))
 

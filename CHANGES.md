@@ -31,6 +31,11 @@
 * Update Requests library 2.33.1 (111d2b7) to 2.34.0 (0b401c7)
 
 
+### 3.35.7 (2026-05-19 20:00:00 UTC)
+
+* Add support for qBittorrent WebAPI 2.14.0 (qB > 5.1.4)
+
+
 ### 3.35.6 (2026-05-18 19:15:00 UTC)
 
 * Update UnRar x64 for Windows 7.21 to 7.22
