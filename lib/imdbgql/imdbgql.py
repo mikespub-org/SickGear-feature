@@ -2,7 +2,7 @@
 import logging
 
 from .graphql import fetch_person_page, _search_by_filters, _trending, _coming_soon, _most_popular, _get_watchlist, \
-    _get_person_filmography, _get_favorite_people
+    _get_person_filmography, _get_favorite_people, _get_person_episodes
 from .exceptions import IMDbGQLError, IMDbGQLPersonNotFound
 
 logger = logging.getLogger(__name__)
@@ -35,8 +35,9 @@ class IMDb(object):
         if page_info['hasNextPage']:
             return page_info['endCursor']
 
-    def get_full_filmography(self, name_id, limits=None, type_categories=None, tv_limit=None, credits_limit=None):
-        # type: (str, int, list, int, int) -> (dict, list, str)
+    def get_full_filmography(self, name_id, limits=None, type_categories=None, tv_limit=None, credits_limit=None,
+                             group_ids=None):
+        # type: (str, int, list, int, int, list) -> (dict, list, str)
         categories = ['movie', 'tv', 'video', 'music', 'gaming', 'audio']
         type_categories = type_categories or []
         for _c in type_categories:
@@ -46,12 +47,29 @@ class IMDb(object):
                 raise IMDbGQLError(msg)
         res = _get_person_filmography(
             name_id=name_id, limits=limits, type_categories=type_categories, tv_limit=tv_limit,
-            credits_limit=credits_limit)
+            credits_limit=credits_limit, group_ids=group_ids)
         if None is res['data']['name']['nameText']:
             raise IMDbGQLPersonNotFound(f'Person not found with id: {name_id}')
-        credit_types = ['Actress', 'Actor', 'Self']
+        credit_types = ['Actress', 'Actor', 'Self', 'Archive Footage']
         result = [t['node'] for r in res['data']['name']['tv']['edges'] for t in r['node']['credits']['edges']
                   if any(_c in r['node']['grouping']['text'] for _c in credit_types)]
+        page_info = [r['node']['credits']['pageInfo'] for r in res['data']['name']['tv']['edges']
+                     if any(_c in r['node']['grouping']['text'] for _c in credit_types)][0]
+        primary_data = res['data']['name']
+        return primary_data, result, self._get_after_cursor(page_info)
+
+    def get_person_episodes(self, name_id, limits=None, tv_limit=None, credits_limit=None, group_ids=None,
+                            episode_limit=None, credited_roles=None):
+        # type: (str, int, int, int, list, int, int) -> (dict, list, str)
+        res = _get_person_episodes(
+            name_id=name_id, limits=limits, tv_limit=tv_limit,
+            credits_limit=credits_limit, group_ids=group_ids, episode_limit=episode_limit,
+            credited_roles=credited_roles)
+        if None is res['data']['name']['id']:
+            raise IMDbGQLPersonNotFound(f'Person not found with id: {name_id}')
+        credit_types = ['Actress', 'Actor', 'Self', 'Archive Footage']
+        result = [t['node'] for r in res['data']['name']['tv']['edges'] for t in r['node']['credits']['edges']
+                  if t['node']['episodeCredits']['total'] and any(_c in r['node']['grouping']['text'] for _c in credit_types)]
         page_info = [r['node']['credits']['pageInfo'] for r in res['data']['name']['tv']['edges']
                      if any(_c in r['node']['grouping']['text'] for _c in credit_types)][0]
         primary_data = res['data']['name']

@@ -25,6 +25,20 @@ HEADERS = {
 
 date_format = '%Y-%m-%d'
 
+imdb_group_ids = {
+    'Actor': 'amzn1.imdb.concept.name_credit_category.a9ab2a8b-9153-4edb-a27a-7c2346830d77',
+    'Actress': 'amzn1.imdb.concept.name_credit_category.7f6d81aa-23aa-4503-844d-38201eb08761',
+    'Self': 'amzn1.imdb.concept.name_credit_category.d6017bdb-c3e7-4ca5-944b-68d74b9de6b6',
+    'Producer': 'amzn1.imdb.concept.name_credit_category.0af123ce-1605-4a51-93cf-7ad477b11832',
+    'Soundtrack': 'amzn1.imdb.concept.name_credit_category.4df03a1e-b90d-4c4a-8638-29eea26a156b',
+    'Archive Footage': 'amzn1.imdb.concept.name_credit_group.6e871823-beae-458a-b972-2cdd635ec0d7',
+    'Writer': 'amzn1.imdb.concept.name_credit_category.c84ecaff-add5-4f2e-81db-102a41881fe3',
+    'Director': 'amzn1.imdb.concept.name_credit_category.ace5cb4c-8708-4238-9542-04641e7c8171',
+    'Additional Crew': 'amzn1.imdb.concept.name_credit_category.a7c2d410-e513-4bd7-85d5-73060ec46a84',
+    'Music Department': 'amzn1.imdb.concept.name_credit_category.aad1533c-6974-45a4-ba98-5f2f43286cfc',
+    'Thanks': 'amzn1.imdb.concept.name_credit_category.90de891d-6d5e-4711-9179-3eda18bd18e1',
+}
+
 logger = logging.Logger('imdb_graphql')
 
 
@@ -159,7 +173,8 @@ def fetch_person_page(person_id):
     return _get_response(payload)
 
 
-def _get_person_filmography(name_id, type_categories=None, limits=None, tv_limit=None, credits_limit=None):
+def _get_person_filmography(name_id, type_categories=None, limits=None, tv_limit=None, credits_limit=None,
+                            episode_limit=None, group_ids=None, after_cursor=None):
 
     def _get_type_categories(cats):
         categories = ['movie', 'tv', 'video', 'music', 'gaming', 'audio']
@@ -171,11 +186,18 @@ def _get_person_filmography(name_id, type_categories=None, limits=None, tv_limit
     if None is tv_limit:
         tv_limit = 9999
 
+    if None is group_ids:
+        group_ids = ('Actor', 'Actress', 'Self', 'Archive Footage')
+
+    group_ids = [imdb_group_ids[g] for g in group_ids]
+
     variables = {
         'nameId': name_id,
         'creditsCount': credits_limit or 0,
+        'episodeCount': episode_limit or 10,
         'isProPage': False,
-        'tv_limit': tv_limit
+        'tv_limit': tv_limit,
+        'groupingIds': group_ids
     }
 
     # We enumerate all 6 possible titleTypeCategory values here,
@@ -197,6 +219,7 @@ def _get_person_filmography(name_id, type_categories=None, limits=None, tv_limit
         $excludedGenre: [ID!]
         $isProPage: Boolean!
         $tv_limit: Int!
+        $groupingIds: [ID!]
     ) {
         name(id: $nameId) {
             id
@@ -702,3 +725,50 @@ def _get_favorite_people(limit=250, jump_pos=1, user_id=None, loc="en-US", sort_
 
     res = _get_response(payload)
     return res
+
+
+def _get_person_episodes(name_id, limits=None, tv_limit=None, credits_limit=None, episode_limit=None, group_ids=None,
+                         credited_roles=10, after_cursor=None):
+
+    if None is tv_limit:
+        tv_limit = 9999
+
+    if None is group_ids:
+        group_ids = ('Actor', 'Actress', 'Self', 'Archive Footage')
+
+    group_ids = [imdb_group_ids[g] for g in group_ids]
+
+    variables = {
+        'nameId': name_id,
+        'creditsCount': credits_limit or 1000,
+        'episodeCount': episode_limit or 250,  # 250 is api limit, uses pagination after
+        'isProPage': False,
+        'tv_limit': tv_limit,
+        'groupingIds': group_ids,
+        'creditedRoles': credited_roles or 10
+    }
+
+    payload = {
+        'query': """query FilmographyV2TitleType(
+        $nameId: ID!
+        $creditsCount: Int!
+        $episodeCount: Int!
+        $includedGenre: [ID!]
+        $excludedGenre: [ID!]
+        $isProPage: Boolean!
+        $tv_limit: Int!
+        $groupingIds: [ID!]
+        $creditedRoles: Int
+    ) {
+        name(id: $nameId) {
+            id
+""" + person_episodes + """
+        }
+    }""",
+    'operationName': 'FilmographyV2TitleType',
+    'variables': variables
+    }
+
+    res = _get_response(payload)
+    return res
+

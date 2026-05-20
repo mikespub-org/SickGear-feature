@@ -214,7 +214,6 @@ CreditMetaDataPace = """ on CreditV2 {
 """
 
 titleCredit = """ on CreditV2Edge {
-    __typename
     node {
 
         title {
@@ -225,7 +224,6 @@ titleCredit = """ on CreditV2Edge {
 """
 
 titleCredit_tv = """ on CreditV2Edge {
-    __typename
     node {
         ...""" + CreditMetaDataPace + """
         title {
@@ -287,6 +285,9 @@ filmography_types = {
                         genres: $includedGenre
                         excludeGenres: $excludedGenre
                     }
+                    creditLevelFilter: { 
+                        groupings: $groupingIds 
+                    }                    
                 }
             ) {
                 edges {
@@ -305,6 +306,9 @@ filmography_types = {
                         genres: $includedGenre
                         excludeGenres: $excludedGenre
                     }
+                    creditLevelFilter: { 
+                        groupings: $groupingIds 
+                    }                    
                 }
             ) {
                 edges {
@@ -323,6 +327,9 @@ filmography_types = {
                         genres: $includedGenre
                         excludeGenres: $excludedGenre
                     }
+                    creditLevelFilter: { 
+                        groupings: $groupingIds 
+                    }                    
                 }
             ) {
                 edges {
@@ -341,6 +348,9 @@ filmography_types = {
                         genres: $includedGenre
                         excludeGenres: $excludedGenre
                     }
+                    creditLevelFilter: { 
+                        groupings: $groupingIds 
+                    }                    
                 }
             ) {
                 edges {
@@ -359,6 +369,9 @@ filmography_types = {
                         genres: $includedGenre
                         excludeGenres: $excludedGenre
                     }
+                    creditLevelFilter: { 
+                        groupings: $groupingIds 
+                    }                    
                 }
             ) {
                 edges {
@@ -376,6 +389,9 @@ filmography_types = {
                         titleTypeCategory: [audio]
                         genres: $includedGenre
                         excludeGenres: $excludedGenre
+                    }
+                    creditLevelFilter: { 
+                        groupings: $groupingIds 
                     }
                 }
             ) {
@@ -522,4 +538,107 @@ ListSearchItemMetadata = """ on ListItemSearchNode {
             }
         }
     }
+"""
+
+creditDisplayableSeasonAndYear_episodes = """ on EpisodeCreditConnection {
+    edges {
+        node {
+            ... on CreditV2 {
+                creditedRoles(first: $creditedRoles) {
+                    edges {
+                        node {
+                            text
+                            category {
+                                text
+                                traits
+                            }
+                        }
+                    }
+                }
+                title {
+                    ... on Title {
+                        id
+                        titleText {
+                            text
+                        }
+                        releaseDate {
+                            day
+                            month
+                            year
+                        }
+                        series {
+                            series {
+                                id
+                            }
+                            episodeNumber {
+                                episodeNumber
+                                seasonNumber
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+CreditMetaDataPace_episodes = """ on CreditV2 {
+    episodeCredits(first: $episodeCount) {
+        total
+        ...""" + creditDisplayableSeasonAndYear_episodes + """
+        pageInfo {
+            hasNextPage
+            endCursor
+        }
+    }
+}
+"""
+
+titleCredit_tv_episodes = """ on CreditV2Edge {
+    node {
+        ...""" + CreditMetaDataPace_episodes + """
+    }
+}
+"""
+
+filmographyV2Grouping_tv_episodes = """ on CreditGroupingEdge {
+    node {
+        grouping {
+            groupingId
+            text
+        }
+        credits(first: $creditsCount) {
+            edges {
+                ...""" + titleCredit_tv_episodes + """
+            }
+            total
+            pageInfo {
+                hasNextPage
+                endCursor
+            }
+        }
+    }
+}
+"""
+
+person_episodes = """tv: creditGroupings(
+            first: $tv_limit
+            useEntitlement: $isProPage
+            creditSort: { by: "RELEASE_DATE", order: DESC }
+            filter: {
+                titleLevelFilter: {
+                    titleTypeCategory: [tv]
+                    genres: $includedGenre
+                    excludeGenres: $excludedGenre
+                }
+                creditLevelFilter: { 
+                    groupings: $groupingIds 
+                }
+            }
+        ) {
+            edges {
+                ...""" + filmographyV2Grouping_tv_episodes + """
+            }
+        }
 """
