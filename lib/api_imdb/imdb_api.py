@@ -486,8 +486,8 @@ class IMDbIndexer(TVInfoBase):
             log.error(msg)
             raise BaseTVinfoError(msg)
 
-    def _convert_graphql_person(self, p_data, show_data):
-        # type: (dict, dict) -> TVInfoPerson
+    def _convert_graphql_person(self, p_data, show_data, ep_list=None):
+        # type: (dict, dict, dict) -> TVInfoPerson
         p_naem = p_data['nameText']['text']
         p_id = int(id_regex.search(p_data['id']).group(1))
         if p_data['primaryImage']:
@@ -540,17 +540,32 @@ class IMDbIndexer(TVInfoBase):
         person_obj = TVInfoPerson(
             p_id=p_id, name=p_naem, image=image, thumb_url=thumb_url, images=images, bio=bio, birthdate=birthdate,
             deathdate=deathdate, ids=ids, birthplace=birthplace, height=height, akas=akas)
+        ep_data_dict = {}
+        if isinstance(ep_list, list):
+            ep_list =  [e['episodeCredits']['edges'] for e in ep_list]
+            for s in ep_list:
+                for e in s:
+                    ep_data_dict.setdefault(e['node']['title']['series']['series']['id'], []).append(e['node'])
+
         for _s in show_data:
             show_obj = self._convert_graphql_show(_s['title'])  # type: TVInfoShow
             cast = CastList()
             if _s:
-                ep_chars = []
-                if 'episodeCredits' in _s and 'edges' in _s['episodeCredits']:
-                    ep_chars = [(a['node']['title'], [b['node']['text'] for b in a['node']['creditedRoles']['edges']]) for a in _s['episodeCredits']['edges']]
                 char_ep = {}
-                for _ep in ep_chars:
-                    for _c in _ep[1]:
-                        char_ep.setdefault(_c, []).append({'id': _ep[0]['id'], 'title': _ep[0]['titleText']['text'], 'original': _ep[0]['originalTitleText']['text'], 'releaseDate': _ep[0]['releaseDate'], 'episodeNumber': _ep[0]['series']['episodeNumber']})
+                for _ep in ep_data_dict.get(show_obj.imdb_id) or []:
+                    for ep_c in _ep['creditedRoles']['edges']:
+                        try:
+                            _ep_num = _ep['title']['series']['episodeNumber']
+                            char_ep.setdefault(ep_c['node']['text'], []).append(
+                                {'ep_id': _ep['title']['id'],
+                                 # 'series_id': _ep['title']['series']['series']['id'],
+                                 'title': _ep['title']['titleText']['text'],
+                                 'releaseDate': _ep['title']['releaseDate'],
+                                 'episode': (None is not _ep_num and _ep_num['episodeNumber']) or None,
+                                 'season': (None is not _ep_num and _ep_num['seasonNumber']) or None})
+                        except (BaseException, Exception) as e:
+                            log.error(f'Error parsing character ep list: {ex(e)}')
+                            log.debug(traceback.format_exc())
 
                 for _r in _s['creditedRoles']['edges']:
                     _cd = _r['node']
@@ -564,14 +579,18 @@ class IMDbIndexer(TVInfoBase):
                             end_year = _s['episodeCredits']['yearRange']['endYear']
                         for _c in _r['node']['characters']['edges']:
                             c_name = _c['node']['name']
+                            ep_count = _s['episodeCredits']['total']
                             char_ep_list = char_ep.get(c_name) or\
                                            next((v for k, v in char_ep.items() if c_name in k), None) or []
-                            ep_count = len(char_ep_list) or _s['episodeCredits']['total']
+                            ep_count = (None, len(char_ep_list))[ep_count <= 250] or ep_count
                             play_self = any('SELF_TRAIT' == _t for _t in _r['node']['category']['traits'])
+                            archive_footage = (_r['node'] and 'attributes' in _r['node'] and _r['node']['attributes']
+                                               and any('archive footage' in _a['text']
+                                                       for _a in _r['node']['attributes'])) or False
                             char_obj = TVInfoCharacter(
                                 name=c_name, ti_show=show_obj, episode_count=ep_count or None, person=[person_obj],
                                 start_year=start_year, end_year=end_year, plays_self=play_self,
-                                episode_list=char_ep_list)
+                                episode_list=char_ep_list, incl_archive_footage=archive_footage)
                             cast[RoleTypes.ActorMain].append(char_obj)
                             person_obj.characters.append(char_obj)
             show_obj.cast = cast
@@ -592,12 +611,13 @@ class IMDbIndexer(TVInfoBase):
                  } for ch in cast[RoleTypes.ActorMain]]
         return person_obj
 
-    def get_person_tvshow_filmography(self, p_id):
-        # type: (str) -> TVInfoPerson
+    def get_person_tvshow_filmography(self, p_id, get_ep_list=False):
+        # type: (str, bool) -> TVInfoPerson
         """
         get all tv shows with actor/actress credit
 
         :param p_id:
+        :param get_ep_list: get ep list
         :return: List of TVInfoShow
         """
         if isinstance(p_id, int):
@@ -612,11 +632,21 @@ class IMDbIndexer(TVInfoBase):
                 name_id=p_id, type_categories=['tv'], tv_limit=9999, credits_limit=9999)
             tv_shows = [_s for _s in res[1]
                         if _s['title']['titleType']['id'] in ["tvSeries", "tvMiniSeries", "tvEpisode"]]
-            result = self._convert_graphql_person(res[0], tv_shows)
+
+            ep_data = None
+            if get_ep_list:
+                ep_data = self._get_graphql_data(
+                    imdb_obj.get_person_episodes,
+                    name_id=p_id, tv_limit=9999, credits_limit=9999, episode_limit=9999, credited_roles=9999)
+                if isinstance(ep_data, tuple):
+                    ep_data = ep_data[1]
+
+            result = self._convert_graphql_person(res[0], tv_shows, ep_data)
         except IMDbPersonNotFound as e:
             raise e
         except (BaseException, Exception) as e:
             log.error(f'Person full filmography error: {e}')
+            log.debug(traceback.format_exc())
         return result
 
     def get_popular(self, result_count=100, start_date=None, end_date=None, after_cursor=None, **kwargs):
@@ -842,7 +872,8 @@ class IMDbIndexer(TVInfoBase):
                 imdb_obj.get_favorite_people,
                 user_id, limit=result_count, sort_by=sort_by, sort_order=sort_order, after_cursor=after_cursor)
             for _p_d in res[0]:
-                if not any(_p['category']['text'] in ('Actress', 'Actor') for _p in _p_d['primaryProfessions']):
+                if not any(_p['category']['text'] in ('Actress', 'Actor', 'Archive Footage')
+                           for _p in _p_d['primaryProfessions']):
                     continue
                 ti_person = self._convert_graphql_person(_p_d, [])
                 if ti_person:

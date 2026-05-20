@@ -965,6 +965,7 @@ class TVInfoCharacter(PersonBase):
                  episode_count=None,  # type: int
                  guest_episodes_numbers=None,  # type: Dict[int, List[int]]
                  episode_list=None,  # type: List
+                 incl_archive_footage=None,  # type: Optional[bool]
                  **kwargs):
         # type: (...) -> None
 
@@ -972,6 +973,7 @@ class TVInfoCharacter(PersonBase):
         self.person = person  # type: List[TVInfoPerson]
         self.voice = voice  # type: Optional[bool]
         self.plays_self = plays_self  # type: Optional[bool]
+        self.incl_archive_footage = incl_archive_footage  # type: Optional[bool]
         self.regular = regular  # type: Optional[bool]
         self.ti_show = ti_show  # type: Optional[TVInfoShow]
         self.start_year = start_year  # type: Optional[integer_types]

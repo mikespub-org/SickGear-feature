@@ -4876,7 +4876,7 @@ class AddShows(Home):
                 items, end_cursor, total, list_info = t.get_watchlist(kwargs['acc_id'], **kwargs)
             elif 'person' == api_method:
                 items = []
-                p_item = t.get_person_tvshow_filmography(**kwargs)  # type: TVInfoPerson
+                p_item = t.get_person_tvshow_filmography(get_ep_list=True, **kwargs)  # type: TVInfoPerson
                 if p_item:
                     p_ref = f'{TVINFO_IMDB}:{p_item.id}'
                     dup = {}  # type: Dict[int, TVInfoShow]
