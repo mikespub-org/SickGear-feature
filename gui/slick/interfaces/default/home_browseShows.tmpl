@@ -790,8 +790,8 @@ $browse_title
         #else
 	<div class="show-card" data-name="$this_show['title']" data-order="$this_show['order']">
 		<div class="show-card-inner">
-			<div class="browse-image">
-				<a class="browse-image" href="$this_show['url_src_db']" target="_blank"
+			<div class="browse-image browse-person-bg">
+				<a class="browse-image browse-person-bg" href="$this_show['url_src_db']" target="_blank"
 					title="<span class='browse-title'>$re.sub(r'(?m)\s+\((?:19|20)\d\d\)\s*$', '', $title_html)</span>
 					<div class='genre age' style='display:#echo ('none', 'block')[bool($this_show['age'])]#;font-weight:bold'><em>Age:&nbsp;$this_show['age']</em></div>
 					<p class='overview' style='margin:0 0 2px'>$overview</p>
