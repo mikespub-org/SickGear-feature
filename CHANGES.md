@@ -21,6 +21,7 @@
 * Change add "NA" as potential non-named episode name
 * Fix potential race condition between SHOWMAPSUPDATE and STARTUP-FORCE-SHOW-UPDATE tasks
 * Fix issue with alt.json cache file handling
+* Change EZTV provider to support for their beta API
 
 
 [develop]
