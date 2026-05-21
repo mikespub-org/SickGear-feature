@@ -1145,7 +1145,8 @@ class GenericProvider(object):
                 if cur_param in search_done:
                     continue
                 search_done += [cur_param]
-                item_list += self._search_provider(cur_param, search_mode=search_mode, epcount=len(ep_obj_list))
+                item_list += self._search_provider(
+                    cur_param, search_mode=search_mode, epcount=len(ep_obj_list), ids=show_obj.ids)
                 if self.should_skip():
                     break
 
