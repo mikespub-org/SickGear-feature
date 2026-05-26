@@ -56,6 +56,7 @@
 * Update idna library 3.14 (37b6b74) to 3.16 (6d1a0de)
 * Update packaging 26.1 (c1a88a3) to 26.2 (84a87ee)
 * Update Requests library 2.33.1 (111d2b7) to 2.34.0 (0b401c7)
+* Fix import if orjson is not installed that blocked running unittests
 
 
 ### 3.35.7 (2026-05-19 20:00:00 UTC)

@@ -39,6 +39,7 @@ is_orjson = False
 has_simplejson = False
 JSON_INDENT = 2
 ORJSON_OPTIONS = None
+OPT_SORT_KEYS = None
 try:
     import orjson as json
     from orjson import JSONDecodeError, JSONEncodeError

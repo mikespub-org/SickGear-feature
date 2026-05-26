@@ -26,7 +26,7 @@ from lib.tvinfo_base import (
     TVInfoBase, TVInfoIDs, TVInfoShow, TVInfoSeason, TVInfoEpisode, TVInfoImage, TVInfoImageType, TVInfoImageSize,
     BaseTVinfoError, CastList, RoleTypes)
 from sg_helpers import clean_data, enforce_type, get_url, try_int, ConnectionSkipException
-from json_helper import json_loads, json_dumps, is_orjson, JSONEncoder, JSON_INDENT, OPT_SORT_KEYS
+from json_helper import json_loads, json_dumps, is_orjson, JSONEncoder, JSON_INDENT
 
 from six import iteritems
 from six.moves import http_client as httplib
@@ -46,7 +46,7 @@ id_regex = re.compile(r'(?:tt|nm)(\d{7,10})', flags=re.I)
 img_uri_regex = re.compile(r'(?im)(.*V1_?)(\..*?)$', flags=re.I)
 
 if is_orjson:
-
+    from json_helper import OPT_SORT_KEYS
     json_enc_kw = {'option': OPT_SORT_KEYS}
 
 else:
