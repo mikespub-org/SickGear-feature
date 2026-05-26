@@ -11,6 +11,7 @@
 * Update Requests library 2.33.0 (bc04dfd) to 2.34.0 (0b401c7)
 * Update browser_ua from user-agents 2.1.38 (a78437e)
 * Update SimpleJSON 3.20.2 (10e5aaf) to 4.0.0 (1608c05)
+* Update soupsieve 2.8.3 (5aedc41) to 2.8.4 (28108ab)
 * Update urllib3 2.6.3 (0248277) to 2.7.0 (9a950b9)
 * Update zoneinfo 2025c to 2026b (fallback)
 * Add network logos
