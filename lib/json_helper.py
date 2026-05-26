@@ -15,6 +15,7 @@
 # along with SickGear.  If not, see <http://www.gnu.org/licenses/>.
 
 from sys import version_info
+from gzip import GzipFile
 
 from _23 import decode_str
 from requests.utils import guess_json_utf
@@ -69,7 +70,10 @@ try:
 
 except ImportError:
     JSONDecodeError = ValueError
-    JSONEncodeError = ValueError, TypeError
+
+    class JSONEncodeError(ValueError, TypeError):
+        pass
+
     try:
         import simplejson as json
 
@@ -118,7 +122,13 @@ def invoke_load(method, *arg, **kwargs):
 
 
 def json_dump(*arg, **kwargs):
-    return invoke_json('dump', *arg, **kwargs)
+    if is_orjson or not isinstance(arg[1], GzipFile):
+        return invoke_json('dump', *arg, **kwargs)
+
+    # necessary because standard json doesn't support GzipFile
+    json_str = json_dumps(arg[0], **kwargs) + "\n"
+    json_bytes = json_str.encode('utf-8')
+    return arg[1].write(json_bytes)
 
 
 def json_dumps(*arg, **kwargs):
@@ -128,7 +138,11 @@ def json_dumps(*arg, **kwargs):
 
 
 def json_load(*arg, **kwargs):
-    return invoke_load('load', *arg, **kwargs)
+    if is_orjson or not isinstance(arg[0], GzipFile):
+        return invoke_load('load', *arg, **kwargs)
+
+    res = arg[0].read().decode('utf-8')
+    return invoke_json('loads', res, **kwargs)
 
 
 def json_loads(*arg, **kwargs):

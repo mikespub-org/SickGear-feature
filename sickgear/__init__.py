@@ -88,6 +88,7 @@ SYS_ENCODING = ''
 DATA_DIR = ''
 
 BTN_SETTINGS_FILE = ''
+STATES_DATA_FILE = ''
 
 # system events
 # noinspection PyTypeChecker
@@ -670,7 +671,7 @@ def init_stage_1(console_logging):
         RECENTSEARCH_STARTUP, NAMING_FORCE_FOLDERS, SOCKET_TIMEOUT, DEBUG, TVINFO_DEFAULT, \
         CONFIG_FILE, CONFIG_VERSION, CONFIG_OLD, CONFIG_LOADED, \
         REMOVE_FILENAME_CHARS, IMPORT_DEFAULT_CHECKED_SHOWS, WANTEDLIST_CACHE, MODULE_UPDATE_STRING, EXT_UPDATES, \
-        BTN_SETTINGS_FILE
+        BTN_SETTINGS_FILE, STATES_DATA_FILE
     # Add Show Search
     global RESULTS_SORTBY
     # Add Show Defaults
@@ -825,6 +826,7 @@ def init_stage_1(console_logging):
     sg_helpers.DATA_DIR = DATA_DIR
 
     BTN_SETTINGS_FILE = os.path.join(DATA_DIR, 'btn-status.json')
+    STATES_DATA_FILE = os.path.join(DATA_DIR, 'states-data.json')
 
     THEME_NAME = check_setting_str(CFG, 'GUI', 'theme_name', 'dark')
     GUI_NAME = check_setting_str(CFG, 'GUI', 'gui_name', 'slick')

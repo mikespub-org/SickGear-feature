@@ -37,7 +37,7 @@ import zipfile
 
 from exceptions_helper import ex, MultipleShowObjectsException
 import exceptions_helper
-from json_helper import json_dumps, json_loads, json_dump, json_load
+from json_helper import json_dumps, json_loads, json_dump, json_load, is_orjson, JSONEncoder
 import sg_helpers
 from sg_helpers import copy_file, remove_file, scantree, is_virtualenv, strip_html_tags
 
@@ -113,6 +113,32 @@ from _23 import decode_bytes, decode_str, getargspec, \
 from lib.sg_lang_codes import alpha3_to_alpha2, lang_to_country
 from six import binary_type, integer_types, iteritems, iterkeys, itervalues, moves, string_types
 from lib.tvinfo_base import TVInfoShow
+
+if is_orjson:
+    def orjson_default(obj):
+        if isinstance(obj, set):
+            return list(obj)
+        # elif isinstance(obj, datetime):
+        #     return SGDatetime.sbfdatetime(obj, d_preset=dateFormat, t_preset='%H:%M %z')
+        # elif isinstance(obj, dt_date):
+        #     return SGDatetime.sbfdate(obj, d_preset=dateFormat)
+        raise TypeError
+
+    json_enc_kw = {'default': orjson_default}
+
+else:
+
+    class PythonObjectEncoder(JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, set):
+                return list(obj)
+            elif isinstance(obj, datetime):
+                return obj.strftime('%Y-%m-%d %H:%M %z')
+            elif isinstance(obj, dt_date):
+                return obj.strftime('%Y-%m-%d')
+            return JSONEncoder.default(self, obj)
+
+    json_enc_kw = {'cls': PythonObjectEncoder}
 
 # noinspection PyUnreachableCode
 if False:
@@ -4084,8 +4110,8 @@ class HomeProcessMedia(Home):
         sickgear.MEMCACHE['DEPRECATE_PP_LEGACY'] = True
 
 class AddShows(Home):
-    _btn_tag_names = {}
-    _persistent_tag_button_states = {}
+    _btn_tag_names = None
+    _persistent_tag_button_states = None
 
     def get(self, route, *args, **kwargs):
         route = route.strip('/')
@@ -6696,7 +6722,7 @@ class AddShows(Home):
 
     @property
     def _get_persistent_btn_states(self):
-        if not AddShows._persistent_tag_button_states:
+        if None is AddShows._persistent_tag_button_states:
             res = {}
             try:
                 # with open(sickgear.BTN_SETTINGS_FILE, 'r') as f:
@@ -6705,8 +6731,10 @@ class AddShows(Home):
                     res = json_load(f)
                 if isinstance(res, dict):
                     AddShows._persistent_tag_button_states = res
-            except (BaseException, Exception):
-                pass
+            except (BaseException, Exception) as e:
+                logger.warning(f'Error loading button states file: {ex(e)}')
+            if not isinstance(AddShows._persistent_tag_button_states, dict):
+                AddShows._persistent_tag_button_states = {}
         return AddShows._persistent_tag_button_states
 
     def get_btn_profile_states(self, browse_cat=None):
@@ -6714,10 +6742,66 @@ class AddShows(Home):
             return json_dumps(c_p[browse_cat])
         return json_dumps({})
 
-    def set_persistent_btn_status(self, button_states=None, browse_cat=None, **kwargs):
+    def _get_states_data(self):
+        if None is AddShows._btn_tag_names:
+            if os.path.isfile(sickgear.STATES_DATA_FILE):
+                try:
+                    with gzip.GzipFile(sickgear.STATES_DATA_FILE, 'r') as f:
+                        res = json_load(f)
+                    if isinstance(res, dict):
+                        AddShows._btn_tag_names = {_k: set(_v) for _k, _v in res.get('_btn_tag_names', {}).items()}
+                        for _ie in res.get('img_cache', []):
+                            sickgear.CACHE_IMAGE_URL_LIST.add_url(_ie[0])
+                    else:
+                        AddShows._btn_tag_names = {}
+                except (BaseException, Exception) as e:
+                    logger.warning(f'Error loading states file: {ex(e)}')
+                    AddShows._btn_tag_names = {}
+            if not isinstance(AddShows._btn_tag_names, dict):
+                AddShows._btn_tag_names = {}
+
+    def _save_states_data(self):
+        try:
+            bak_file = None
+            if os.path.isfile(sickgear.STATES_DATA_FILE):
+                bak_file = re.sub(r'\.json$', '.bak', sickgear.STATES_DATA_FILE)
+                if os.path.isfile(sickgear.STATES_DATA_FILE):
+                    copy_file(sickgear.STATES_DATA_FILE, bak_file)
+            with gzip.GzipFile(sickgear.STATES_DATA_FILE, 'w') as f:
+                _states_data = {
+                    '_btn_tag_names': AddShows._btn_tag_names,
+                    'img_cache': list(sickgear.CACHE_IMAGE_URL_LIST)
+                }
+                json_dump(_states_data, f, **json_enc_kw)
+            if not os.path.isfile(sickgear.STATES_DATA_FILE):
+                logger.warning(f'Error saving states data file: {ex(e)}')
+                return False
+            with gzip.GzipFile(sickgear.STATES_DATA_FILE, 'r') as f:
+                if not isinstance(json_load(f), dict):
+                    try:
+                        f.close()
+                        remove_file(sickgear.STATES_DATA_FILE)
+                    except (BaseException, Exception):
+                        pass
+                    if bak_file:
+                        copy_file(bak_file, sickgear.STATES_DATA_FILE)
+                    return False
+            if bak_file:
+                try:
+                    remove_file(bak_file)
+                except (BaseException, Exception):
+                    pass
+        except (BaseException, Exception) as e:
+            logger.warning(f'Error saving states data file: {ex(e)}')
+            return False
+        return True
+
+    def set_persistent_btn_status(self, button_states=None, browse_cat=None, sg_pid=None, **kwargs):
         if button_states:
             button_states = json_loads(button_states)
             if isinstance(button_states, dict):
+                self._get_persistent_btn_states  # load list if needed
+                self._get_states_data()
                 # validate data
                 profile_numbers = [f'{i}' for i in range(1, 11)]
                 profile_names = {p: n for p,n in button_states[browse_cat].get('names', {}).items()
@@ -6757,6 +6841,7 @@ class AddShows(Home):
                         except (BaseException, Exception):
                             pass
                 except (BaseException, Exception) as e:
+                    logger.warning(f'Error button states file: {ex(e)}')
                     return json_dumps({'result': 'failed'})
                 return json_dumps({'result': 'success'})
         return json_dumps({'result': 'failed'})
@@ -6788,7 +6873,9 @@ class AddShows(Home):
         t.all_shows = []
         all_classes = all_classes or set()
         _browse_cat = browse_type + ('', '-person')[bool(t.p_ref)]
+        self._get_states_data()
         AddShows._btn_tag_names.setdefault(_browse_cat, set()).update(all_classes)
+        self._save_states_data()
         t.all_classes = self._make_browse_classes(all_classes)
         t.persistent_tag_button_states = {
             _browse_cat: {'current': self._get_persistent_btn_states.get(_browse_cat, {}).get('current', {})}}
