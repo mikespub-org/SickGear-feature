@@ -12,6 +12,7 @@
 * Update browser_ua from user-agents 2.1.38 (a78437e)
 * Update SimpleJSON 3.20.2 (10e5aaf) to 4.0.0 (1608c05)
 * Update soupsieve 2.8.3 (5aedc41) to 2.8.4 (28108ab)
+* Update tmdbsimple 2.9.2 (0b3359f) to 2.9.6 (e17ec76)
 * Update urllib3 2.6.3 (0248277) to 2.7.0 (9a950b9)
 * Update zoneinfo 2025c to 2026b (fallback)
 * Add network logos
