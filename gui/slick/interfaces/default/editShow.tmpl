@@ -391,7 +391,7 @@
          $tvid in $sickgear.TVInfoAPI().sources and not $sickgear.TVInfoAPI($tvid).config.get('defunct') and
          $sickgear.TVInfoAPI($tvid).config.get('active'))
     #set $settable_main = ($dev or ($ok_tvid and $maybe_main))
-						<div class="field-pair" style="padding:0">
+						<div class="field-pair">
 								<span class="component-title">
     #if $tvid in $show_obj.ids
         #set $src_search_url = sickgear.TVInfoAPI($tvid).config.get('finder')
@@ -420,7 +420,7 @@
     #else
 									<label for="lockid-$tvid">
 										<input type="checkbox" name="lockid-$tvid" id="lockid-$tvid"#echo ('', $html_checked)[$show_obj.ids.get($tvid, {'status': $sickgear.indexermapper.MapStatus.NONE}).get('status') == $sickgear.indexermapper.MapStatus.NO_AUTOMATIC_CHANGE]#>
-										<p style="padding-left:19px;margin-right:24px">lock this ID</p>
+										<p>lock this ID</p>
 									</label>
         #if $settable_main
 									<label for="set-main-$tvid">
@@ -431,7 +431,7 @@
 								</span>
 						</div>
 #end for
-						<div class="field-pair" style="padding-top:0">
+						<div class="field-pair">
 							<span id="panel-save-get" class="component-desc show">
 								<p>invalid values can break finding episode and TV info</p>
 								<input type="button" value="Save Changes" id="save-mapping" class="btn btn-inline">

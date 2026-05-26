@@ -15,7 +15,7 @@
 * Update tmdbsimple 2.9.2 (0b3359f) to 2.9.6 (e17ec76)
 * Update urllib3 2.6.3 (0248277) to 2.7.0 (9a950b9)
 * Update zoneinfo 2025c to 2026b (fallback)
-* Add network logos
+* Change add some missing network logos
 * Fix parsing same named show with different appended years
 * Fix tvdb_api_v4 pagination
 * Fix browsing IMDb cards where there is no year fetched
@@ -24,6 +24,27 @@
 * Fix potential race condition between SHOWMAPSUPDATE and STARTUP-FORCE-SHOW-UPDATE tasks
 * Fix issue with alt.json cache file handling
 * Change EZTV provider to support for their beta API
+* Change add top rated, new shows, new season, coming soon to menu Shows -> IMDb
+* Change Add IMDb to "Other shows" inside view-show/person
+* Change persons view move "Other shows" to near the top of the person view for improved usability
+* Change add cast link to IMDb Person Browse Shows
+* Change add renamable persistent filter profiles to most Browse Shows views
+* Change add "Country" filter to menu Shows -> TVDb
+* Change add "Genre", "Country", "Language", "Networks" filters to Shows -> TVmaze
+* Change add "Genre", "Country", filters to Shows -> TMDB
+* Change add "Genre", "Country", "Language", "Content Rating", "Networks" , filters to Shows -> Trakt
+* Change add "Genre", "Country", "Language", "Content Rating" filters to Shows -> IMDb
+* Change add "Genre" filter to Shows -> Metacritic
+* Change add "Genre" and "Networks" filters to Shows -> Next Episode
+* Change add "Networks" filter to Shows -> TV Calendar
+* Change add include, exclude, deselect under a [filters] button to show and person card views
+* Change add favorite actors to Shows -> IMDb
+* Change append death symbol to IMDb age where applicable
+* Change flags to improved svg format
+* Change improve legibility of all inputs on dark theme
+* Change use browser dark mode for checkbox and radio inputs
+* Change make main menus height dynamic to window height
+* Fix data parsing in tv show search
 
 
 [develop]

@@ -379,7 +379,7 @@ inc_top.tmpl
 	filter:alpha(opacity=35);
 	-webkit-border-radius:8px;
 	   -moz-border-radius:8px;
-		    border-radius:8px;
+			border-radius:8px;
 	background:#000 url("../css/lib/images/ui-bg_flat_0_000000_40x100.png") 50% 50% repeat-x
 }
 
@@ -921,6 +921,8 @@ home.tmpl
 }
 
 .yes,
+.placeholder,
+.filter-ico,
 .no{
 	display:inline-block;
 	vertical-align:middle;
@@ -930,6 +932,7 @@ home.tmpl
 
 .yes{background-image:url("../images/yes16.png")}
 .no{background-image:url("../images/no16.png")}
+.placeholder{background-image:url("../images/_placeholder16.png")}
 
 .container,
 #container{
@@ -1034,6 +1037,7 @@ home.tmpl
 	border-radius:0
 }
 
+.person-title,
 .show-title{
 	position:relative;
 	overflow:hidden;
@@ -1488,6 +1492,25 @@ home_browseShows.tmpl
 	background-position:50% 50%;
 	text-decoration: none !important;
 	background-image:url("../images/poster-dark.jpg")
+}
+
+.browse-person-bg {
+	background-image:url("../images/poster-person.jpg") !important
+}
+
+.browse-person-image{
+	display:block;
+	margin-left: 50%;
+	transform: translateX(-50%);
+	overflow:hidden;
+	height:275px;  /* +1 to hide the random white line */
+	/*width:186px;*/
+	border-top-left-radius:5px;
+	border-top-right-radius:5px;
+	border-bottom:1px solid #111;
+	background-position:50% 50%;
+	text-decoration: none !important;
+	background-image:url("../images/poster-person.jpg")
 }
 
 #browse-list.tvcalendar a.browse-image{
@@ -2445,6 +2468,16 @@ td.col-search{
 	width:639px
 }
 
+#edit-show #idmapping-options .component-desc label{
+	white-space:nowrap
+}
+#edit-show #idmapping-options .component-desc label p{
+	padding-left:19px;
+	margin-right:24px
+}
+#edit-show #idmapping-options .field-pair{
+	padding:0;
+}
 /* =======================================================================
 episodeView.tmpl
 ========================================================================== */
@@ -3797,9 +3830,55 @@ option.flag{
 
 #select2-infosrc-lang-select-container .flag,
 #select2-infosrc-lang-select-results .flag{
-	padding-left:25px;
+	padding: 2px 0 0 28px;
 	background-repeat:no-repeat;
-	background-position:0 50%
+	background-position:0 0;
+	background-size:24px 20px;
+}
+
+.browse-shows-result .flag,
+.add-shows-popup .flag,
+#addShowForm #search-results .flag{
+	background-size:24px 20px;
+	display: inline-block;
+	width: 24px;
+	height: 20px;
+	vertical-align: middle;
+}
+
+.add-shows-popup .flag,
+#addShowForm #search-results .flag{
+	margin: 0 6px 0px 0px;
+}
+
+.browse-shows-result .flag{
+	margin:0 0 2px 3px;
+}
+
+.browse-shows-result{
+	line-height:15px;
+	margin-bottom:2px
+}
+
+.add-shows-popup .add-shows-lang,
+.add-shows-popup .add-shows-network{
+	font-weight:bold;
+	font-size:0.9em;
+}
+.add-shows-popup .add-shows-genre{
+	font-weight:bold
+}
+.add-shows-popup .add-shows-image{
+	float:right;
+	margin-left:3px;
+	max-height:150px;
+}
+.add-shows-popup .add-shows-overview{
+	margin:0 0 2px;
+}
+.add-shows-popup .add-shows-cta{
+	float:right;
+	clear:both
 }
 
 /* Anime section for editShow */
@@ -5060,8 +5139,14 @@ li.token-input-token input{
 	float:left
 }
 
+div.token-input-dropdown ul li,
 li.token-input-token p{
 	line-height:2.0 !important
+}
+
+li.token-input-token p{
+	display:inline-block;
+	float:none !important;
 }
 
 li.token-input-input-token input{
@@ -5090,15 +5175,13 @@ span.token-input-delete-token{
 	margin:0 1px
 }
 
-li.token-input-token img{
-	padding:5px 4px 0 0;
-	float:left
-}
-
+li.token-input-token img,
 li.token-input-dropdown-item img,
 li.token-input-dropdown-item2 img{
-	padding:2px 4px 0 0;
-	float:left
+	display:inline-block;
+	padding:0 4px 0 0;
+	width:28px;
+	height:24px
 }
 
 /* =======================================================================
@@ -5223,8 +5306,100 @@ fancybox.css Overrides
 	background-color:rgba(0, 0, 0, 0.4)
 }
 .fancybox-image{
-	 -moz-border-radius:10px; -webkit-border-radius:10px; border-radius:10px
+	-moz-border-radius:10px; -webkit-border-radius:10px; border-radius:10px
 }
 .fancybox-container .fancybox-progress{
-	background-color:#181818
+	background-color:#20c997;
+}
+
+.btn-toggle{
+	padding-left: 10px;
+	padding-right: 15px;
+	margin: 3px;
+	border-radius: 25px !important;
+}
+
+#tags-container .row-select-all{
+	border-radius: 5px !important;
+	margin: 3px;
+}
+#tags-container .row-select-none{
+	border-radius: 5px !important;
+	margin: 3px;
+}
+#tags-container .row-select-exclude{
+	border-radius: 5px !important;
+	margin: 3px;
+}
+#tags-container .select-buttons{
+	text-align: center;
+}
+#tags-container button i{
+	margin:-4px 2px 0 0
+}
+#tags-table {
+	border-collapse: separate;
+	border-spacing: 0 1em;
+}
+#tags-table .label-container{
+	display:table-cell;
+	vertical-align: middle;
+	padding-right: 10px;
+}
+#tags-table .button-container{
+	vertical-align: middle;
+}
+.ui-dialog {
+	z-index: 8000 !important ;
+	position:fixed !important;
+}
+
+#tag-menu-container {
+	text-align:center;
+}
+
+#filter_button .filter-ico{
+	background-image:url("../images/filter16.png");
+	margin-right: 4px;
+}
+#tag-filters{
+	display: none
+}
+#tag-dialog{
+	display: inline-block
+}
+
+.person-hdr{
+	float:left;margin:0 0 0 2px
+}
+.person-hdr .tvsrc{
+	display: inline-block;
+	padding-left: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 16px;
+}
+
+.profile-menu {
+	display:inline;
+	margin: 10px;
+	padding: 4px 10px 5px 10px;
+	cursor: pointer;
+	border-radius: 10px;
+}
+.profile-menu-items {
+	display:none;
+	position: absolute;
+	z-index:8010;
+	list-style-type: none;
+	padding: 0;
+	margin: 0 10px;
+}
+.profile-menu-items .menu-item {
+	padding:0 10px;
+}
+
+.profile-menu .ui-icon{
+	margin-right: 5px;
+	transform: scale(1.5);
 }

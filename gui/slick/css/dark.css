@@ -1,3 +1,8 @@
+:root{
+	--link:#00bfff;
+	--link-hover:#add8e6;
+	--text:#ddd;
+}
 /* =======================================================================
 inc_top.tmpl
 ========================================================================== */
@@ -69,7 +74,7 @@ pre .prelight-num{
 .ui-widget-content{
 	background:#606060;
 	border:1px solid #111;
-	color:#ddd
+	color:var(--text)
 }
 
 .ui-widget.ui-widget-content{
@@ -78,18 +83,18 @@ pre .prelight-num{
 
 .component-group.bubblelist a,
 .ui-widget-content a{
-	color:#2d8fbf
+	color:var(--link)
 }
 
 .component-group.bubblelist a:hover,
 .ui-widget-content a:hover{
-	color:#09a2ff
+	color:var(--link-hover)
 }
 
 .ui-widget-header{
 	background:#3d3d3d;
 	border:1px solid #111;
-	color:#ddd
+	color:var(--text)
 }
 
 .ui-state-default,
@@ -186,7 +191,7 @@ pre .prelight-num{
 }
 
 .ui-state-default a, .ui-state-default a:link, .ui-state-default a:visited{
-	color:#ddd;
+	color:var(--text);
 	text-decoration:none
 }
 
@@ -274,7 +279,7 @@ home.tmpl
 .ui-font,
 a.ui-font{
 	text-shadow:0 0 2px #000;
-	color:#ddd
+	color:var(--text)
 }
 
 #show-list .show-card{
@@ -321,7 +326,7 @@ a.ui-font{
 
 .show-toggle-hide,
 td.tvShow a{
-	color:#ddd;
+	color:var(--text);
 	text-decoration:none
 }
 
@@ -329,7 +334,7 @@ td.tvShow a{
 td.tvShow a:hover span,
 td.tvShow a:hover{
 	cursor:pointer;
-	color:#09a2ff
+	color:var(--link-hover)
 }
 
 /* =======================================================================
@@ -373,7 +378,7 @@ home_newShow.tmpl
 
 #newShowPortal #displayText .show-name,
 #newShowPortal #displayText .show-dest{
-	color:#ddd
+	color:var(--text)
 }
 
 /* =======================================================================
@@ -422,7 +427,7 @@ body.back-art .footer,
 displayShow.tmpl
 ========================================================================== */
 body#display-show.back-art{
-	color:#ddd
+	color:var(--text)
 }
 
 .cast.last{border-right:2px dashed #444}
@@ -445,7 +450,7 @@ tr.seasonheader{
 }
 
 body#display-show.back-art .displayshow-wrapper .label a{
-	color:#ddd
+	color:var(--text)
 }
 body#display-show.back-art .displayshow-wrapper .label a:hover,
 body#display-show.back-art .displayshow-wrapper .label a:focus{
@@ -508,7 +513,7 @@ body#display-show.back-art .displayshow-wrapper .label a:focus{
 
 .back-art th.row-seasonheader h3,
 .displayshow-wrapper .sickbeardTable th.row-seasonheader{
-	color:#ddd
+	color:var(--text)
 }
 
 .back-art.pro.ii .navbar-default,
@@ -528,7 +533,7 @@ episodeView.tmpl
 ========================================================================== */
 
 h2.day, h2.network{
-	color:#ddd;
+	color:var(--text);
 	text-shadow:-1px -1px 0 rgba(0, 0, 0, 0.3);
 	background-color:#15528f
 }
@@ -540,7 +545,7 @@ h2.day, h2.network{
 }
 
 .tvshowDiv a:hover{
-	color:#09a2ff
+	color:var(--link-hover)
 }
 
 .tvshowTitle a{
@@ -570,12 +575,12 @@ h2.day, h2.network{
 
 #showListTable td.tvShow a:hover{
 	cursor:pointer;
-	color:#09a2ff
+	color:var(--link-hover)
 }
 
 .day-of-week .day-number{
 	background-color:#15528f;
-	color:#ddd
+	color:var(--text)
 }
 
 .today .day-number .number, .today .day-number .month, .today .day-number .day{
@@ -597,7 +602,7 @@ h2.day, h2.network{
 .day-of-week .text .airtime,
 .day-of-week .text .episode,
 .day-of-week .text .episode .name{
-	color:#ddd
+	color:var(--text)
 }
 
 .day-of-week .text .episode .season,
@@ -671,7 +676,7 @@ config*.tmpl
 
 .qr-btn .glyphicon-qrcode,
 .component-group-desc p{
-	color:#ddd
+	color:var(--text)
 }
 
 .dotted-surround,
@@ -681,7 +686,7 @@ config*.tmpl
 
 #provider_order_list li,
 #service_order_list li{
-	color:#ddd
+	color:var(--text)
 }
 
 .provider-enabled{
@@ -725,7 +730,7 @@ config_postProcessing.tmpl
 }
 
 .Key th, .tableHeader{
-	color:#ddd;
+	color:var(--text);
 	background:#15528f
 }
 
@@ -743,17 +748,17 @@ config_notifications.tmpl
 
 div.metadata_options{
 	background:#333;
-	color:#ddd;
+	color:var(--text);
 	border:1px solid #111
 }
 
 div.metadata_options label:hover{
-	color:#ddd;
+	color:var(--text);
 	background-color:#15528f
 }
 
 div.metadata_options label{
-	color:#ddd
+	color:var(--text)
 }
 
 div.metadata_example{
@@ -761,7 +766,7 @@ div.metadata_example{
 }
 
 div.metadata_example label{
-	color:#ddd
+	color:var(--text)
 }
 
 div.metadataDiv .disabled{
@@ -786,7 +791,7 @@ manage*.tmpl
 ========================================================================== */
 
 .separator{
-	color:#ddd
+	color:var(--text)
 }
 
 a.whitelink{
@@ -844,7 +849,7 @@ a.whitelink{
 .server-failures.focus-highlight .even th:focus,
 .server-failures.focus-highlight .even td:focus{
 	background-color:#181818;
-	color:#ddd
+	color:var(--text)
 }
 
 /* =======================================================================
@@ -860,7 +865,7 @@ Global
 ========================================================================== */
 
 span.path{
-	color:#09a2ff;
+	color:var(--link-hover);
 	background-color:#333
 }
 
@@ -884,12 +889,26 @@ body{
 
 body,
 .show-date{
-	color:#ddd
+	color:var(--text)
 }
 
 input, textarea, select, .uneditable-input{
 	width:auto;
-	color:#000
+	color:var(--text);
+	background-color: #181818;
+	scrollbar-color: #888 #232323;
+	-webkit-scrollbar-thumb: #888;
+	-webkit-scrollbar-track: #232323;
+}
+input[type="checkbox"], input[type="radio"]{
+	color-scheme: dark;
+	width: 16px;
+	height: 16px;
+}
+.form-control,
+input, textarea, select, .uneditable-input,
+input[type="checkbox"], input[type="radio"], input[type="search"]{
+	border:1px solid #666;
 }
 
 /* navbar styling */
@@ -906,33 +925,33 @@ input, textarea, select, .uneditable-input{
 }
 
 .navbar-default .navbar-brand{
-	color:#ddd
+	color:var(--text)
 }
 
 .navbar-default .navbar-brand:hover,
 .navbar-default .navbar-brand:focus{
-	color:#ddd;
+	color:var(--text);
 	background-color:transparent
 }
 
 .navbar-default .navbar-text{
-	color:#ddd
+	color:var(--text)
 }
 
 .navbar-default .navbar-nav > li > a{
-	color:#ddd
+	color:var(--text)
 }
 
 .navbar-default .navbar-nav > li > a:hover,
 .navbar-default .navbar-nav > li > a:focus{
-	color:#ddd;
+	color:var(--text);
 	background-color:#124477
 }
 
 .navbar-default .navbar-nav > .active > a,
 .navbar-default .navbar-nav > .active > a:hover,
 .navbar-default .navbar-nav > .active > a:focus{
-	color:#ddd;
+	color:var(--text);
 	background-color:#124477
 }
 
@@ -965,22 +984,22 @@ input, textarea, select, .uneditable-input{
 .navbar-default .navbar-nav > .open > a:hover,
 .navbar-default .navbar-nav > .open > a:focus{
 	background-color:#124477;
-	color:#ddd
+	color:var(--text)
 }
 
 @media (max-width:767px){
 	.navbar-default .navbar-nav .open .dropdown-menu > li > a{
-		color:#ddd
+		color:var(--text)
 	}
 	.navbar-default .navbar-nav .open .dropdown-menu > li > a:hover,
 	.navbar-default .navbar-nav .open .dropdown-menu > li > a:focus{
-		color:#ddd;
+		color:var(--text);
 		background-color:transparent
 	}
 	.navbar-default .navbar-nav .open .dropdown-menu > .active > a,
 	.navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover,
 	.navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus{
-		color:#ddd;
+		color:var(--text);
 		background-color:#124477
 	}
 	.navbar-default .navbar-nav .open .dropdown-menu > .disabled > a,
@@ -992,11 +1011,11 @@ input, textarea, select, .uneditable-input{
 }
 
 .navbar-default .navbar-link{
-	color:#ddd
+	color:var(--text)
 }
 
 .navbar-default .navbar-link:hover{
-	color:#ddd
+	color:var(--text)
 }
 
 .navbar-default .btn-link{
@@ -1005,7 +1024,7 @@ input, textarea, select, .uneditable-input{
 
 .navbar-default .btn-link:hover,
 .navbar-default .btn-link:focus{
-	color:#ddd
+	color:var(--text)
 }
 
 .navbar-default .btn-link[disabled]:hover,
@@ -1016,11 +1035,11 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 }
 
 .dropdown-menu li > a{
-	color:#ddd
+	color:var(--text)
 }
 
 .dropdown-menu li > a:hover, .dropdown-menu li > a:focus{
-	color:#ddd;
+	color:var(--text);
 	text-decoration:none;
 	background-color:#15528f
 }
@@ -1035,12 +1054,26 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 .img-trakt-16{background-image:url("../images/addshows/trakt16-white.png")}
 .img-import-16{background-image:url("../images/addshows/add-existing16-white.png")}
 
+#fileBrowserDialog .form-control,
 .form-control{
-	color:#000
+	color:var(--text);
+	background-color: #181818;
+}
+#fileBrowserDialog .form-control:active,
+#fileBrowserDialog .form-control:hover {
+	background-color: #444412;
 }
 
+.form-control[disabled],
+.form-control[readonly],
+fieldset[disabled] .form-control{
+	background-color: #180000;
+	color:#d55;
+}
+
+
 .btn{
-	color:#ddd;
+	color:var(--text);
 	text-shadow:0 1px 1px rgba(0, 0, 0, 0.75);
 	background-color:#2672b6;
 	*background-color:#2672b6;
@@ -1068,17 +1101,17 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 .btn[disabled]{
 	background-color:#2672b6;
 	*background-color:#2672b6;
-	color:#ddd
+	color:var(--text)
 }
 
 .btn:active,
 .btn.active{
 	background-color:#ccc \9;
-	color:#ddd
+	color:var(--text)
 }
 
 .btn:hover{
-	color:#ddd;
+	color:var(--text);
 	background-color:#2672b6;
 	*background-color:#2672b6;
 	background-position:0 -150px;
@@ -1094,7 +1127,7 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 	outline:5px auto -webkit-focus-ring-color;
 	outline-offset:-2px;
 	background-position:0;
-	color:#ddd
+	color:var(--text)
 }
 
 .btn.active,
@@ -1102,7 +1135,7 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 	background-color:#2672b6;
 	background-color:#2672b6 \9;
 	background-image:none;
-	color:#ddd;
+	color:var(--text);
 	outline:0;
 	-webkit-box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05);
 	-moz-box-shadow:inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -1150,7 +1183,7 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 .btn-info:hover,
 .btn-inverse,
 .btn-inverse:hover{
-	color:#ddd;
+	color:var(--text);
 	text-shadow:0 -1px 0 rgba(0, 0, 0, 0.25)
 }
 
@@ -1375,7 +1408,7 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 }
 
 pre{
-	color:#ddd;
+	color:var(--text);
 	background-color:#3d3d3d;
 	border-color:#111
 }
@@ -1391,7 +1424,7 @@ input sizing (for config pages)
 #showfilter optgroup,
 #showsort optgroup,
 #editAProvider optgroup{
-	color:#eee;
+	color:var(--text);
 	background-color:rgb(51, 51, 51)
 }
 
@@ -1402,8 +1435,8 @@ input sizing (for config pages)
 #showfilter optgroup option,
 #showsort optgroup option,
 #editAProvider optgroup option{
-	color:#222;
-	background-color:#ddd
+	color:#rgb(204, 204, 204);
+	background-color:#181818
 }
 
 /* =======================================================================
@@ -1415,12 +1448,12 @@ browser.css
 }
 
 #fileBrowserDialog ul li a:hover{
-	color:#09a2ff;
+	color:var(--link-hover);
 	background:rgb(61, 61, 61) none
 }
 
 .ui-menu .ui-menu-item{
-	background-color:#eee
+	background-color:#ddd
 }
 
 .ui-menu .ui-menu-item-alternate{
@@ -1428,7 +1461,7 @@ browser.css
 }
 
 .ui-autocomplete .ui-menu-item .ui-state-focus{
-	color:#ddd;
+	color:var(--text);
 	background:none;
 	background-color:#0a246a
 }
@@ -1439,7 +1472,7 @@ formWizard
 
 .step,
 legend.legendStep{
-	color:#ddd
+	color:var(--text)
 }
 
 div.stepsguide .step p{
@@ -1463,7 +1496,7 @@ div.stepsguide .disabledstep p{
 }
 
 div.formpaginate .prev, div.formpaginate .next{
-	color:#ddd;
+	color:var(--text);
 	background:#2265a1
 }
 
@@ -1486,11 +1519,11 @@ pnotify.css
 }
 
 .ui-pnotify-title{
-	color:#ddd
+	color:var(--text)
 }
 
 .ui-pnotify-text{
-	color:#ddd
+	color:var(--text)
 }
 
 /* =======================================================================
@@ -1498,7 +1531,7 @@ tablesorter.css
 ========================================================================== */
 
 .tablesorter{
-	color:#ddd;
+	color:var(--text);
 	background-color:#333
 }
 
@@ -1515,7 +1548,7 @@ tablesorter.css
 
 .tablesorter th,
 .sickbeardTable thead .seasoncols td{
-	color:#ddd;
+	color:var(--text);
 	text-shadow:-1px -1px 0 rgba(0, 0, 0, 0.3);
 	background-color:#15528f
 }
@@ -1565,17 +1598,13 @@ thead.tablesorter-stickyHeader{
 	border-bottom:1px solid #111
 }
 
-.tablesorter-filter-row input[type="search"]{
-	box-shadow:inset rgba(255, 255, 255, 0.2) 0 1px 0
-}
-
 #tfoot{
 	text-shadow:-1px -1px 0 rgba(0, 0, 0, 0.3)
 }
 
 #tfoot,
 .tablesorter tfoot tr{
-	color:#ddd;
+	color:var(--text);
 	text-align:center;
 	background-color:#333
 }
@@ -1585,7 +1614,7 @@ thead.tablesorter-stickyHeader{
 }
 
 .tablesorter tfoot a{
-	color:#ddd
+	color:var(--text)
 }
 
 #bulk-change-table .tablesorter-filter-row,
@@ -1608,11 +1637,11 @@ token-input.css Overrides
 ul.token-input-list,
 div.token-input-dropdown,
 div.token-input-dropdown ul li{
-	background-color:#ddd
+	background-color:#232323
 }
 
 li.token-input-selected-token{
-	color:#ddd
+	color:#232323
 }
 
 /* =======================================================================
@@ -1635,17 +1664,17 @@ jquery.confirm.css
 #confirmBox h1{
 	background-color:#15528f;
 	border-bottom:1px solid #111;
-	color:#ddd;
+	color:var(--text);
 	text-shadow:0 1px 1px rgba(0, 0, 0, 0.75)
 }
 
 #confirmBox p{
-	color:#ddd;
+	color:var(--text);
 	text-shadow:0 1px 1px rgba(0, 0, 0, 0.75)
 }
 
 #confirmBox .button{
-	color:#ddd;
+	color:var(--text);
 	text-shadow:0 1px 1px rgba(0, 0, 0, 0.75);
 	border:1px solid #111;
 	border-radius:3px;
@@ -1671,4 +1700,95 @@ jquery.confirm.css
 
 #confirmBox .red:hover{
 	background-color:#a13331
+}
+
+/* =======================================================================
+add-shows qtip
+========================================================================== */
+.qtip-bootstrap{
+	background-color: #181818;
+	color: #c1bfb9;
+	border: 1px solid #666;
+}
+.add-shows-popup .add-shows-title{
+	color:rgb(66, 139, 202);
+}
+.add-shows-popup .add-shows-lang,
+.add-shows-popup .add-shows-network{
+	color:#888;
+}
+.add-shows-popup .add-shows-image{
+	border:1px solid #282828;
+}
+
+/* =======================================================================
+dropdown select2
+========================================================================== */
+body .select2-container--default .select2-selection--single {
+	background-color:#121212;
+	border:1px solid #666;
+}
+body .select2-dropdown{
+	background-color: #282828;
+	border: 1px solid #666;
+}
+body .select2-container--default .select2-search--dropdown .select2-search__field {
+	border: 1px solid #232323;
+}
+body .select2-container--default .select2-selection--single .select2-selection__rendered{
+	color:var(--text);
+}
+body .select2-container--default .select2-selection--single .select2-selection__arrow b {
+	border-color: #ddd transparent transparent transparent;
+}
+body .select2-results__options .select2-results__option {
+	color: var(--text);
+	background-color: #121212;
+}
+body .select2-results__options .select2-results__option {
+	color: var(--text) !important;
+	background-color: #121212;
+}
+body .select2-results__option--selected, 
+body .select2-results__option--selected span,
+body #select2-infosrc-lang-select-results .select2-results__option--selected span{
+	color: rgb(204, 0, 0) !important;
+}
+body .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+	background-color: #5897fb;
+	color: white;
+}
+
+.qtip-bootstrap .add-shows-title,
+.qtip-bootstrap .browse-title,
+a{
+	color:var(--link)	/* DeepSkyBlue*/
+}
+a:focus, a:hover {
+	color:var(--link-hover)	/* LightBlue; */
+}
+
+.profile-menu,
+.profile-menu-items {
+	border: 1px solid #666;
+	color: var(--text) !important;
+	background-color: #282828;
+}
+.profile-menu-items .menu-item:hover {
+	background-color: #777;
+}
+.row-select-all,
+.btn-on{
+	background: darkgreen;
+}
+.row-select-exclude,
+.btn-off{
+	background: darkred;
+}
+.row-select-none,
+.btn-none{
+	background: #000000;
+}
+.deselect-text{
+	color:var(--text);
 }

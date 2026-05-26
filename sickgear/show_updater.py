@@ -76,6 +76,7 @@ class ShowUpdater(Job):
                     if isinstance(backup_success, tuple) and backup_success[0]:
                         # backup config.ini
                         backup_config()
+                        backup_btn_status()
                 except (BaseException, Exception):
                     logger.error('backup db error')
 

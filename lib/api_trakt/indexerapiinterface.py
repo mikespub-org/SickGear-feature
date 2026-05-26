@@ -1,7 +1,7 @@
 import datetime
 import logging
 import re
-from .exceptions import TraktException, TraktAuthException, TraktMethodNotExisting
+from .exceptions import TraktException, TraktAuthException, TraktMethodNotExisting, TraktPersonNotFound
 from exceptions_helper import ConnectionSkipException, ex
 from six import iteritems
 from .trakt import TraktAPI
@@ -323,16 +323,19 @@ class TraktIndexer(TVInfoBase):
                             ti_show.genre_list = c['show']['genres']
                             ti_show.slug = c['show'].get('ids', {}).get('slug')
                             ti_show.language = c['show'].get('language')
+                            ti_show.spoken_languages = enforce_type(c['show'].get('languages'), list, [])
                             ti_show.network_country = c['show'].get('country')
                             ti_show.rating = c['show'].get('rating')
                             ti_show.vote_count = c['show'].get('votes')
+                            ti_show.contentrating = c['show'].get('certification') or None
                             for ch in c.get('characters') or ['unknown name']:
                                 clean_ch = clean_data(ch)
                                 _ti_character = TVInfoCharacter(
                                     name=clean_ch, regular=c.get('series_regular'), ti_show=ti_show, person=[result],
                                     episode_count=c.get('episode_count'),
-                                    plays_self=enforce_type((clean_ch or '').lower() in
-                                                            ('self', clean_lower_person_name), bool, False))
+                                    plays_self=enforce_type(
+                                        any(_ct in (clean_ch or '').lower()
+                                            for _ct in ('self', clean_lower_person_name)), bool, False))
                                 pc.append(_ti_character)
                                 ti_show.cast[(RoleTypes.ActorGuest, RoleTypes.ActorMain)[
                                     c.get('series_regular', False)]].append(_ti_character)
@@ -343,6 +346,7 @@ class TraktIndexer(TVInfoBase):
                 raise e
             except TraktMethodNotExisting:
                 log.debug(f'Person id doesn\'t exist: {p_id}')
+                raise TraktPersonNotFound(f'Person id doesn\'t exist: {p_id}')
             except TraktException as e:
                 log.debug('Could not connect to Trakt service: {ex(e)}')
         return result
@@ -408,16 +412,18 @@ class TraktIndexer(TVInfoBase):
         _s_d = (show_data, show_data.get('show'))['show' in show_data]
         ti_show = TVInfoShow()
         ti_show.seriesname, ti_show.id, ti_show.firstaired, ti_show.overview, ti_show.runtime, ti_show.network, \
-            ti_show.network_country, ti_show.status, ti_show.genre_list, ti_show.language, ti_show.watcher_count, \
-            ti_show.play_count, ti_show.collected_count, ti_show.collector_count, ti_show.vote_count, \
-            ti_show.vote_average, ti_show.rating, ti_show.contentrating, ti_show.official_site, ti_show.slug = \
+            ti_show.network_country, ti_show.status, ti_show.genre_list, ti_show.language, ti_show.spoken_languages, \
+            ti_show.watcher_count, ti_show.play_count, ti_show.collected_count, ti_show.collector_count, \
+            ti_show.vote_count, ti_show.vote_average, ti_show.rating, ti_show.contentrating, ti_show.official_site, \
+            ti_show.slug = \
             clean_data(_s_d['title']), _s_d['ids']['trakt'], \
             re.sub('T.+$', '', _s_d.get('first_aired') or '') or _s_d.get('year'), \
             enforce_type(clean_data(_s_d.get('overview')), str, ''), _s_d.get('runtime'), _s_d.get('network'), \
             _s_d.get('country'), _s_d.get('status'), _s_d.get('genres', []), _s_d.get('language'), \
-            show_data.get('watcher_count'), show_data.get('play_count'), show_data.get('collected_count'), \
-            show_data.get('collector_count'), _s_d.get('votes'), _s_d.get('rating'), _s_d.get('rating'), \
-            _s_d.get('certification'), _s_d.get('homepage'), _s_d['ids'].get('slug')
+                enforce_type(_s_d.get('languages'), list, []), show_data.get('watcher_count'), \
+                show_data.get('play_count'), show_data.get('collected_count'), show_data.get('collector_count'), \
+                _s_d.get('votes'), _s_d.get('rating'), _s_d.get('rating'), _s_d.get('certification'), \
+                _s_d.get('homepage'), _s_d['ids'].get('slug')
         ti_show.ids = TVInfoIDs(ids={id_map[src]: _convert_imdb_id(id_map[src], sid)
                                 for src, sid in iteritems(_s_d['ids']) if src in id_map})
         ti_show.genre = '|'.join(ti_show.genre_list or [])

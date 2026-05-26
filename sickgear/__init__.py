@@ -87,6 +87,8 @@ MY_ARGS = []
 SYS_ENCODING = ''
 DATA_DIR = ''
 
+BTN_SETTINGS_FILE = ''
+
 # system events
 # noinspection PyTypeChecker
 events = None  # type: Events
@@ -667,7 +669,8 @@ def init_stage_1(console_logging):
         CREATE_MISSING_SHOW_DIRS, SHOW_DIRS_WITH_DOTS, \
         RECENTSEARCH_STARTUP, NAMING_FORCE_FOLDERS, SOCKET_TIMEOUT, DEBUG, TVINFO_DEFAULT, \
         CONFIG_FILE, CONFIG_VERSION, CONFIG_OLD, CONFIG_LOADED, \
-        REMOVE_FILENAME_CHARS, IMPORT_DEFAULT_CHECKED_SHOWS, WANTEDLIST_CACHE, MODULE_UPDATE_STRING, EXT_UPDATES
+        REMOVE_FILENAME_CHARS, IMPORT_DEFAULT_CHECKED_SHOWS, WANTEDLIST_CACHE, MODULE_UPDATE_STRING, EXT_UPDATES, \
+        BTN_SETTINGS_FILE
     # Add Show Search
     global RESULTS_SORTBY
     # Add Show Defaults
@@ -765,7 +768,7 @@ def init_stage_1(console_logging):
     global USE_TRAKT, TRAKT_CONNECTED_ACCOUNT, TRAKT_ACCOUNTS, TRAKT_MRU, TRAKT_VERIFY, \
         TRAKT_USE_WATCHLIST, TRAKT_REMOVE_WATCHLIST, TRAKT_TIMEOUT, TRAKT_METHOD_ADD, TRAKT_START_PAUSED, \
         TRAKT_SYNC, TRAKT_DEFAULT_INDEXER, TRAKT_REMOVE_SERIESLIST, TRAKT_UPDATE_COLLECTION, \
-        MC_MRU, NE_MRU, TMDB_MRU, TVC_MRU, TVDB_MRU, TVM_MRU, \
+        IMDB_MRU, MC_MRU, NE_MRU, TMDB_MRU, TVC_MRU, TVDB_MRU, TVM_MRU, \
         USE_SLACK, SLACK_NOTIFY_ONSNATCH, SLACK_NOTIFY_ONDOWNLOAD, SLACK_NOTIFY_ONSUBTITLEDOWNLOAD, \
         SLACK_CHANNEL, SLACK_AS_AUTHED, SLACK_BOT_NAME, SLACK_ICON_URL, SLACK_ACCESS_TOKEN, \
         USE_DISCORD, DISCORD_NOTIFY_ONSNATCH, DISCORD_NOTIFY_ONDOWNLOAD, \
@@ -820,6 +823,8 @@ def init_stage_1(console_logging):
             logger.error('!!! creating local zoneinfo dir failed')
     sg_helpers.CACHE_DIR = CACHE_DIR
     sg_helpers.DATA_DIR = DATA_DIR
+
+    BTN_SETTINGS_FILE = os.path.join(DATA_DIR, 'btn-status.json')
 
     THEME_NAME = check_setting_str(CFG, 'GUI', 'theme_name', 'dark')
     GUI_NAME = check_setting_str(CFG, 'GUI', 'gui_name', 'slick')
@@ -1194,6 +1199,7 @@ def init_stage_1(console_logging):
     TRAKT_ACCOUNTS = TraktAPI.read_config_string(check_setting_str(CFG, 'Trakt', 'trakt_accounts', ''))
     TRAKT_MRU = check_setting_str(CFG, 'Trakt', 'trakt_mru', '')
 
+    IMDB_MRU = check_setting_str(CFG, 'IMDB', 'imdb_mru', '')
     MC_MRU = check_setting_str(CFG, 'Metacritic', 'mc_mru', '')
     NE_MRU = check_setting_str(CFG, 'NextEpisode', 'ne_mru', '')
     TMDB_MRU = check_setting_str(CFG, 'TMDB', 'tmdb_mru', '')
@@ -2271,6 +2277,9 @@ def _save_config(force=False, **kwargs):
         ]),
         ('NextEpisode', [
             ('mru', NE_MRU)
+        ]),
+        ('IMDB', [
+            ('mru', IMDB_MRU)
         ]),
         ('TMDB', [
             ('mru', TMDB_MRU)
