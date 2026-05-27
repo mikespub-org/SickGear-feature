@@ -645,7 +645,7 @@ $(function() {
 			<table id="tags-table"><tbody id="tags-container"></tbody></table>
 		</div>
 	</div>&nbsp;
-	<button id="filter_button" class="btn btn-inline" type="button"><i class="filter-ico"></i></i><b>Filters</b></button>&nbsp;
+	## <button id="filter_button" class="btn btn-inline" type="button"><i class="filter-ico"></i></i><b>Filters</b></button>&nbsp;
     #end if
 	<input id="search_show_name" class="search form-control form-control-inline input-sm input200" type="search" placeholder="Filter Show Name#if $use_network#/Network#end if#">
 	&nbsp;<button type="button" class="resetshows btn btn-inline">Reset Filter</button>
@@ -707,6 +707,9 @@ $browse_title
             #set $data_rating = $try_float($this_show['rating'])
         #end if
         #if 'favorite_actors' not in $mode
+            #if 'tag-trait-self' in $this_show.get('tag_classes')
+                #continue
+            #end if
 	<div class="show-card $this_show.get('tag_classes', '') ${exclude_show}${hide}${known}inlibrary" data-name="#echo re.sub(r'([\'\"])', r'', $this_show['title'])#" data-id="$show_id" data-ajax="$this_show.get('overview_ajax', '0')" data-nroles="#echo len($this_show.get('p_chars', []))#" #if $use_ratings# data-rating="$data_rating"#end if##if $use_votes# data-votes="$this_show['votes']"#end if# data-premiered="$this_show['ord_premiered']"#if $use_returning# data-returning="$this_show['ord_returning']"#end if# data-order="$this_show['order']"#if $use_network# data-network="$this_show['network']"#end if#>
 		<div class="show-card-inner">
 			<div class="browse-image">
