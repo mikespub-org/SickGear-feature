@@ -59,6 +59,8 @@
 * Update Requests library 2.33.1 (111d2b7) to 2.34.0 (0b401c7)
 * Fix import if orjson is not installed that blocked running unittests
 * Change temporary remove browse filters while a bug is being investigated, and remove tag-trait-self from actor lists
+* Fix save states on browse shows when a tab is open on a page and sg restarts e.g. for an upgrade
+* Change restore filters
 
 
 ### 3.35.7 (2026-05-19 20:00:00 UTC)
