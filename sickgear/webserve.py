@@ -6774,7 +6774,7 @@ class AddShows(Home):
                 }
                 json_dump(_states_data, f, **json_enc_kw)
             if not os.path.isfile(sickgear.STATES_DATA_FILE):
-                logger.warning(f'Error saving states data file: {ex(e)}')
+                logger.warning(f'Warning saved states data file is missing')
                 return False
             with gzip.GzipFile(sickgear.STATES_DATA_FILE, 'r') as f:
                 if not isinstance(json_load(f), dict):
@@ -6841,7 +6841,7 @@ class AddShows(Home):
                         except (BaseException, Exception):
                             pass
                 except (BaseException, Exception) as e:
-                    logger.warning(f'Error button states file: {ex(e)}')
+                    logger.warning(f'Error saving button states file: {ex(e)}')
                     return json_dumps({'result': 'failed'})
                 return json_dumps({'result': 'success'})
         return json_dumps({'result': 'failed'})
