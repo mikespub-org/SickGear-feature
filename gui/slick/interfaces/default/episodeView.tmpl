@@ -39,11 +39,11 @@
 #end if
 
 #if $layout in ['daybyday', 'list']
-<script type="text/javascript" src="$sbRoot/js/plotTooltip.js?v=$sbPID"></script>
+<script src="$sbRoot/js/plotTooltip.js?v=$sbPID"></script>
 #end if
 
 #if 'daybyday' != $layout
-<script type="text/javascript" src="$sbRoot/js/ajaxEpSearch.js?v=$sbPID"></script>
+<script src="$sbRoot/js/ajaxEpSearch.js?v=$sbPID"></script>
 <input type="hidden" id="sbRoot" value="$sbRoot" />
 #else
 <script>
@@ -174,7 +174,7 @@
 </script>
 #end if
 
-<style type="text/css">
+<style>
 #SubMenu{display:none}
 #if 'daybyday' == $layout
 .ep-caret{cursor:pointer; vertical-align:middle; margin-right:2px}

@@ -26,7 +26,7 @@
 #import os.path
 #set global $inc_ofi = True
 #include $os.path.join($sg_str('PROG_DIR'), 'gui/slick/interfaces/default/inc_top.tmpl')
-<script type="text/javascript" src="$sbRoot/js/cast.js?v=$sbPID"></script>
+<script src="$sbRoot/js/cast.js?v=$sbPID"></script>
 
 <script>
 	var config = {
@@ -42,12 +42,12 @@ var browse_type = "$browse_type";
 //-->
 var browse_person = #if $p_ref#true#else#false#end if#;
 </script>
-<script type="text/javascript" src="$sg_root/js/plotTooltip.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sbRoot/js/browseShows.js?v=$sbPID"></script>
-<link rel="stylesheet" type="text/css" href="$sg_root/css/lib/jquery.toast.min.css?v=$sbPID">
-<script type="text/javascript" src="$sg_root/js/lib/jquery.toast.min.js?v=$sbPID"></script>
+<script src="$sg_root/js/plotTooltip.js?v=$sbPID"></script>
+<script src="$sbRoot/js/browseShows.js?v=$sbPID"></script>
+<link rel="stylesheet" href="$sg_root/css/lib/jquery.toast.min.css?v=$sbPID">
+<script src="$sg_root/js/lib/jquery.toast.min.js?v=$sbPID"></script>
 
-<script type="text/javascript" charset="utf-8">
+<script charset="utf-8">
 <!--
 #raw
 	var addQTip = (function(){
@@ -833,7 +833,7 @@ $browse_title
 			$browse_type did not return results, this can happen from time to time.
 			<br><br>This view should auto refresh every 10 mins.
 
-<script type="text/javascript" charset="utf-8">
+<script charset="utf-8">
 <!--
 window.setInterval('location.reload(true)', 600000); // Refresh every 10 minutes
 //-->
@@ -844,10 +844,10 @@ window.setInterval('location.reload(true)', 600000); // Refresh every 10 minutes
 </div>
 #end if
 
-<script type="text/javascript" src="$sg_root/js/lazyload/lazyload.min.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sg_root/js/inc_bottom.js?v=$sbPID"></script>
+<script src="$sg_root/js/lazyload/lazyload.min.js?v=$sbPID"></script>
+<script src="$sg_root/js/inc_bottom.js?v=$sbPID"></script>
 #if 'library' in $saved_showsort_view or 'hide' in $saved_showsort_view
-<script type="text/javascript" charset="utf-8">
+<script charset="utf-8">
 <!--
 \$(document).ready(function(){
     #if 'library' in $saved_showsort_view

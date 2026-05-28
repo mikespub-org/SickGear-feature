@@ -43,61 +43,61 @@
 	<meta name="msapplication-config" content="$sbRoot/css/browserconfig.xml">
 	<meta name="theme-color" content="#echo '#%s' % ('333', '15528F')['dark' == $sg_str('THEME_NAME', 'dark')]#">
 
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/lib/bootstrap.min.css?v=$sbPID"/>
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/lib/bootstrap-theme.min.css?v=$sbPID"/>
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/browser.css?v=$sbPID" />
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/lib/jquery-ui.min.css?v=$sbPID" />
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/lib/jquery.qtip.min.css?v=$sbPID"/>
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/lib/pnotify.custom.min.css?v=$sbPID" />
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/lib/token-input.min.css?v=$sbPID" />
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/style.css?v=$sbPID"/>
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/${sg_str('THEME_NAME', 'dark')}.css?v=$sbPID" />
+	<link rel="stylesheet" href="$sbRoot/css/lib/bootstrap.min.css?v=$sbPID"/>
+	<link rel="stylesheet" href="$sbRoot/css/lib/bootstrap-theme.min.css?v=$sbPID"/>
+	<link rel="stylesheet" href="$sbRoot/css/browser.css?v=$sbPID" />
+	<link rel="stylesheet" href="$sbRoot/css/lib/jquery-ui.min.css?v=$sbPID" />
+	<link rel="stylesheet" href="$sbRoot/css/lib/jquery.qtip.min.css?v=$sbPID"/>
+	<link rel="stylesheet" href="$sbRoot/css/lib/pnotify.custom.min.css?v=$sbPID" />
+	<link rel="stylesheet" href="$sbRoot/css/lib/token-input.min.css?v=$sbPID" />
+	<link rel="stylesheet" href="$sbRoot/css/style.css?v=$sbPID"/>
+	<link rel="stylesheet" href="$sbRoot/css/${sg_str('THEME_NAME', 'dark')}.css?v=$sbPID" />
 #if $getVar('inc_top_glide', None)
 ##	Required Core Stylesheet
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/lib/glide.core.min.css">
+	<link rel="stylesheet" href="$sbRoot/css/lib/glide.core.min.css">
 ##  Optional Theme Stylesheet
-	<link rel="stylesheet" type="text/css" href="$sbRoot/css/lib/glide.theme.min.css">
+	<link rel="stylesheet" href="$sbRoot/css/lib/glide.theme.min.css">
 #end if
 
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery-2.2.4.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/bootstrap.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/bootstrap-hover-dropdown.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery-ui.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.json.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/js.cookie.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.cookiejar.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.selectboxes.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.tablesorter.combined.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.qtip.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/pnotify.custom.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.form.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.ui.touch-punch.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/isotope.pkgd.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/imagesloaded.pkgd.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.confirm.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/script.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/inc_top.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery-2.2.4.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/bootstrap.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/bootstrap-hover-dropdown.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery-ui.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.json.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/js.cookie.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.cookiejar.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.selectboxes.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.tablesorter.combined.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.qtip.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/pnotify.custom.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.form.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.ui.touch-punch.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/isotope.pkgd.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/imagesloaded.pkgd.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.confirm.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/script.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/inc_top.js?v=$sbPID"></script>
 #if $sg_var('FUZZY_DATING')
-	<script type="text/javascript" src="$sbRoot/js/moment/moment.min.js?v=$sbPID"></script>
-	<script type="text/javascript" src="$sbRoot/js/fuzzyMoment.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/moment/moment.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/fuzzyMoment.js?v=$sbPID"></script>
 #end if
 #if $getVar('inc_top_glide', None)
-	<script type="text/javascript" src="$sbRoot/js/glide/glide.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/glide/glide.min.js?v=$sbPID"></script>
 #end if
 #if $getVar('inc_ofi', None)
-	<script type="text/javascript" src="$sbRoot/js/ofi/ofi.min.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/ofi/ofi.min.js?v=$sbPID"></script>
 #end if
-	<script type="text/javascript" charset="utf-8">
+	<script charset="utf-8">
 	<!--
 		var sbRoot = '$sbRoot', anonURL = '$sg_str('ANON_REDIRECT')', themeSpinner = '#echo ('', '-dark')['dark' == $sg_str('THEME_NAME', 'dark')]#',
 			top_image_html = '<img src="$sbRoot/images/top.gif" width="31" height="11" alt="Jump to top" />', topmenu = '$topmenu';
 		\$.SickGear = {Root: '${sbRoot}', PID: '${sbPID}', anonURL: '$sg_str('ANON_REDIRECT')'};
 	//-->
 	</script>
-	<script type="text/javascript" src="$sbRoot/js/lib/jquery.scrolltopcontrol-1.1.js"></script>
-	<script type="text/javascript" src="$sbRoot/js/browser.js"></script>
-	<script type="text/javascript" src="$sbRoot/js/ajaxNotifications.js"></script>
-	<script type="text/javascript" src="$sbRoot/js/confirmations.js?v=$sbPID"></script>
+	<script src="$sbRoot/js/lib/jquery.scrolltopcontrol-1.1.js"></script>
+	<script src="$sbRoot/js/browser.js"></script>
+	<script src="$sbRoot/js/ajaxNotifications.js"></script>
+	<script src="$sbRoot/js/confirmations.js?v=$sbPID"></script>
 </head>
 #set $tab = 4
 #set global $body_attr = ''

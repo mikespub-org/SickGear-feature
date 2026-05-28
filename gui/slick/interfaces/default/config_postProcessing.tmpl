@@ -14,8 +14,8 @@
 #import os.path
 #include $os.path.join($sickgear.PROG_DIR, 'gui/slick/interfaces/default/inc_top.tmpl')
 
-<script type="text/javascript" src="$sbRoot/js/configPostProcessing.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sbRoot/js/config.js?v=$sbPID"></script>
+<script src="$sbRoot/js/configPostProcessing.js?v=$sbPID"></script>
+<script src="$sbRoot/js/config.js?v=$sbPID"></script>
 
 #if $varExists('header')
 	<h1 class="header">$header</h1>
@@ -1305,7 +1305,7 @@
 
 <div class="clearfix"></div>
 
-<script type="text/javascript" charset="utf-8">
+<script charset="utf-8">
 <!--
 	jQuery('#config-components').tabs();
 	jQuery('#tv_download_dir').fileBrowser({ title: 'Select completed TV downloads directory' });

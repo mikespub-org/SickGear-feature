@@ -19,8 +19,8 @@
     #set $initial_quality = $SD
 #end if
 #set $anyQualities, $bestQualities = $Quality.split_quality($sg_var('QUALITY_DEFAULT', $initial_quality))
-<script type="text/javascript" src="$sbRoot/js/qualityChooser.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sbRoot/js/massEdit.js?v=$sbPID"></script>
+<script src="$sbRoot/js/qualityChooser.js?v=$sbPID"></script>
+<script src="$sbRoot/js/massEdit.js?v=$sbPID"></script>
 
 <form action="mass_edit_submit" method="post">
 	$xsrf_form_html
@@ -213,7 +213,7 @@
 </form>
 <br />
 
-<script type="text/javascript" charset="utf-8">
+<script charset="utf-8">
 <!--
 	jQuery('#location').fileBrowser({ title:'Select Show Location' });
 //-->

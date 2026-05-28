@@ -46,6 +46,7 @@
 * Change use browser dark mode for checkbox and radio inputs
 * Change make main menus height dynamic to window height
 * Fix data parsing in tv show search
+* Change remove redundant html markup
 
 
 [develop]
