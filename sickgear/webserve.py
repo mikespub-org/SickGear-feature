@@ -1113,7 +1113,7 @@ class MainHandler(WebHandler):
             <title>%s</title>
         </head>
         <body>
-            <br/>
+            <br />
             <font color="#0000FF">Error %s: You need to provide a valid username and password.</font>
         </body>
     </html>
@@ -1127,8 +1127,8 @@ class MainHandler(WebHandler):
             self.redirect(sickgear.WEB_ROOT + '/home/')
         elif self.settings.get('debug') and 'exc_info' in kwargs:
             exc_info = kwargs['exc_info']
-            trace_info = ''.join(['%s<br/>' % strip_html_tags(line) for line in traceback.format_exception(*exc_info)])
-            request_info = ''.join(['<strong>%s</strong>: %s<br/>' % (k, strip_html_tags(self.request.__dict__[k]))
+            trace_info = ''.join(['%s<br />' % strip_html_tags(line) for line in traceback.format_exception(*exc_info)])
+            request_info = ''.join(['<strong>%s</strong>: %s<br />' % (k, strip_html_tags(self.request.__dict__[k]))
                                     for k in iterkeys(self.request.__dict__)])
             error = strip_html_tags(exc_info[1])
 
@@ -1616,10 +1616,21 @@ r.close()
 
             return json_dumps(data)
 
+    def toggle_paused(self, tvid_prodid):
+
+        if None is tvid_prodid or None is (show_obj := helpers.find_show_by_id(tvid_prodid)):
+            return json_dumps({'Error', f'Unable to find the specified show: {tvid_prodid}'})
+
+        with show_obj.lock:
+            show_obj.paused = not show_obj.paused
+            show_obj.save_to_db()
+
+        self.redirect(f'/home/view-show?tvid_prodid={tvid_prodid}')
+
     def toggle_specials_view_show(self, tvid_prodid):
         sickgear.DISPLAY_SHOW_SPECIALS = not sickgear.DISPLAY_SHOW_SPECIALS
 
-        self.redirect('/home/view-show?tvid_prodid=%s' % tvid_prodid)
+        self.redirect(f'/home/view-show?tvid_prodid={tvid_prodid}')
 
     def set_layout_history(self, layout):
 
@@ -1693,14 +1704,14 @@ class Home(MainHandler):
 
         show_obj = helpers.find_show_by_id(tvid_prodid)
         if None is show_obj:
-            return 'Invalid show paramaters'
+            return 'Invalid show parameters'
 
         if absolute:
             ep_obj = show_obj.get_episode(absolute_number=int(absolute))
         elif None is not season and None is not episode:
             ep_obj = show_obj.get_episode(int(season), int(episode))
         else:
-            return 'Invalid paramaters'
+            return 'Invalid parameters'
 
         if None is ep_obj:
             return "Episode couldn't be retrieved"
@@ -2330,7 +2341,7 @@ class Home(MainHandler):
         show_obj = self.fix_show_obj_db_data(show_obj)
 
         t = PageTemplate(web_handler=self, file='displayShow.tmpl')
-        t.submenu = [{'title': 'Edit', 'path': 'home/edit-show?tvid_prodid=%s' % tvid_prodid}]
+        # t.submenu = [{'title': 'Edit', 'path': 'home/edit-show?tvid_prodid=%s' % tvid_prodid}]
 
         try:
             t.showLoc = (show_obj.location, True)
@@ -2383,38 +2394,38 @@ class Home(MainHandler):
 
         show_message = '.<br>'.join(show_message)
 
-        t.force_update = 'home/update-show?tvid_prodid=%s&amp;force=1&amp;web=1' % tvid_prodid
-        if not sickgear.show_queue_scheduler.action.is_being_added(show_obj):
-            if not sickgear.show_queue_scheduler.action.is_being_updated(show_obj):
-                t.submenu.append(
-                    {'title': 'Remove',
-                     'path': 'home/delete-show?tvid_prodid=%s' % tvid_prodid, 'confirm': True})
-                t.submenu.append(
-                    {'title': 'Re-scan files', 'path': 'home/refresh-show?tvid_prodid=%s' % tvid_prodid})
-                t.submenu.append(
-                    {'title': 'Force Full Update', 'path': t.force_update})
-                t.submenu.append(
-                    {'title': 'Cast Update', 'path': 'home/update-cast?tvid_prodid=%s' % tvid_prodid})
-                t.submenu.append(
-                    {'title': 'Update show in Emby',
-                     'path': 'home/update-mb%s' % (
-                             TVINFO_TVDB == show_obj.tvid and ('?tvid_prodid=%s' % tvid_prodid) or '/'),
-                     'requires': self.have_emby})
-                t.submenu.append(
-                    {'title': 'Update show in Kodi', 'path': 'home/update-kodi?show_name=%s' % quote_plus(
-                        show_obj.name.encode('utf-8')), 'requires': self.have_kodi})
-                t.submenu.append(
-                    {'title': 'Update show in XBMC',
-                     'path': 'home/update-xbmc?show_name=%s' % quote_plus(
-                         show_obj.name.encode('utf-8')), 'requires': self.have_xbmc})
-                t.submenu.append(
-                    {'title': 'Media Rename',
-                     'path': 'home/rename-media?tvid_prodid=%s' % tvid_prodid})
-                if sickgear.USE_SUBTITLES and not sickgear.show_queue_scheduler.action.is_being_subtitled(
-                        show_obj) and show_obj.subtitles:
-                    t.submenu.append(
-                        {'title': 'Download Subtitles',
-                         'path': 'home/subtitle-show?tvid_prodid=%s' % tvid_prodid})
+        # t.force_update = 'home/update-show?tvid_prodid=%s&amp;force=1&amp;web=1' % tvid_prodid
+        # if not sickgear.show_queue_scheduler.action.is_being_added(show_obj):
+        #     if not sickgear.show_queue_scheduler.action.is_being_updated(show_obj):
+        #         t.submenu.append(
+        #             {'title': 'Remove',
+        #              'path': 'home/delete-show?tvid_prodid=%s' % tvid_prodid, 'confirm': True})
+        #         t.submenu.append(
+        #             {'title': 'Re-scan files', 'path': 'home/refresh-show?tvid_prodid=%s' % tvid_prodid})
+        #         t.submenu.append(
+        #             {'title': 'Force Full Update', 'path': t.force_update})
+        #         t.submenu.append(
+        #             {'title': 'Cast Update', 'path': 'home/update-cast?tvid_prodid=%s' % tvid_prodid})
+        #         t.submenu.append(
+        #             {'title': 'Update show in Emby',
+        #              'path': 'home/update-mb%s' % (
+        #                      TVINFO_TVDB == show_obj.tvid and ('?tvid_prodid=%s' % tvid_prodid) or '/'),
+        #              'requires': self.have_emby})
+        #         t.submenu.append(
+        #             {'title': 'Update show in Kodi', 'path': 'home/update-kodi?show_name=%s' % quote_plus(
+        #                 show_obj.name.encode('utf-8')), 'requires': self.have_kodi})
+        #         t.submenu.append(
+        #             {'title': 'Update show in XBMC',
+        #              'path': 'home/update-xbmc?show_name=%s' % quote_plus(
+        #                  show_obj.name.encode('utf-8')), 'requires': self.have_xbmc})
+        #         t.submenu.append(
+        #             {'title': 'Media Rename',
+        #              'path': 'home/rename-media?tvid_prodid=%s' % tvid_prodid})
+        #         if sickgear.USE_SUBTITLES and not sickgear.show_queue_scheduler.action.is_being_subtitled(
+        #                 show_obj) and show_obj.subtitles:
+        #             t.submenu.append(
+        #                 {'title': 'Download Subtitles',
+        #                  'path': 'home/subtitle-show?tvid_prodid=%s' % tvid_prodid})
 
         t.show_obj = show_obj
         with BS4Parser('<html><body>%s</body></html>' % show_obj.overview, features=['html5lib', 'permissive']) as soup:
@@ -2589,6 +2600,45 @@ class Home(MainHandler):
         t.scene_absolute_numbering = get_scene_absolute_numbering_for_show(show_obj.tvid, show_obj.prodid)
         t.xem_numbering = get_xem_numbering_for_show(show_obj.tvid, show_obj.prodid)
         t.xem_absolute_numbering = get_xem_absolute_numbering_for_show(show_obj.tvid, show_obj.prodid)
+
+        t.submenu = [
+            dict(title=f'{("Pause", "Unpause")[bool(show_obj.paused)]} show', icon='pause',
+                 path=f'toggle-paused/?tvid_prodid={tvid_prodid}'),
+            dict(title='Edit', icon='edit', path=f'home/edit-show?tvid_prodid={tvid_prodid}')]
+
+        if t.has_special or (t.seasons and 0 == t.seasons[-1][0]):
+            t.submenu += [
+                dict(title=f'{("Unhide", "Hide")[bool(sickgear.DISPLAY_SHOW_SPECIALS)]} specials', icon='specials',
+                     path=f'toggle-specials-view-show/?tvid_prodid={tvid_prodid}')]
+
+        t.force_update = f'home/update-show?tvid_prodid={tvid_prodid}&amp;force=1&amp;web=1'
+        if (not sickgear.show_queue_scheduler.action.is_being_added(show_obj)
+                and not sickgear.show_queue_scheduler.action.is_being_updated(show_obj)):
+            show_name_utf8 = quote_plus(show_obj.name.encode('utf-8'))
+            t.submenu += [
+                dict(title='Remove', icon='delete', path=f'home/delete-show?tvid_prodid={tvid_prodid}', confirm=True),
+                dict(title='Rename media', icon='rename', path=f'home/rename-media?tvid_prodid={tvid_prodid}'),
+                dict(title='Quick file scan', icon='refresh', newrow=True,
+                     path=f'home/refresh-show?tvid_prodid={tvid_prodid}'),
+                dict(title='Full update', icon='full-update', path=t.force_update),
+                dict(title='Cast update', icon='people', path=f'home/update-cast?tvid_prodid={tvid_prodid}'),
+                dict(title='Emby show update', icon='emby',
+                     path=f'home/update-mb{(TVINFO_TVDB == show_obj.tvid and f"tvid_prodid={tvid_prodid}" or "/")}',
+                     requires=self.have_emby),
+                dict(title='Kodi show update', icon='kodi',
+                     path=f'home/update-kodi?show_name={show_name_utf8}',
+                     requires=self.have_kodi),
+                dict(title='XBMC show update', icon='xbmc',
+                     path=f'home/update-xbmc?show_name={show_name_utf8}',
+                     requires=self.have_xbmc)
+            ]
+            if (sickgear.USE_SUBTITLES
+                    and not sickgear.show_queue_scheduler.action.is_being_subtitled(show_obj)
+                    and show_obj.subtitles):
+                t.submenu += [
+                    dict(title='Download subtitles', icon='subtitles',
+                         path=f'home/subtitle-show?tvid_prodid={tvid_prodid}')
+                ]
 
         return t.respond()
 

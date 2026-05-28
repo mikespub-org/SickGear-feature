@@ -46,8 +46,16 @@
 * Change use browser dark mode for checkbox and radio inputs
 * Change make main menus height dynamic to window height
 * Fix data parsing in tv show search
-* Change remove redundant html markup
-
+* Change remove redundant HEAD markup throughout all templates
+* Change view-show, reorder submenu items and migrate Javascript to Python to remove button display lag
+* Change view-show, add "Pause/Unpause" to submenu
+* Change view-show, move "Hide/Unhide specials" to submenu
+* Change view-show, add hover color to 'Edit' and 'Remove' submenu buttons
+* Change view-show, cleanup JavaScript
+* Change view-show, shorten label "Change show:" to "View:"
+* Change view-show, explicitly display counts of episodes and specials in overview
+* Change view-show, colorise the Qualities to be consistent with the quality colors used throughout the app
+* Change view-show, rename key item "Low Quality" to "Upgradable" and hide it when upgrades are not used
 
 [develop]
 * Change disable check_same_thread for sqllite connection to make sure that finalize __del__ doesn't throw exceptions
