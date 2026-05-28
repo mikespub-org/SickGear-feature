@@ -13,7 +13,7 @@
 #import os.path
 #include $os.path.join($sg_str('PROG_DIR'), 'gui/slick/interfaces/default/inc_top.tmpl')
 
-<script type="text/javascript" charset="utf-8">
+<script charset="utf-8">
 <!--
 var config = { sortArticle: #echo ['!1','!0'][$sg_var('SORT_ARTICLE')]# }
 \$.sgSid = '$kwargs.get('tvid_prodid', '')';
@@ -24,10 +24,10 @@ var config = { sortArticle: #echo ['!1','!0'][$sg_var('SORT_ARTICLE')]# }
 });
 //-->
 </script>
-<script type="text/javascript" src="$sbRoot/js/qualityChooser.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sbRoot/js/addExistingShow.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sbRoot/js/rootDirs.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sbRoot/js/addShowOptions.js?v=$sbPID"></script>
+<script src="$sbRoot/js/qualityChooser.js?v=$sbPID"></script>
+<script src="$sbRoot/js/addExistingShow.js?v=$sbPID"></script>
+<script src="$sbRoot/js/rootDirs.js?v=$sbPID"></script>
+<script src="$sbRoot/js/addShowOptions.js?v=$sbPID"></script>
 
 #if $varExists('header')
 	<h1 class="header">$header</h1>

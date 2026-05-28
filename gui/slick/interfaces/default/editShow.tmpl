@@ -25,9 +25,9 @@
 <script>
 	var config = {showLang: '$show_obj.lang', showIsAnime: #echo ('!1','!0')[$show_obj.is_anime]#, expandIds: #echo ('!1','!0')[$expand_ids]#}
 </script>
-<script type="text/javascript" src="$sbRoot/js/qualityChooser.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sbRoot/js/editShow.js?v=$sbPID"></script>
-<script type="text/javascript" src="$sbRoot/js/livepanel.js?v=$sbPID"></script>
+<script src="$sbRoot/js/qualityChooser.js?v=$sbPID"></script>
+<script src="$sbRoot/js/editShow.js?v=$sbPID"></script>
+<script src="$sbRoot/js/livepanel.js?v=$sbPID"></script>
 <script src="$sbRoot/js/lib/select2.full.min.js"></script>
 <link href="$sbRoot/css/lib/select2.css" rel="stylesheet">
 
@@ -295,7 +295,7 @@
 #if $show_obj.is_anime
     #import sickgear.anime
     #include $os.path.join($sg_str('PROG_DIR'), 'gui/slick/interfaces/default/inc_anigrouplists.tmpl')
-					<script type="text/javascript" src="$sbRoot/js/anigrouplists.js?v=$sbPID"></script>
+					<script src="$sbRoot/js/anigrouplists.js?v=$sbPID"></script>
 #end if
 				</div><!-- /component-group2 //-->
 
