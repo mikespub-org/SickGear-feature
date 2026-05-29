@@ -56,6 +56,11 @@
 * Change view-show, explicitly display counts of episodes and specials in overview
 * Change view-show, colorise the Qualities to be consistent with the quality colors used throughout the app
 * Change view-show, rename key item "Low Quality" to "Upgradable" and hide it when upgrades are not used
+* Change highlight menu item of current viewed page
+* Change move menu item "About" from "Config" to "Tools" menu
+* Change add lamp under "Config" menu to toggle light or dark theme
+* Change hover color of 'Logout', 'Restart' and 'Shutdown' menu items
+
 
 [develop]
 * Change disable check_same_thread for sqllite connection to make sure that finalize __del__ doesn't throw exceptions

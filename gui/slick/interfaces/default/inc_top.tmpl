@@ -76,7 +76,6 @@
 	<script src="$sbRoot/js/lib/imagesloaded.pkgd.min.js?v=$sbPID"></script>
 	<script src="$sbRoot/js/lib/jquery.confirm.js?v=$sbPID"></script>
 	<script src="$sbRoot/js/script.js?v=$sbPID"></script>
-	<script src="$sbRoot/js/inc_top.js?v=$sbPID"></script>
 #if $sg_var('FUZZY_DATING')
 	<script src="$sbRoot/js/moment/moment.min.js?v=$sbPID"></script>
 	<script src="$sbRoot/js/fuzzyMoment.js?v=$sbPID"></script>
@@ -90,10 +89,11 @@
 	<script charset="utf-8">
 	<!--
 		var sbRoot = '$sbRoot', anonURL = '$sg_str('ANON_REDIRECT')', themeSpinner = '#echo ('', '-dark')['dark' == $sg_str('THEME_NAME', 'dark')]#',
-			top_image_html = '<img src="$sbRoot/images/top.gif" width="31" height="11" alt="Jump to top" />', topmenu = '$topmenu';
+			top_image_html = '<img src="$sbRoot/images/top.gif" width="31" height="11" alt="Jump to top" />';
 		\$.SickGear = {Root: '${sbRoot}', PID: '${sbPID}', anonURL: '$sg_str('ANON_REDIRECT')'};
 	//-->
 	</script>
+	<script src="$sbRoot/js/inc_top.js?v=$sbPID"></script>
 	<script src="$sbRoot/js/lib/jquery.scrolltopcontrol-1.1.js"></script>
 	<script src="$sbRoot/js/browser.js"></script>
 	<script src="$sbRoot/js/ajaxNotifications.js"></script>
@@ -132,10 +132,14 @@
 #set logo = ('', '-xmas')[(12 <= $date.tm_mon) or (3 > $date.tm_yday) or (3 == $date.tm_yday and 5 > $date.tm_hour)]
 				<a href="$sbRoot/home/" class="navbar-brand" tabindex="-1" title="SickGear"><img alt="SickGear" src="$sbRoot/images/sickgear${logo}.png" style="height: 50px;" class="img-responsive pull-left" /></a>
 			</div>
+#set $current_menu_home = ' active' if 'home' == $topmenu else ''
+#set $current_menu_manage = ' active' if 'manage' == $topmenu else ''
+#set $current_menu_config = ' active' if 'config' == $topmenu else ''
+#set $current_menu_tools = ' active' if 'tools' == $topmenu else ''
 #set $hover_dropdown='data-hover="dropdown" data-hover-delay="400" data-delay="500"'
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 				<ul class="nav navbar-nav navbar-right">
-					<li id="NAVhome" class="dropdown">
+					<li id="NAVhome" class="dropdown$current_menu_home">
 						<a href="$sbRoot/home/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#">Shows <b class="caret"></b></a>
 #set $showlist_home, $episode_home, $history_home = 3 * ['(<i class="sgicon-home tight"></i>)']
 #if 'shows' == $sickgear.DEFAULT_HOME
@@ -264,7 +268,7 @@
 						</ul>
 					</li>
 
-					<li id="NAVmanage" class="dropdown">
+					<li id="NAVmanage" class="dropdown$current_menu_manage">
 						<a href="$sbRoot/manage/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#">Manage <b class="caret"></b><span class="snf bar"><i class="sgicon-warning"><em class="pulse"></em></i></span></a>
 						<ul class="dropdown-menu">
 							<li><a href="$sbRoot/home/process-media/" tabindex="$tab#set $tab += 1#"><i class="sgicon-postprocess"></i>Process Media</a></li>
@@ -295,10 +299,10 @@
 						</ul>
 					</li>
 
-					<li id="NAVconfig" class="dropdown">
-						<a href="$sbRoot/config/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18.png" class="navbaricon hidden-xs" /><b class="caret hidden-xs"></b><span class="visible-xs">Config <b class="caret"></b></span></a>
+					<li id="NAVconfig" class="dropdown$current_menu_config">
+						<a href="$sbRoot/config/general/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18.png" class="navbaricon hidden-xs" /><b class="caret hidden-xs"></b><span class="visible-xs">Config <b class="caret"></b></span></a>
 						<ul class="dropdown-menu">
-							<li><a href="$sbRoot/config/" tabindex="$tab#set $tab += 1#"><i class="sgicon-info"></i>About</a></li>
+        					<li><a href="#" id="theme" tabindex="$tab#set $tab += 1#"><i class="glyphicon glyphicon-lamp"></i>Light or Dark</a></li>
 							<li class="divider"></li>
 							<li class="menu-item-noicon opacity60">Settings...</li>
 							<li><a href="$sbRoot/config/general/" tabindex="$tab#set $tab += 1#"><i class="sgicon-config"></i>General</a></li>
@@ -311,11 +315,14 @@
 						</ul>
 					</li>
 
-					<li id="NAVtools" class="dropdown">
 #set num_errors = $getVar('$log_num_errors', None)
 #set $err_class = ('', ' errors ' + (len('%s' % $num_errors ) * 'n')[0:4])[any([$num_errors])]
-						<a href="$sbRoot/manage/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18-2.png" class="navbaricon hidden-xs" /><b class="caret hidden-xs"></b><span class="visible-xs">System <b class="caret"></b></span><span class="logger bar$err_class"><i class="sgicon-warning"><em class="pulse"></em></i></span></a>
+					<li id="NAVtools" class="dropdown$current_menu_tools$err_class">
+						<a href="$sbRoot/config/about/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18-2.png" class="navbaricon hidden-xs"><b class="caret hidden-xs"></b><span class="visible-xs">System <b class="caret"></b></span><span class="logger bar$err_class"><i class="sgicon-warning"><em class="pulse"></em></i></span></a>
+## new without $err_class					<a href="$sbRoot/config/about/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18-2.png" class="navbaricon hidden-xs"><b class="caret hidden-xs"></b><span class="visible-xs">System <b class="caret"></b></span><span class="logger bar"><i class="sgicon-warning"><em class="pulse"></em></i></span></a>
 						<ul class="dropdown-menu">
+							<li><a href="$sbRoot/config/about/" tabindex="$tab#set $tab += 1#"><i class="sgicon-info"></i>About</a></li>
+							<li class="divider"></li>
 #if not $sg_var('EXT_UPDATES')
 							<li><a href="$sbRoot/home/check-update" tabindex="$tab#set $tab += 1#"><i class="sgicon-updatecheck"></i>Check for Updates</a></li>
 #end if
@@ -330,10 +337,10 @@
 								<div class="menu-item-desc opacity60">existing shows</div></a></li>
 							<li class="divider"></li>
 #if $sg_str('WEB_USERNAME') or $sg_str('WEB_PASSWORD')
-							<li><a href="$sbRoot/logout" class="confirm logout" tabindex="$tab#set $tab += 1#"><i class="sgicon-logout"></i>Logout</a></li>
+							<li><a href="$sbRoot/logout" class="confirm logout hover-gold" tabindex="$tab#set $tab += 1#"><i class="sgicon-logout"></i>Logout</a></li>
 #end if
-							<li><a href="$sbRoot/home/restart/?pid=$sbPID" class="confirm restart" tabindex="$tab#set $tab += 1#"><i class="sgicon-restart"></i>Restart</a></li>
-							<li><a href="$sbRoot/home/shutdown/?pid=$sbPID" class="confirm shutdown" tabindex="$tab#set $tab += 1#"><i class="sgicon-shutdown"></i>Shutdown</a></li>
+							<li><a href="$sbRoot/home/restart/?pid=$sbPID" class="confirm restart hover-green" tabindex="$tab#set $tab += 1#"><i class="sgicon-restart"></i>Restart</a></li>
+							<li><a href="$sbRoot/home/shutdown/?pid=$sbPID" class="confirm shutdown hover-red" tabindex="$tab#set $tab += 1#"><i class="sgicon-shutdown"></i>Shutdown</a></li>
 						</ul>
 					</li>
 				</ul>

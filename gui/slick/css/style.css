@@ -171,6 +171,7 @@ glyphs
 	-moz-osx-font-smoothing:grayscale
 }
 
+.dropdown [class^="glyphicon"],
 .dropdown [class^="sgicon-"], .dropdown [class*="sgicon-"]{
 	margin-right:6px
 }
@@ -5301,6 +5302,10 @@ jquery.confirm.css
 .btn.hover-green:hover,
 #confirmBox .green:hover{
 	background-color:#48873e
+}
+
+.dropdown-menu > li > a.hover-gold:hover, .dropdown-menu > li > a.hover-gold:focus{
+	background-color:#ad6704
 }
 
 #confirmBox .red{
