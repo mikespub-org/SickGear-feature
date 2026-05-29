@@ -1,7 +1,7 @@
 from .. import exception as exception
 from ..common import NotifyFormat as NotifyFormat, NotifyType as NotifyType, PersistentStoreMode as PersistentStoreMode
 from ..url import PrivacyMode as PrivacyMode
-from ..utils.parse import is_email as is_email, parse_emails as parse_emails, validate_regex as validate_regex
+from ..utils.parse import is_email as is_email, parse_bool as parse_bool, parse_emails as parse_emails, validate_regex as validate_regex
 from ..utils.sanitize import sanitize_payload as sanitize_payload
 from .base import NotifyBase as NotifyBase
 from _typeshed import Incomplete
@@ -38,6 +38,7 @@ class NotifyOffice365(NotifyBase):
     client_id: Incomplete
     secret: Incomplete
     tenant: Incomplete
+    save_sent: Incomplete
     names: Incomplete
     cc: Incomplete
     bcc: Incomplete
@@ -48,7 +49,7 @@ class NotifyOffice365(NotifyBase):
     from_email: Incomplete
     from_name: Incomplete
     source_is_object_id: bool
-    def __init__(self, tenant=None, client_id=None, secret=None, source=None, targets=None, cc=None, bcc=None, reply_to=None, mode=None, **kwargs) -> None:
+    def __init__(self, tenant=None, client_id=None, secret=None, source=None, targets=None, cc=None, bcc=None, reply_to=None, mode=None, savesent=None, **kwargs) -> None:
         """Initialize Office 365 Object."""
     def send(self, body, title: str = '', notify_type=..., attach=None, **kwargs):
         """Perform Office 365 Notification."""
