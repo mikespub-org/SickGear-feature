@@ -2,7 +2,7 @@ from ...common import NotifyType as NotifyType
 from ...url import PrivacyMode as PrivacyMode
 from ...utils.parse import parse_bool as parse_bool, parse_list as parse_list, validate_regex as validate_regex
 from ..base import NotifyBase as NotifyBase
-from .adapter import SLIXMPP_SUPPORT_AVAILABLE as SLIXMPP_SUPPORT_AVAILABLE, SlixmppAdapter as SlixmppAdapter, XMPPConfig as XMPPConfig
+from .adapter import SLIXMPP_SUPPORT_AVAILABLE as SLIXMPP_SUPPORT_AVAILABLE, SlixmppAdapter as SlixmppAdapter, XMPPChannelBindingError as XMPPChannelBindingError, XMPPConfig as XMPPConfig
 from .common import SECURE_MODES as SECURE_MODES, SecureXMPPMode as SecureXMPPMode
 from _typeshed import Incomplete
 from typing import Any
@@ -28,10 +28,11 @@ class NotifyXMPP(NotifyBase):
     roster: Incomplete
     subject: Incomplete
     keepalive: Incomplete
+    scramplus: Incomplete
     secure: bool
     name: Incomplete
     _adapter: SlixmppAdapter | None
-    def __init__(self, targets: list[str, str] | None = None, secure_mode: str | None = None, roster: bool | None = None, subject: bool | None = None, keepalive: bool | None = None, name: str | None = None, xmpp_host: str | None = None, **kwargs: Any) -> None: ...
+    def __init__(self, targets: list[str, str] | None = None, secure_mode: str | None = None, roster: bool | None = None, subject: bool | None = None, keepalive: bool | None = None, name: str | None = None, xmpp_host: str | None = None, scramplus: bool | None = None, **kwargs: Any) -> None: ...
     def __del__(self) -> None:
         """Best-effort close for keepalive sessions."""
     @property

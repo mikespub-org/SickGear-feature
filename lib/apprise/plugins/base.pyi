@@ -1,5 +1,5 @@
 from ..apprise_attachment import AppriseAttachment as AppriseAttachment
-from ..common import NOTIFY_FORMATS as NOTIFY_FORMATS, NotifyFormat as NotifyFormat, NotifyImageSize as NotifyImageSize, NotifyType as NotifyType, OVERFLOW_MODES as OVERFLOW_MODES, OverflowMode as OverflowMode, PersistentStoreMode as PersistentStoreMode
+from ..common import APPRISE_MAX_SERVICE_RETRY as APPRISE_MAX_SERVICE_RETRY, APPRISE_MAX_SERVICE_WAIT as APPRISE_MAX_SERVICE_WAIT, NOTIFY_FORMATS as NOTIFY_FORMATS, NotifyFormat as NotifyFormat, NotifyImageSize as NotifyImageSize, NotifyType as NotifyType, OVERFLOW_MODES as OVERFLOW_MODES, OverflowMode as OverflowMode, PersistentStoreMode as PersistentStoreMode
 from ..locale import Translatable as Translatable
 from ..persistent_store import PersistentStore as PersistentStore
 from ..url import URLBase as URLBase
@@ -79,6 +79,9 @@ class NotifyBase(URLBase):
     overflow_mode: Incomplete
     storage_mode: Incomplete
     interpret_emojis: bool
+    service_retry: int
+    service_wait: float
+    optional: bool
     attachment_support: bool
     default_html_tag_id: str
     template_args: Incomplete
@@ -88,6 +91,17 @@ class NotifyBase(URLBase):
     overflow_display_title_once: Incomplete
     overflow_amalgamate_title: bool
     __tzinfo: Incomplete
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        """Automatically wrap any __len__ defined on a subclass so that it
+        multiplies its base target count by (retry + 1).
+
+        This ensures every plugin's __len__ reflects the total number of
+        transmission attempts (targets * retry-factor) without requiring
+        each plugin to be updated individually.
+        """
+    retry: Incomplete
+    wait: Incomplete
     __store: Incomplete
     url_identifier: bool
     __cached_url_identifier: Incomplete
@@ -136,6 +150,14 @@ class NotifyBase(URLBase):
         """
     def send(self, body: str, title: str = '', notify_type: NotifyType = ..., **kwargs: Any) -> bool:
         """Should preform the actual notification itself."""
+    def __len__(self) -> int:
+        """Returns the number of HTTP requests this instance will make,
+        factoring in the configured retry count.
+
+        Subclasses that override this are automatically wrapped by
+        __init_subclass__ to apply the same retry multiplier, so they
+        should return their raw target count without worrying about retry.
+        """
     def url_parameters(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Provides a default set of parameters to work with.
 
@@ -148,6 +170,14 @@ class NotifyBase(URLBase):
 
         This is very specific and customized for Apprise.
 
+        In addition to the fields extracted by URLBase.parse_url(), this
+        method extracts the NotifyBase-level query-string parameters:
+        ``format``, ``overflow``, ``emojis``, ``tz``, ``store``, ``retry``,
+        ``wait``, and ``optional``.  The extracted values are placed
+        directly in the returned results dict under their respective keys,
+        ready to be consumed by NotifyBase.__init__() (or a subclass).
+        Child classes should call this method via ``super()`` and then
+        layer their own parameter extraction on top of the returned dict.
 
         Args:
             url (str): The URL you want to fully parse.

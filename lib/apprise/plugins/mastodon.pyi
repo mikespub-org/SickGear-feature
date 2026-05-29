@@ -56,7 +56,7 @@ class NotifyMastodon(NotifyBase):
     idempotency_key: Incomplete
     language: Incomplete
     targets: Incomplete
-    tags: Incomplete
+    hashtags: Incomplete
     ping: Incomplete
     def __init__(self, token=None, targets=None, batch: bool = True, sensitive=None, spoiler=None, visibility=None, cache: bool = True, key=None, language=None, ping=None, **kwargs) -> None:
         """Initialize Notify Mastodon Object."""
