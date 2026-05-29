@@ -346,7 +346,16 @@
 	<div id="SubMenu">
 		<span>
     #set $first = True
+    #set $row = 1
     #for $menuItem in $submenu
+        #if 'newrow' in $menuItem
+            #set $first = True
+            #set $row += 1
+		</span>
+	</div><!-- /SubMenu -->
+	<div id="SubMenu$row">
+		<span>
+        #end if
         #if 'requires' not in $menuItem or $menuItem.requires()
             #if type($menuItem.path) == dict
                 #if $first then '' else '</span><span>'#<b>$menuItem.title</b>
@@ -354,19 +363,22 @@
                 #set $inner_first = True
                 #for $cur_link in $menuItem.path
                     #if $inner_first then '' else '&middot; '
-                    ##
-			<a class="inner" href="$sbRoot/$menuItem.path[$cur_link]">$cur_link</a>
                     #set $inner_first = False
+			<a class="btn inner" href="$sbRoot/$menuItem.path[$cur_link]">$cur_link</a>
                 #end for
             #else
-                ##
-			<a href="$sbRoot/$menuItem.path"#if 'confirm' in $menuItem then ' class="confirm"' else ''# tabindex="$tab#set $tab += 1#">$menuItem.title</a>
                 #set $first = False
+                #set $btn_class = ('', ' confirm')['confirm' in $menuItem] \
+                    + ('delete-show' in $menuItem.path and ' hover-red remove' or
+                       'edit-show' in $menuItem.path and ' hover-green' or '')
+                #set $icon = '' if 'icon' not in $menuItem else f'<i class="sgicon-{menuItem['icon']}"></i>'
+                ##
+			<a href="$sbRoot/$menuItem.path" class="btn$btn_class" tabindex="$tab#set $tab += 1#">$icon$menuItem.title</a>
             #end if
         #end if
     #end for
 		</span>
-	</div><!-- /SubMenu -->
+	</div><!-- /SubMenu$row -->
 
 #end if
 ##

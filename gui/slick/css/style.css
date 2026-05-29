@@ -152,10 +152,321 @@ fonts
 	font-style:normal
 }
 
+
+
+/* =======================================================================
+glyphs
+========================================================================== */
+[class^="sgicon-"], [class*=" sgicon-"]{
+	font-family:"sgicons";
+	speak:none;
+	font-style:normal;
+	font-weight:normal;
+	font-variant:normal;
+	text-shadow:none;
+	text-transform:none;
+	text-rendering:auto;
+	line-height:1;
+	-webkit-font-smoothing:antialiased;
+	-moz-osx-font-smoothing:grayscale
+}
+
+.dropdown [class^="sgicon-"], .dropdown [class*="sgicon-"]{
+	margin-right:6px
+}
+
+.dropdown [class^="sgicon-"].tight{
+	margin-right:0px
+}
+
+#SubMenu [class^="sgicon-"],
+#SubMenu [class*="sgicon-"],
+#SubMenu2 [class^="sgicon-"],
+#SubMenu2 [class*="sgicon-"]{
+	margin-right:3px
+}
+
+.sgicon-pause:before{
+	content:"\e600"
+}
+
+.sgicon-play:before{
+	content:"\e601"
+}
+
+.sgicon-queued:before{
+	content:"\e602"
+}
+
+.sgicon-trim:before{
+	content:"\e603"
+}
+
+.sgicon-backlog:before{
+	content:"\e604"
+}
+
+.sgicon-home:before{
+	content:"\e605"
+}
+
+.sgicon-delete:before{
+	content:"\e606"
+}
+
+.sgicon-errorlog:before{
+	content:"\e607"
+}
+
+.sgicon-log:before{
+	content:"\e608"
+}
+
+.sgicon-notification:before{
+	content:"\e609"
+}
+
+.sgicon-postprocess:before{
+	content:"\e60a"
+}
+
+.sgicon-failed:before{
+	content:"\e60b"
+}
+
+.sgicon-subtitles:before{
+	content:"\e60d"
+}
+
+.sgicon-anime:before{
+	content:"\e60f"
+}
+
+.sgicon-logout:before{
+	content:"\e610"
+}
+
+.sgicon-edit:before{
+	content:"\e611"
+}
+
+.sgicon-rename:before{
+	content:"\e612"
+}
+
+.sgicon-full-update:before{
+	content:"\e613"
+}
+
+.sgicon-showqueue:before,
+.sgicon-refresh:before{
+	content:"\e614"
+}
+
+.sgicon-bulk-change:before{
+	content:"\e615"
+}
+
+.sgicon-search:before{
+	content:"\e616"
+}
+
+.sgicon-info:before{
+	content:"\e65b"
+}
+
+.sgicon-restart:before{
+	content:"\e618"
+}
+
+.sgicon-shutdown:before{
+	content:"\e619"
+}
+
+.sgicon-addshow:before{
+	content:"\e61a"
+}
+
+.sgicon-config:before{
+	content:"\e61b"
+}
+
+.sgicon-arrowup:before{
+	content:"\e63b"
+}
+
+.sgicon-arrowdown:before{
+	content:"\e63a"
+}
+
+.sgicon-plex:before{
+	content:"\e903"
+}
+
+.sgicon-kodi:before{
+	content:"\e901"
+}
+
+.sgicon-bittorrent:before{
+	content:"\e910"
+}
+
+.sgicon-xbmc:before{
+	content:"\e902"
+}
+
+.sgicon-rss:before{
+	content:"\e622"
+}
+
+.sgicon-import:before{
+	content:"\e623"
+}
+
+.sgicon-changes:before{
+	content:"\e624"
+}
+
+.sgicon-updatecheck:before{
+	content:"\e625"
+}
+
+.sgicon-download:before{
+	content:"\e626"
+}
+
+.sgicon-img-portrait:before{
+	content:"\e627"
+}
+
+.sgicon-img-landscape:before{
+	content:"\e628"
+}
+
+.sgicon-episodestatus:before{
+	content:"\e629"
+}
+
+.sgicon-warning:before{
+	content:"\e657"
+}
+
+.sgicon-list:before{
+	content:"\e62b"
+}
+
+.sgicon-cal:before{
+	content:"\e62c"
+}
+
+.sgicon-mediafile:before{
+	content:"\e62d"
+}
+
+.sgicon-archive:before{
+	content:"\e62e"
+}
+
+.sgicon-book:before{
+	content:"\e62f"
+}
+
+.sgicon-specials:before{
+	content:"\e630"
+}
+
+.sgicon-downloaded:before{
+	content:"\e634"
+}
+
+.sgicon-personlines:before{
+	content:"\e63f"
+}
+
+.sgicon-personsquare:before{
+	content:"\e640"
+}
+
+.sgicon-people:before{
+	content:"\e641"
+}
+
+.sgicon-watched:before{
+	content:"\e643"
+}
+
+.sgicon-failures:before{
+	content:"\e685"
+}
+
+.sgicon-metac:before{
+	content:"\e890"
+}
+
+.sgicon-tvc:before{
+	content:"\e891"
+}
+
+.sgicon-ne:before{
+	content:"\e892"
+}
+
+.sgicon-imdb:before{
+	content:"\e898"
+}
+
+.sgicon-trakt:before{
+	content:"\e899"
+}
+
+.sgicon-tvmaze:before{
+	content:"\e89a";
+	margin-right:14px
+}
+
+.sgicon-emby:before{
+	content:"\e900"
+}
+
+.searchadd.icon-glyph{
+	display:none
+}
+.active .searchadd.icon-glyph{
+	opacity:0.4;filter:alpha(opacity=40);
+	float:none;
+	display:inline-block;
+	margin:0 0 -2px 0;
+	height:14px
+}
+.searchadd.icon-glyph{
+	background-position:-337px 0
+}
+
+.personage.icon-glyph{
+	background-position:-168px 0;
+	margin:1px 0 0 0;
+	height:14px;
+	opacity:0.75;filter:alpha(opacity=75);
+}
+
+#add-show-name:hover{
+	cursor:pointer
+}
+
+#service_order_list .input-sm,
+#add-show-name input{
+	margin:0 0 0 -1px;
+	padding:0 2px;
+	height:18px;
+	width:135px;
+	font-size:12px
+}
+
+
+
 /* =======================================================================
 inc_top.tmpl
 ========================================================================== */
-
 .navbaricon{
 	margin-top:-15px;
 	margin-bottom:-15px
@@ -435,11 +746,19 @@ inc_top.tmpl
 	clear:both
 }
 
-#SubMenu{
+#SubMenu,
+#SubMenu2{
 	padding-right:20px;
 	clear:both;
 	font-size:12px;
 	float:right
+}
+#SubMenu2{
+	clear:right;
+	margin:3px 0
+}
+#display-show #SubMenu2{
+	margin-bottom:15px
 }
 
 .topbar-notification{
@@ -451,303 +770,10 @@ inc_top.tmpl
 	margin-bottom:0
 }
 
-[class^="sgicon-"], [class*=" sgicon-"]{
-	font-family:"sgicons";
-	speak:none;
-	font-style:normal;
-	font-weight:normal;
-	font-variant:normal;
-	text-shadow:none;
-	text-transform:none;
-	text-rendering:auto;
-	line-height:1;
-	-webkit-font-smoothing:antialiased;
-	-moz-osx-font-smoothing:grayscale
+#display-show .upgrade-notification{
+	clear:right
 }
 
-.dropdown [class^="sgicon-"], .dropdown [class*="sgicon-"]{
-	margin-right:6px
-}
-
-.dropdown [class^="sgicon-"].tight{
-	margin-right:0px
-}
-
-#SubMenu [class^="sgicon-"], #SubMenu [class*="sgicon-"]{
-	margin-right:3px
-}
-
-.sgicon-pause:before{
-	content:"\e600"
-}
-
-.sgicon-play:before{
-	content:"\e601"
-}
-
-.sgicon-queued:before{
-	content:"\e602"
-}
-
-.sgicon-trim:before{
-	content:"\e603"
-}
-
-.sgicon-backlog:before{
-	content:"\e604"
-}
-
-.sgicon-home:before{
-	content:"\e605"
-}
-
-.sgicon-delete:before{
-	content:"\e606"
-}
-
-.sgicon-errorlog:before{
-	content:"\e607"
-}
-
-.sgicon-log:before{
-	content:"\e608"
-}
-
-.sgicon-notification:before{
-	content:"\e609"
-}
-
-.sgicon-postprocess:before{
-	content:"\e60a"
-}
-
-.sgicon-failed:before{
-	content:"\e60b"
-}
-
-.sgicon-subtitles:before{
-	content:"\e60d"
-}
-
-.sgicon-anime:before{
-	content:"\e60f"
-}
-
-.sgicon-logout:before{
-	content:"\e610"
-}
-
-.sgicon-edit:before{
-	content:"\e611"
-}
-
-.sgicon-rename:before{
-	content:"\e612"
-}
-
-.sgicon-fullupdate:before{
-	content:"\e613"
-}
-
-.sgicon-showqueue:before,
-.sgicon-refresh:before{
-	content:"\e614"
-}
-
-.sgicon-bulk-change:before{
-	content:"\e615"
-}
-
-.sgicon-search:before{
-	content:"\e616"
-}
-
-.sgicon-info:before{
-	content:"\e65b"
-}
-
-.sgicon-restart:before{
-	content:"\e618"
-}
-
-.sgicon-shutdown:before{
-	content:"\e619"
-}
-
-.sgicon-addshow:before{
-	content:"\e61a"
-}
-
-.sgicon-config:before{
-	content:"\e61b"
-}
-
-.sgicon-arrowup:before{
-	content:"\e63b"
-}
-
-.sgicon-arrowdown:before{
-	content:"\e63a"
-}
-
-.sgicon-plex:before{
-	content:"\e903"
-}
-
-.sgicon-kodi:before{
-	content:"\e901"
-}
-
-.sgicon-bittorrent:before{
-	content:"\e910"
-}
-
-.sgicon-xbmc:before{
-	content:"\e902"
-}
-
-.sgicon-rss:before{
-	content:"\e622"
-}
-
-.sgicon-import:before{
-	content:"\e623"
-}
-
-.sgicon-changes:before{
-	content:"\e624"
-}
-
-.sgicon-updatecheck:before{
-	content:"\e625"
-}
-
-.sgicon-download:before{
-	content:"\e626"
-}
-
-.sgicon-img-portrait:before{
-	content:"\e627"
-}
-
-.sgicon-img-landscape:before{
-	content:"\e628"
-}
-
-.sgicon-episodestatus:before{
-	content:"\e629"
-}
-
-.sgicon-warning:before{
-	content:"\e657"
-}
-
-.sgicon-list:before{
-	content:"\e62b"
-}
-
-.sgicon-cal:before{
-	content:"\e62c"
-}
-
-.sgicon-mediafile:before{
-	content:"\e62d"
-}
-
-.sgicon-archive:before{
-	content:"\e62e"
-}
-
-.sgicon-book:before{
-	content:"\e62f"
-}
-
-.sgicon-downloaded:before{
-	content:"\e634"
-}
-
-.sgicon-personlines:before{
-	content:"\e63f"
-}
-
-.sgicon-personsquare:before{
-	content:"\e640"
-}
-
-.sgicon-people:before{
-	content:"\e641"
-}
-
-.sgicon-watched:before{
-	content:"\e643"
-}
-
-.sgicon-failures:before{
-	content:"\e685"
-}
-
-.sgicon-metac:before{
-	content:"\e890"
-}
-
-.sgicon-tvc:before{
-	content:"\e891"
-}
-
-.sgicon-ne:before{
-	content:"\e892"
-}
-
-.sgicon-imdb:before{
-	content:"\e898"
-}
-
-.sgicon-trakt:before{
-	content:"\e899"
-}
-
-.sgicon-tvmaze:before{
-	content:"\e89a";
-	margin-right:14px
-}
-
-.sgicon-emby:before{
-	content:"\e900"
-}
-
-.searchadd.icon-glyph{
-	display:none
-}
-.active .searchadd.icon-glyph{
-	opacity:0.4;filter:alpha(opacity=40);
-	float:none;
-	display:inline-block;
-	margin:0 0 -2px 0;
-	height:14px
-}
-.searchadd.icon-glyph{
-	background-position:-337px 0
-}
-
-.personage.icon-glyph{
-	background-position:-168px 0;
-	margin:1px 0 0 0;
-	height:14px;
-	opacity:0.75;filter:alpha(opacity=75);
-}
-
-#add-show-name:hover{
-	cursor:pointer
-}
-
-#service_order_list .input-sm,
-#add-show-name input{
-	margin:0 0 0 -1px;
-	padding:0 2px;
-	height:18px;
-	width:135px;
-	font-size:12px
-}
 #service_order_list .input-sm{
 	width:100px
 }
@@ -4583,6 +4609,7 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 	*background-color:#a9302a
 }
 
+.btn.hover-red:active,
 .btn-danger:active,
 .btn-danger.active{
 	background-color:#942a25 \9
@@ -4613,6 +4640,7 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 	*background-color:#499249
 }
 
+.btn.hover-green:active,
 .btn-success:active,
 .btn-success.active{
 	background-color:#408140 \9
@@ -5269,6 +5297,8 @@ jquery.confirm.css
 	background-color:#3f7636
 }
 
+.dropdown-menu > li > a.hover-green:hover, .dropdown-menu > li > a.hover-green:focus,
+.btn.hover-green:hover,
 #confirmBox .green:hover{
 	background-color:#48873e
 }
@@ -5277,6 +5307,9 @@ jquery.confirm.css
 	background-color:#8d2d2b
 }
 
+.dropdown-menu > li > a.hover-red:hover, .dropdown-menu > li > a.hover-red:focus,
+.btn.hover-red:hover,
+.modal-footer .red:hover,
 #confirmBox .red:hover{
 	background-color:#a13331
 }

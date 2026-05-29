@@ -11,18 +11,18 @@ function initActions() {
 	menu$.find('a[href*="/home/restart/"]').addClass('btn restart').html('<i class="sgicon-restart"></i>Restart');
 	menu$.find('a[href*="/home/shutdown/"]').addClass('btn shutdown').html('<i class="sgicon-shutdown"></i>Shutdown');
 	menu$.find('a[href*="/home/logout/"]').addClass('btn').html('<i class="sgicon-logout"></i>Logout');
-	menu$.find('a:contains("Edit")').addClass('btn').html('<i class="sgicon-edit"></i>Edit');
-	menu$.find('a:contains("Remove")').addClass('btn remove').html('<i class="sgicon-delete"></i>Remove');
+	// menu$.find('a:contains("Edit")').addClass('btn').html('<i class="sgicon-edit"></i>Edit');
+	// menu$.find('a:contains("Remove")').addClass('btn remove').html('<i class="sgicon-delete"></i>Remove');
 	menu$.find('a:contains("Clear History")').addClass('btn clearhistory').html('<i class="sgicon-delete"></i>Clear History');
 	menu$.find('a:contains("Trim History")').addClass('btn trimhistory').html('<i class="sgicon-trim"></i>Trim History');
 	menu$.find('a[href$="/events/download-log/"]').addClass('btn').html('<i class="sgicon-download"></i>Download Log');
 	menu$.find('a[href$="/errors/clear-log/"]').addClass('btn').html('<i class="sgicon-delete"></i>Clear Errors');
-	menu$.find('a:contains("Re-scan")').addClass('btn').html('<i class="sgicon-refresh"></i>Re-scan');
+	// menu$.find('a:contains("Quick")').addClass('btn').html('<i class="sgicon-refresh"></i>Quick file scan');
 	menu$.find('a:contains("Backlog Overview")').addClass('btn').html('<i class="sgicon-backlog"></i>Backlog Overview');
 	menu$.find('a[href$="/home/update-plex/"]').addClass('btn').html('<i class="sgicon-plex"></i>Update PLEX');
-	menu$.find('a:contains("Force")').addClass('btn').html('<i class="sgicon-fullupdate"></i>Full Update');
-	menu$.find('a:contains("Cast")').addClass('btn').html('<i class="sgicon-people" style="vertical-align:middle; font-size:13px"></i>Cast Update');
-	menu$.find('a:contains("Rename")').addClass('btn').html('<i class="sgicon-rename"></i>Media Rename');
+	// menu$.find('a:contains("Full")').addClass('btn').html('<i class="sgicon-fullupdate"></i>Full Update');
+	// menu$.find('a:contains("Cast")').addClass('btn').html('<i class="sgicon-people" style="vertical-align:middle; font-size:13px"></i>Cast update');
+	// menu$.find('a:contains("Rename")').addClass('btn').html('<i class="sgicon-rename"></i>Media Rename');
 	menu$.find('a[href$="/config/subtitles/"]').addClass('btn').html('<i class="sgicon-subtitles"></i>Subtitles');
 	menu$.find('a[href*="/home/subtitle-show"]').addClass('btn').html('<i class="sgicon-subtitles"></i>Download Subtitles');
 	menu$.find('a:contains("Anime")').addClass('btn').html('<i class="sgicon-anime"></i>Anime');
@@ -38,11 +38,11 @@ function initActions() {
 	menu$.find('a:contains("Show Tasks")').addClass('btn').html('<i class="sgicon-showqueue"></i>Show Tasks');
 	menu$.find('a[href$="/manage/failed-downloads/"]').addClass('btn').html('<i class="sgicon-failed"></i>Failed Downloads');
 	menu$.find('a:contains("Notification")').addClass('btn').html('<i class="sgicon-notification"></i>Notifications');
-	menu$.find('a[href$="/home/update-mb/"]').addClass('btn').html('<i class="sgicon-emby"></i>Update Emby');
-	menu$.find('a[href$="/home/update-kodi/"]').addClass('btn').html('<i class="sgicon-kodi"></i>Update Kodi');
+	// menu$.find('a[href$="/home/update-mb/"]').addClass('btn').html('<i class="sgicon-emby"></i>Update Emby');
+	// menu$.find('a[href$="/home/update-kodi/"]').addClass('btn').html('<i class="sgicon-kodi"></i>Update Kodi');
 	// menu$.find('a[href$="/home/update-xbmc/"]').addClass('btn').html('<i class="sgicon-xbmc"></i>Update XBMC');
-	menu$.find('a:contains("Update show in Emby")').addClass('btn').html('<i class="sgicon-emby"></i>Emby Update Show');
-	menu$.find('a:contains("Update show in Kodi")').addClass('btn').html('<i class="sgicon-kodi"></i>Kodi Update Show ');
+	// menu$.find('a:contains("Update show in Emby")').addClass('btn').html('<i class="sgicon-emby"></i>Emby Update Show');
+	// menu$.find('a:contains("Update show in Kodi")').addClass('btn').html('<i class="sgicon-kodi"></i>Kodi Update Show ');
 	// menu$.find('a:contains("Update show in XBMC")').addClass('btn').html('<i class="sgicon-xbmc"></i>Update show in XBMC');
 
 	$(window).on('resize', updateMenus).resize(); // also executes func immediately on load
