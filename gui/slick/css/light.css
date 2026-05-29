@@ -943,6 +943,12 @@ input, textarea, select, .uneditable-input{
 	color:#fff
 }
 
+.navbar-default .navbar-nav > .active > .dropdown-menu .active{
+	color:#333;
+	background-color:#ccc;
+	box-shadow:inset 5px 0 0 0 #215F2F
+}
+
 @media (max-width:767px){
 	.navbar-default .navbar-nav .open .dropdown-menu > li > a{
 		color:#ddd

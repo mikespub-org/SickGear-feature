@@ -1616,6 +1616,12 @@ r.close()
 
             return json_dumps(data)
 
+    @staticmethod
+    def toggle_theme(theme):
+
+        if theme in ('dark', 'light'):
+            sickgear.THEME_NAME = theme
+
     def toggle_paused(self, tvid_prodid):
 
         if None is tvid_prodid or None is (show_obj := helpers.find_show_by_id(tvid_prodid)):
@@ -8997,6 +9003,9 @@ class Config(MainHandler):
         return [x for x in menu if exclude not in x['title']]
 
     def index(self):
+        self.redirect('/config/about/')
+
+    def about(self, *args, **kwargs):
         t = PageTemplate(web_handler=self, file='config.tmpl')
         t.submenu = self.config_menu()
 

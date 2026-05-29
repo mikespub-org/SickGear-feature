@@ -93,10 +93,35 @@ function updateMenu(menuHeader) {
 	});
 }
 
+function setStyle(theme){
+	let style$, fromTheme='light', toTheme = 'dark';
+
+	if (!(style$ = $('link[rel*="stylesheet"][href*="light"]')).length){
+		style$ = $('link[rel*="stylesheet"][href*="dark"]');
+		fromTheme='dark';
+		toTheme = 'light';
+	}
+	style$.disabled = !0;
+	style$.attr('href', style$.attr('href').replace(fromTheme, toTheme));
+	$.get($.SickGear.Root + '/add-shows/toggle-theme',
+		{'theme': toTheme});
+	style$.disabled = !1;
+	return !0;
+}
+
 $(function(){
 	initActions();
-	$('#NAV' + topmenu).addClass('active');
+
+	let activemenu$ = $('.dropdown.active .dropdown-menu li');
+	let tailloc = location.href.replace(/.*\/([^\/]+)\/?$/, '/$1');
+	if (-1 !== tailloc.indexOf('view-show')){
+		tailloc = location.href.replace(/.*\/([^\/]+)\/?$/, '$1');
+	}
+	if (!activemenu$.find('a[href$="' + tailloc + '/"]').addClass('active').length)
+		activemenu$.find('a[href*="' + tailloc + '"]').addClass('active');
+
 	$('.dropdown-toggle').dropdownHover();
+	$('#theme').click(function(){setStyle();});
 	(/undefined/i.test(document.createElement('input').placeholder)) && $('body').addClass('no-placeholders');
 
 	$('.bubblelist').on('click', '.list .item a', function(){
