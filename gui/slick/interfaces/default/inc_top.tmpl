@@ -378,7 +378,7 @@
                 #set $btn_class = ('', ' confirm')['confirm' in $menuItem] \
                     + ('delete-show' in $menuItem.path and ' hover-red remove' or
                        'edit-show' in $menuItem.path and ' hover-green' or '')
-                #set $icon = '' if 'icon' not in $menuItem else f'<i class="sgicon-{menuItem['icon']}"></i>'
+                #set $icon = '' if 'icon' not in $menuItem else f'<i class="sgicon-{menuItem["icon"]}"></i>'
                 ##
 			<a href="$sbRoot/$menuItem.path" class="btn$btn_class" tabindex="$tab#set $tab += 1#">$icon$menuItem.title</a>
             #end if

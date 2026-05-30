@@ -77,6 +77,7 @@
 * Change temporary remove browse filters while a bug is being investigated, and remove tag-trait-self from actor lists
 * Fix save states on browse shows when a tab is open on a page and sg restarts e.g. for an upgrade
 * Change restore filters
+* Fix for old Pythons that don't support certain quotation use in f-string
 
 
 ### 3.35.7 (2026-05-19 20:00:00 UTC)
