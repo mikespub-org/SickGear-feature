@@ -182,16 +182,30 @@ class PageTemplate(Template):
 
         headers = web_handler.request.headers
         self.xsrf_form_html = re.sub(r'\s*/>$', '>', web_handler.xsrf_form_html())
-        self.sbHost = headers.get('X-Forwarded-Host')
-        if None is self.sbHost:
-            sb_host = headers.get('Host') or 'localhost'
-            self.sbHost = re.match('(?msx)^' + (('[^:]+', r'\[.*\]')['[' == sb_host[0]]), sb_host).group(0)
-        self.sbHttpPort = sickgear.WEB_PORT
-        self.sbHttpsPort = headers.get('X-Forwarded-Port') or self.sbHttpPort
-        self.sbRoot = sickgear.WEB_ROOT
-        self.sbHttpsEnabled = 'https' == headers.get('X-Forwarded-Proto') or sickgear.ENABLE_HTTPS
-        self.sbHandleReverseProxy = sickgear.HANDLE_REVERSE_PROXY
-        self.sbThemeName = sickgear.THEME_NAME
+
+        # TODO: begin variable migration 2026-05-30
+        # let variables populate for a good while within install base browsers
+        self.sg_host = headers.get('X-Forwarded-Host')
+        if None is self.sg_host:
+            sg_host = headers.get('Host') or 'localhost'
+            self.sg_host = re.match('(?msx)^' + (('[^:]+', r'\[.*\]')['[' == sg_host[0]]), sg_host).group(0)
+        self.sg_http_port = sickgear.WEB_PORT
+        self.sg_https_port = headers.get('X-Forwarded-Port') or self.sg_http_port
+        self.sg_root = sickgear.WEB_ROOT
+        self.sg_https_enabled = 'https' == headers.get('X-Forwarded-Proto') or sickgear.ENABLE_HTTPS
+        self.sg_handle_reverse_proxy = sickgear.HANDLE_REVERSE_PROXY
+        self.sg_theme_name = sickgear.THEME_NAME
+        self.sg_pid = str(sickgear.PID)
+        # then switch off the `sb` variants later (should reduce the number of issues for users)
+        # when vars inside templates are migrated to sg_
+        self.sbHost = self.sg_host
+        self.sbHttpPort = self.sg_http_port
+        self.sbHttpsPort = self.sg_https_port
+        self.sbRoot = self.sg_root
+        self.sbHttpsEnabled = self.sg_https_enabled
+        self.sbHandleReverseProxy = self.sg_handle_reverse_proxy
+        self.sbThemeName = self.sg_theme_name
+        self.sbPID = self.sg_pid
 
         self.log_num_errors = len(classes.ErrorViewer.errors)
         if None is not sickgear.showList:
@@ -199,14 +213,15 @@ class PageTemplate(Template):
                                                 if 0 < cur_so.not_found_count])
             self.log_num_not_found_shows_all = len([cur_so for cur_so in sickgear.showList
                                                     if 0 != cur_so.not_found_count])
-        self.sbPID = str(sickgear.PID)
-        self.menu = [
-            {'title': 'Home', 'key': 'home'},
-            {'title': 'Episodes', 'key': 'daily-schedule'},
-            {'title': 'History', 'key': 'history'},
-            {'title': 'Manage', 'key': 'manage'},
-            {'title': 'Config', 'key': 'config'},
-        ]
+
+        # cannot seee the use for this struct
+        # self.menu = [
+        #     {'title': 'Home', 'key': 'home'},
+        #     {'title': 'Episodes', 'key': 'daily-schedule'},
+        #     {'title': 'History', 'key': 'history'},
+        #     {'title': 'Manage', 'key': 'manage'},
+        #     {'title': 'Config', 'key': 'config'},
+        # ]
 
         kwargs['file'] = os.path.join(sickgear.PROG_DIR, 'gui/%s/interfaces/default/' %
                                       sickgear.GUI_NAME, kwargs['file'])

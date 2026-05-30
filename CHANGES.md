@@ -64,7 +64,8 @@
 * Change remove trailing slash in void elements (img, br, hr, input, etc.) as not needed in HTML5
 * Change remaining submenus from partial JS to full Python to remove button display lag
 * Change move "About" page from /config/about to root /about
-* Fix hide the media process config button on the submenu of the media process config page 
+* Fix hide the media process config button on the submenu of the media process config page
+* Change begin PageTemplate variable migration (let new variables populate for a while)
 
 
 [develop]
