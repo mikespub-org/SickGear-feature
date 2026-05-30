@@ -61,6 +61,7 @@
 * Change add lamp under "Config" menu to toggle light or dark theme
 * Change hover color of 'Logout', 'Restart' and 'Shutdown' menu items
 * Change ensure alert banners don't overlap submenus on view-show
+* Change remove trailing slash in void elements (img, br, hr, input, etc.) as not needed in HTML5
 
 
 [develop]

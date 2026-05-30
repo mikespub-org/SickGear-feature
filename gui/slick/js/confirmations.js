@@ -68,7 +68,7 @@ $(document).ready(function () {
 		var showname = document.getElementById('showtitle').getAttribute('data-showname');
 		$.confirm({
 			'title'		: 'Remove Show',
-			'message'	: 'Are you sure you want to remove <span class="footerhighlight">' + showname + '</span> from the database ?<br /><br /><input type="checkbox" id="delete-files"> <span class="red-text">Check to delete files as well. IRREVERSIBLE</span>',
+			'message'	: 'Are you sure you want to remove <span class="footerhighlight">' + showname + '</span> from the database ?<br><br><input type="checkbox" id="delete-files"> <span class="red-text">Check to delete files as well. IRREVERSIBLE</span>',
 			'buttons'	: {
 				'Yes'	: {
 					'class'	: 'green',

@@ -367,10 +367,10 @@ $(document).ready(function () {
 			newMain = (save && !isMain),
 			paused = 'on' === $('#paused:checked').val(),
 			extraWarn = !newMain ? '' : 'Warning: Changing the main source can produce undesirable'
-				+ ' results if episodes do not match at old and new TV info sources<br /><br />'
+				+ ' results if episodes do not match at old and new TV info sources<br><br>'
 				+ (paused ? '' : '<input type="checkbox" id="mark-wanted" style="margin-right:6px">'
 					+ '<span class="red-text">Mark all added episodes Wanted to search for releases</span>'
-					+ '</input><br /><br />'),
+					+ '</input><br><br>'),
 			checkAction = !newMain ? 'save ID changes' : 'change the TV info source';
 
 		$.confirm({

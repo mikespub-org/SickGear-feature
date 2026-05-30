@@ -132,7 +132,7 @@ class PostProcessor(object):
 
         # if the new file exists, return the appropriate code depending on the size
         if os.path.isfile(existing_file):
-            new_file = f'New file {self.file_path}<br />.. is '
+            new_file = f'New file {self.file_path}<br>.. is '
             if os.path.getsize(self.file_path) == os.path.getsize(existing_file):
                 self._log(f'{new_file}the same size as {existing_file}', logger.DEBUG)
                 return PostProcessor.EXISTS_SAME
@@ -1053,15 +1053,15 @@ class PostProcessor(object):
         """
 
         self._log(f'Processing... {os.path.relpath(self.file_path, self.folder_path)}'
-                  f'{(f"<br />.. from nzb {self.nzb_name}", "")[None is self.nzb_name]}')
+                  f'{(f"<br>.. from nzb {self.nzb_name}", "")[None is self.nzb_name]}')
 
         if os.path.isdir(self.file_path):
-            self._log(f'Expecting file {self.file_path}<br />.. is actually a directory, skipping')
+            self._log(f'Expecting file {self.file_path}<br>.. is actually a directory, skipping')
             return False
 
         for ignore_file in self.IGNORED_FILESTRINGS:
             if ignore_file in self.file_path:
-                self._log(f'File {self.file_path}<br />.. is ignored type, skipping')
+                self._log(f'File {self.file_path}<br>.. is ignored type, skipping')
                 return False
 
         # reset per-file stuff
@@ -1183,7 +1183,7 @@ class PostProcessor(object):
                          'new_base_name': new_base_name,
                          'associated_files': sickgear.MOVE_ASSOCIATED_FILES}
             args_cpmv = {'subtitles': sickgear.USE_SUBTITLES and ep_obj.show_obj.subtitles,
-                         'action_tmpl': ' %s<br />.. to %s'}
+                         'action_tmpl': ' %s<br>.. to %s'}
             args_cpmv.update(args_link)
             if self.webhandler:
                 self.webhandler('Processing method is "%s"' % self.process_method)

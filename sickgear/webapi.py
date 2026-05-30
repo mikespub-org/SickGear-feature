@@ -1452,7 +1452,7 @@ class CMD_SickGearSubtitleSearch(ApiCall):
         if previous_subtitles != ep_obj.subtitles:
             status = 'New subtitles downloaded: %s' % ' '.join([
                 "<img src='" + sickgear.WEB_ROOT + "/images/flags/" + subliminal.language.Language(
-                    x).alpha2 + ".png' alt='" + subliminal.language.Language(x).name + "'/>" for x in
+                    x).alpha2 + ".png' alt='" + subliminal.language.Language(x).name + "'>" for x in
                 sorted(list(set(ep_obj.subtitles).difference(previous_subtitles)))])
             response = _responds(RESULT_SUCCESS, msg='New subtitles found')
         else:
@@ -1840,7 +1840,7 @@ class CMD_SickGearLogs(ApiCall):
                         final_data.append(cur_line)
                         if any(normal_data):
                             final_data += ['%02s) %s' % (n + 1, x) for n, x in enumerate(normal_data[::-1])] + \
-                                          ['<br />']
+                                          ['<br>']
                             num_lines += len(normal_data)
                             normal_data = []
                     else:
@@ -1851,7 +1851,7 @@ class CMD_SickGearLogs(ApiCall):
                     if not any(normal_data) and not any([cur_line.strip()]):
                         continue
 
-                    normal_data.append(re.sub(r'\r?\n', '<br />', cur_line.replace('<', '&lt;').replace('>', '&gt;')))
+                    normal_data.append(re.sub(r'\r?\n', '<br>', cur_line.replace('<', '&lt;').replace('>', '&gt;')))
 
                 num_lines += 1
 

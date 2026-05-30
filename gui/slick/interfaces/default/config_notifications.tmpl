@@ -315,7 +315,7 @@
 									<label for="plex-update-library">
 										<span class="component-title">Update server library</span>
 										<span class="component-desc">
-											<input type="checkbox" name="plex_update_library" id="plex-update-library" #if $sickgear.PLEX_UPDATE_LIBRARY then 'checked="checked" ' else ''#/>
+											<input type="checkbox" name="plex_update_library" id="plex-update-library" #if $sickgear.PLEX_UPDATE_LIBRARY then 'checked="checked" ' else ''#>
 											<p>update Plex Media Server library when a download finishes</p>
 										</span>
 									</label>
@@ -603,7 +603,7 @@
 
 				<div class="component-group">
 					<div class="component-group-desc">
-						<img class="notifier-icon" src="$sbRoot/images/notifiers/nmj.png" alt="" title="Networked Media Jukebox v2"/>
+						<img class="notifier-icon" src="$sbRoot/images/notifiers/nmj.png" alt="" title="Networked Media Jukebox v2">
 						<h3><a name="nmjv2" href="<%= anon_url('http://www.popcornhour.com/') %>" rel="noreferrer" onclick="window.open(this.href, '_blank'); return false;">NMJv2</a></h3>
 						<p>The Networked Media Jukebox, is the official media jukebox interface for Popcorn Hour 300/400 series.</p>
 					</div>
@@ -635,7 +635,7 @@
 										<input type="radio" NAME="nmjv2_dbloc" VALUE="local" id="NMJV2_DBLOC_A" #if $sickgear.NMJv2_DBLOC=='local' then 'checked="checked"' else ''#>PCH Local Media
 									</label>
 									<label for="NMJV2_DBLOC_B">
-										<input type="radio" NAME="nmjv2_dbloc" VALUE="network" id="NMJV2_DBLOC_B" #if $sickgear.NMJv2_DBLOC=='network' then 'checked="checked"' else ''#/>PCH Network Media
+										<input type="radio" NAME="nmjv2_dbloc" VALUE="network" id="NMJV2_DBLOC_B" #if $sickgear.NMJv2_DBLOC=='network' then 'checked="checked"' else ''#>PCH Network Media
 									</label>
 								</span>
 							</div>
@@ -1331,7 +1331,7 @@
 
 				<div class="component-group clear-left">
 					<div class="component-group-desc">
-						<img class="notifier-icon" src="$sbRoot/images/notifiers/trakt.png" alt="" title="Trakt"/>
+						<img class="notifier-icon" src="$sbRoot/images/notifiers/trakt.png" alt="" title="Trakt">
 						<h3><a name="trakt" href="<%= anon_url('http://trakt.tv/') %>" rel="noreferrer" onclick="window.open(this.href, '_blank'); return false;">Trakt</a></h3>
 						<p>Trakt can recommend shows based on notifications. (Add show... Trakt cards/Recommend)</p>
 					</div>
