@@ -4750,6 +4750,7 @@ pre{
 
 .alert{
 	padding:10px;
+	clear: both;
 	text-align:center
 }
 
