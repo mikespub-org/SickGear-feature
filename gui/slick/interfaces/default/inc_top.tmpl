@@ -273,7 +273,7 @@
 						<ul class="dropdown-menu">
 							<li><a href="$sbRoot/home/process-media/" tabindex="$tab#set $tab += 1#"><i class="sgicon-postprocess"></i>Process Media</a></li>
 							<li class="divider"></li>
-							<li><a href="$sbRoot/manage/" tabindex="$tab#set $tab += 1#"><i class="sgicon-bulk-change"></i>Bulk Change</a></li>
+							<li><a href="$sbRoot/manage/bulk" tabindex="$tab#set $tab += 1#"><i class="sgicon-bulk-change"></i>Bulk Change</a></li>
 							<li><a href="$sbRoot/manage/backlog-overview/" tabindex="$tab#set $tab += 1#"><i class="sgicon-backlog"></i>Backlog Overview</a></li>
 							<li><a href="$sbRoot/manage/search-tasks/" tabindex="$tab#set $tab += 1#"><i class="sgicon-search"></i>Search Tasks</a></li>
 							<li><a href="$sbRoot/manage/show-tasks/" tabindex="$tab#set $tab += 1#"><span class="snf item"><i class="sgicon-warning"><em class="pulse"></em></i><i class="sgicon-showqueue"></i></span>Show Tasks</a></li>
@@ -318,10 +318,10 @@
 #set num_errors = $getVar('$log_num_errors', None)
 #set $err_class = ('', ' errors ' + (len('%s' % $num_errors ) * 'n')[0:4])[any([$num_errors])]
 					<li id="NAVtools" class="dropdown$current_menu_tools$err_class">
-						<a href="$sbRoot/config/about/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18-2.png" class="navbaricon hidden-xs"><b class="caret hidden-xs"></b><span class="visible-xs">System <b class="caret"></b></span><span class="logger bar$err_class"><i class="sgicon-warning"><em class="pulse"></em></i></span></a>
-## new without $err_class					<a href="$sbRoot/config/about/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18-2.png" class="navbaricon hidden-xs"><b class="caret hidden-xs"></b><span class="visible-xs">System <b class="caret"></b></span><span class="logger bar"><i class="sgicon-warning"><em class="pulse"></em></i></span></a>
+						<a href="$sbRoot/about/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18-2.png" class="navbaricon hidden-xs"><b class="caret hidden-xs"></b><span class="visible-xs">System <b class="caret"></b></span><span class="logger bar$err_class"><i class="sgicon-warning"><em class="pulse"></em></i></span></a>
+## new without $err_class					<a href="$sbRoot/about/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18-2.png" class="navbaricon hidden-xs"><b class="caret hidden-xs"></b><span class="visible-xs">System <b class="caret"></b></span><span class="logger bar"><i class="sgicon-warning"><em class="pulse"></em></i></span></a>
 						<ul class="dropdown-menu">
-							<li><a href="$sbRoot/config/about/" tabindex="$tab#set $tab += 1#"><i class="sgicon-info"></i>About</a></li>
+							<li><a href="$sbRoot/about/" tabindex="$tab#set $tab += 1#"><i class="sgicon-info"></i>About</a></li>
 							<li class="divider"></li>
 #if not $sg_var('EXT_UPDATES')
 							<li><a href="$sbRoot/home/check-update" tabindex="$tab#set $tab += 1#"><i class="sgicon-updatecheck"></i>Check for Updates</a></li>
@@ -354,8 +354,8 @@
 		<span>
     #set $first = True
     #set $row = 1
-    #for $menuItem in $submenu
-        #if 'newrow' in $menuItem
+    #for $subitem in $submenu
+        #if 'newrow' in $subitem
             #set $first = True
             #set $row += 1
 		</span>
@@ -363,24 +363,23 @@
 	<div id="SubMenu$row">
 		<span>
         #end if
-        #if 'requires' not in $menuItem or $menuItem.requires()
-            #if type($menuItem.path) == dict
-                #if $first then '' else '</span><span>'#<b>$menuItem.title</b>
+        #if 'requires' not in $subitem or $subitem.requires()
+            #if type($subitem.path) == dict
+                #if $first then '' else '</span><span>'#<b>$subitem.title</b>
                 #set $first = False
                 #set $inner_first = True
-                #for $cur_link in $menuItem.path
+                #for $cur_link in $subitem.path
                     #if $inner_first then '' else '&middot; '
                     #set $inner_first = False
-			<a class="btn inner" href="$sbRoot/$menuItem.path[$cur_link]">$cur_link</a>
+			<a class="btn inner" href="$sbRoot/$subitem.path[$cur_link]">$cur_link</a>
                 #end for
             #else
                 #set $first = False
-                #set $btn_class = ('', ' confirm')['confirm' in $menuItem] \
-                    + ('delete-show' in $menuItem.path and ' hover-red remove' or
-                       'edit-show' in $menuItem.path and ' hover-green' or '')
-                #set $icon = '' if 'icon' not in $menuItem else f'<i class="sgicon-{menuItem["icon"]}"></i>'
+                #set $btn_class = f'{('', 'confirm')['confirm' in subitem]} {subitem.get("addclass", "")}'.strip()
+                #set $btn_class = (f' {btn_class}', '')[not $btn_class]
+                #set $icon = '' if 'icon' not in $subitem else f'<i class="sgicon-{subitem["icon"]}"></i>'
                 ##
-			<a href="$sbRoot/$menuItem.path" class="btn$btn_class" tabindex="$tab#set $tab += 1#">$icon$menuItem.title</a>
+			<a href="$sbRoot/$subitem.path" class="btn$btn_class" tabindex="$tab#set $tab += 1#">$icon$subitem.title</a>
             #end if
         #end if
     #end for

@@ -1405,6 +1405,38 @@ class MainHandler(WebHandler):
 
         return t.respond()
 
+    def about(self):
+        t = PageTemplate(web_handler=self, file='config.tmpl')
+        t.submenu = [
+            dict(title='Process Media', icon='postprocess', path='home/process-media/')
+        ]
+
+        try:
+            with open(os.path.join(sickgear.PROG_DIR, 'CHANGES.md')) as fh:
+                t.version = re.findall(r'###[^0-9]+([0-9]+\.[0-9]+\.[0-9x]+)', fh.readline())[0]
+        except (BaseException, Exception):
+            t.version = ''
+
+        current_file = zoneinfo.ZONEFILENAME
+        t.tz_fallback = False
+        t.tz_version = None
+        try:
+            if None is not current_file:
+                current_file = os.path.basename(current_file)
+                zonefile = real_path(os.path.join(sickgear.ZONEINFO_DIR, current_file))
+                if not os.path.isfile(zonefile):
+                    t.tz_fallback = True
+                    zonefile = os.path.join(os.path.dirname(zoneinfo.__file__), current_file)
+                if os.path.isfile(zonefile):
+                    t.tz_version = zoneinfo.ZoneInfoFile(zoneinfo.getzoneinfofile_stream()).metadata['tzversion']
+        except (BaseException, Exception):
+            pass
+
+        t.backup_db_path = sickgear.BACKUP_DB_MAX_COUNT and \
+            (sickgear.BACKUP_DB_PATH or os.path.join(sickgear.DATA_DIR, 'backup')) or 'Disabled'
+
+        return t.respond()
+
     @staticmethod
     def live_panel(**kwargs):
 
@@ -1663,11 +1695,11 @@ class Home(MainHandler):
 
     def home_menu(self):
         return [
-            {'title': 'Process Media', 'path': 'home/process-media/'},
-            {'title': 'Update Emby', 'path': 'home/update-mb/', 'requires': self.have_emby},
-            {'title': 'Update Kodi', 'path': 'home/update-kodi/', 'requires': self.have_kodi},
-            {'title': 'Update XBMC', 'path': 'home/update-xbmc/', 'requires': self.have_xbmc},
-            {'title': 'Update Plex', 'path': 'home/update-plex/', 'requires': self.have_plex}
+            dict(title='Process Media', icon='postprocess', path='home/process-media/'),
+            dict(title='Update Emby', icon='emby', path='home/update-mb/', requires=self.have_emby),
+            dict(title='Update Kodi', icon='kodi', path='home/update-kodi/', requires=self.have_kodi),
+            dict(title='Update XBMC', icon='xbmc', path='home/update-xbmc/', requires=self.have_xbmc),
+            dict(title='Update Plex', icon='plex', path='home/update-plex/', requires=self.have_plex)
         ]
 
     @private_call
@@ -2610,7 +2642,7 @@ class Home(MainHandler):
         t.submenu = [
             dict(title=f'{("Pause", "Unpause")[bool(show_obj.paused)]} show', icon='pause',
                  path=f'toggle-paused/?tvid_prodid={tvid_prodid}'),
-            dict(title='Edit', icon='edit', path=f'home/edit-show?tvid_prodid={tvid_prodid}')]
+            dict(title='Edit', icon='edit', path=f'home/edit-show?tvid_prodid={tvid_prodid}', addclass='hover-green')]
 
         if t.has_special or (t.seasons and 0 == t.seasons[-1][0]):
             t.submenu += [
@@ -2622,7 +2654,8 @@ class Home(MainHandler):
                 and not sickgear.show_queue_scheduler.action.is_being_updated(show_obj)):
             show_name_utf8 = quote_plus(show_obj.name.encode('utf-8'))
             t.submenu += [
-                dict(title='Remove', icon='delete', path=f'home/delete-show?tvid_prodid={tvid_prodid}', confirm=True),
+                dict(title='Remove', icon='delete', path=f'home/delete-show?tvid_prodid={tvid_prodid}', confirm=True,
+                     addclass='remove hover-red'),
                 dict(title='Rename media', icon='rename', path=f'home/rename-media?tvid_prodid={tvid_prodid}'),
                 dict(title='Quick file scan', icon='refresh', newrow=True,
                      path=f'home/refresh-show?tvid_prodid={tvid_prodid}'),
@@ -3534,7 +3567,8 @@ class Home(MainHandler):
             ep_obj_rename_list.reverse()
 
         t = PageTemplate(web_handler=self, file='testRename.tmpl')
-        t.submenu = [{'title': 'Edit', 'path': 'home/edit-show?tvid_prodid=%s' % show_obj.tvid_prodid}]
+        t.submenu = [
+            dict(title='Edit', icon='edit', path=f'home/edit-show?tvid_prodid={tvid_prodid}', addclass='hover-green')]
         t.ep_obj_list = ep_obj_rename_list
         t.show_obj = show_obj
 
@@ -7281,23 +7315,24 @@ class Manage(MainHandler):
 
     @staticmethod
     def manage_menu(exclude='n/a'):
-        menu = [
-            {'title': 'Backlog Overview', 'path': 'manage/backlog-overview/'},
-            {'title': 'Search Tasks', 'path': 'manage/search-tasks/'},
-            {'title': 'Show Tasks', 'path': 'manage/show-tasks/'},
-            {'title': 'Episode Overview', 'path': 'manage/episode-overview/'}, ]
-
-        if sickgear.USE_SUBTITLES:
-            menu.append({'title': 'Subtitles Missed', 'path': 'manage/subtitle-missed/'})
-
-        if sickgear.USE_FAILED_DOWNLOADS:
-            menu.append({'title': 'Failed Downloads', 'path': 'manage/failed-downloads/'})
-
-        return [x for x in menu if exclude not in x['title']]
+        # noinspection PyTypeChecker
+        return [_subitem for _subitem in ([
+            dict(title='Backlog Overview', icon='backlog', path='manage/backlog-overview/'),
+            dict(title='Search Tasks', icon='search', path='manage/search-tasks/'),
+            dict(title='Show Tasks', icon='showqueue', path='manage/show-tasks/'),
+            dict(title='Episode Overview', icon='episodestatus', path='manage/episode-overview/')]
+                + (sickgear.USE_SUBTITLES
+                   and [dict(title='Subtitles Missed', icon='subtitles', path='manage/subtitle-missed/')] or [])
+                + (sickgear.USE_FAILED_DOWNLOADS
+                   and [dict(title='Failed Downloads', icon='failed', path='manage/failed-downloads/')] or [])
+                ) if exclude not in _subitem['title']]
 
     def index(self):
+        self.redirect('/manage/bulk/')
+
+    def bulk(self, *args, **kwargs):
         t = PageTemplate(web_handler=self, file='manage.tmpl')
-        t.submenu = self.manage_menu('Bulk')
+        t.submenu = self.manage_menu()
 
         t.has_any_sports = False
         t.has_any_anime = False
@@ -8491,8 +8526,9 @@ class History(MainHandler):
 
             t.compact_results = compact
             t.history_results = sql_result
-            t.submenu = [{'title': 'Clear History', 'path': 'history/clear-history'},
-                         {'title': 'Trim History', 'path': 'history/trim-history'}]
+            t.submenu = [
+                dict(title='Clear History', icon='delete', path='history/clear-history', addclass='clearhistory'),
+                dict(title='Trim History', icon='trim', path='history/trim-history', addclass='trimhistory')]
 
             result_sets = ['compact_results', 'history_results']
 
@@ -8992,48 +9028,18 @@ class Config(MainHandler):
     @staticmethod
     def config_menu(exclude='n/a'):
         menu = [
-            {'title': 'General', 'path': 'config/general/'},
-            {'title': 'Media Providers', 'path': 'config/providers/'},
-            {'title': 'Search', 'path': 'config/search/'},
-            {'title': 'Subtitles', 'path': 'config/subtitles/'},
-            {'title': 'Media Process', 'path': 'config/media-process/'},
-            {'title': 'Notifications', 'path': 'config/notifications/'},
-            {'title': 'Anime', 'path': 'config/anime/'},
+            dict(title='General', icon='config', path='config/general/'),
+            dict(title='Media Providers', icon='book', path='config/providers/'),
+            dict(title='Search', icon='search', path='config/search/'),
+            dict(title='Subtitles', icon='subtitles', path='config/subtitles/'),
+            dict(title='Media Process', icon='postprocess', path='config/media-process/'),
+            dict(title='Notifications', icon='notification', path='config/notifications/'),
+            dict(title='Anime', icon='anime', path='config/anime/'),
         ]
         return [x for x in menu if exclude not in x['title']]
 
     def index(self):
-        self.redirect('/config/about/')
-
-    def about(self, *args, **kwargs):
-        t = PageTemplate(web_handler=self, file='config.tmpl')
-        t.submenu = self.config_menu()
-
-        try:
-            with open(os.path.join(sickgear.PROG_DIR, 'CHANGES.md')) as fh:
-                t.version = re.findall(r'###[^0-9]+([0-9]+\.[0-9]+\.[0-9x]+)', fh.readline())[0]
-        except (BaseException, Exception):
-            t.version = ''
-
-        current_file = zoneinfo.ZONEFILENAME
-        t.tz_fallback = False
-        t.tz_version = None
-        try:
-            if None is not current_file:
-                current_file = os.path.basename(current_file)
-                zonefile = real_path(os.path.join(sickgear.ZONEINFO_DIR, current_file))
-                if not os.path.isfile(zonefile):
-                    t.tz_fallback = True
-                    zonefile = os.path.join(os.path.dirname(zoneinfo.__file__), current_file)
-                if os.path.isfile(zonefile):
-                    t.tz_version = zoneinfo.ZoneInfoFile(zoneinfo.getzoneinfofile_stream()).metadata['tzversion']
-        except (BaseException, Exception):
-            pass
-
-        t.backup_db_path = sickgear.BACKUP_DB_MAX_COUNT and \
-            (sickgear.BACKUP_DB_PATH or os.path.join(sickgear.DATA_DIR, 'backup')) or 'Disabled'
-
-        return t.respond()
+        self.redirect('/config/general/')
 
 
 class ConfigGeneral(Config):
@@ -9556,7 +9562,7 @@ class ConfigMediaProcess(Config):
     def index(self):
 
         t = PageTemplate(web_handler=self, file='config_postProcessing.tmpl')
-        t.submenu = self.config_menu('Processing')
+        t.submenu = self.config_menu('Process')
         return t.respond()
 
     def save_post_processing(
@@ -10461,9 +10467,9 @@ class EventLogs(MainHandler):
 
     @staticmethod
     def error_logs_menu():
-        menu = [{'title': 'Download Log', 'path': 'events/download-log/'}]
+        menu = [dict(title='Download Log', icon='download', path='events/download-log/')]
         if len(classes.ErrorViewer.errors):
-            menu += [{'title': 'Clear Errors', 'path': 'errors/clear-log/'}]
+            menu += [dict(title='Clear Errors', icon='delete', path='errors/clear-log/')]
         return menu
 
     def index(self):
