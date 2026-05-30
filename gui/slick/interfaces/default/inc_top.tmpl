@@ -422,7 +422,7 @@
 #end if
 ##
 #if $sickgear.MEMCACHE.get('DEPRECATE_SB_RUNNER')
-	<div style="background-color:#a00; margin-top:35px; padding:5px 5px 1px 5px">
+	<div class="alert" style="background-color:#a00; margin-top:35px; padding:5px 5px 1px 5px">
 		<p>Since Jan 2019, installations like this one have displayed a
 		message on every startup to run `<em><span style="color:#fff">sickgear.py</em></span>` instead of `SickBeard.py`.<br>
 		But some runners (e.g. Linux service files) hide the message.</p>
@@ -433,7 +433,7 @@
 #end if
 ##
 #if $sickgear.MEMCACHE.get('DEPRECATE_PP_LEGACY')
-	<div style="background-color:#a00; margin-top:35px; padding:5px 5px 1px 5px">
+	<div class="alert" style="background-color:#a00; margin-top:35px; padding:5px 5px 1px 5px">
 		<p>Mar 2020: The `<em><span style="color:#fff">nzbToMedia</em></span>`  script began using the <em><span style="color:#fff">secure</em></span> API to process media</p>
 		<p>Mar 2023: To remove this red box, please follow this <a target="_blank" href="https://github.com/SickGear/SickGear/wiki/FAQ-nzbToMedia"><span style="color:#fff">guidance</span></a></p>
 	</div>

@@ -60,6 +60,7 @@
 * Change move menu item "About" from "Config" to "Tools" menu
 * Change add lamp under "Config" menu to toggle light or dark theme
 * Change hover color of 'Logout', 'Restart' and 'Shutdown' menu items
+* Change ensure alert banners don't overlap submenus on view-show
 
 
 [develop]
