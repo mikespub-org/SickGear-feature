@@ -6,48 +6,6 @@
 /** @namespace content.hSmallest */
 /** @namespace content.hAverageSize */
 
-function initActions() {
-	var menu$ = $('#SubMenu');
-	menu$.find('a[href*="/home/restart/"]').addClass('btn restart').html('<i class="sgicon-restart"></i>Restart');
-	menu$.find('a[href*="/home/shutdown/"]').addClass('btn shutdown').html('<i class="sgicon-shutdown"></i>Shutdown');
-	menu$.find('a[href*="/home/logout/"]').addClass('btn').html('<i class="sgicon-logout"></i>Logout');
-	// menu$.find('a:contains("Edit")').addClass('btn').html('<i class="sgicon-edit"></i>Edit');
-	// menu$.find('a:contains("Remove")').addClass('btn remove').html('<i class="sgicon-delete"></i>Remove');
-	menu$.find('a:contains("Clear History")').addClass('btn clearhistory').html('<i class="sgicon-delete"></i>Clear History');
-	menu$.find('a:contains("Trim History")').addClass('btn trimhistory').html('<i class="sgicon-trim"></i>Trim History');
-	menu$.find('a[href$="/events/download-log/"]').addClass('btn').html('<i class="sgicon-download"></i>Download Log');
-	menu$.find('a[href$="/errors/clear-log/"]').addClass('btn').html('<i class="sgicon-delete"></i>Clear Errors');
-	// menu$.find('a:contains("Quick")').addClass('btn').html('<i class="sgicon-refresh"></i>Quick file scan');
-	menu$.find('a:contains("Backlog Overview")').addClass('btn').html('<i class="sgicon-backlog"></i>Backlog Overview');
-	menu$.find('a[href$="/home/update-plex/"]').addClass('btn').html('<i class="sgicon-plex"></i>Update PLEX');
-	// menu$.find('a:contains("Full")').addClass('btn').html('<i class="sgicon-fullupdate"></i>Full Update');
-	// menu$.find('a:contains("Cast")').addClass('btn').html('<i class="sgicon-people" style="vertical-align:middle; font-size:13px"></i>Cast update');
-	// menu$.find('a:contains("Rename")').addClass('btn').html('<i class="sgicon-rename"></i>Media Rename');
-	menu$.find('a[href$="/config/subtitles/"]').addClass('btn').html('<i class="sgicon-subtitles"></i>Subtitles');
-	menu$.find('a[href*="/home/subtitle-show"]').addClass('btn').html('<i class="sgicon-subtitles"></i>Download Subtitles');
-	menu$.find('a:contains("Anime")').addClass('btn').html('<i class="sgicon-anime"></i>Anime');
-	menu$.find('a:contains("Search")').addClass('btn').html('<i class="sgicon-search"></i>Search');
-	menu$.find('a:contains("Provider")').addClass('btn').html('<i class="sgicon-book"></i>Media Providers');
-	menu$.find('a:contains("General")').addClass('btn').html('<i class="sgicon-config"></i>General');
-	menu$.find('a:contains("Episode Overview")').addClass('btn').html('<i class="sgicon-episodestatus"></i>Episode Overview');
-	menu$.find('a:contains("Subtitles Missed")').addClass('btn').html('<i class="sgicon-subtitles"></i>Subtitles Missed');
-	menu$.find('a[href$="/config/media-process/"]').addClass('btn').html('<i class="sgicon-postprocess"></i>Media Process');
-	menu$.find('a[href$="/process-media/"]').addClass('btn').html('<i class="sgicon-postprocess"></i>Process Media');
-	menu$.find('a:contains("Search")').addClass('btn').html('<i class="sgicon-search"></i>Search Tasks');
-	menu$.find('a:contains("Manage Torrents")').addClass('btn').html('<i class="sgicon-bittorrent"></i>Manage Torrents');
-	menu$.find('a:contains("Show Tasks")').addClass('btn').html('<i class="sgicon-showqueue"></i>Show Tasks');
-	menu$.find('a[href$="/manage/failed-downloads/"]').addClass('btn').html('<i class="sgicon-failed"></i>Failed Downloads');
-	menu$.find('a:contains("Notification")').addClass('btn').html('<i class="sgicon-notification"></i>Notifications');
-	// menu$.find('a[href$="/home/update-mb/"]').addClass('btn').html('<i class="sgicon-emby"></i>Update Emby');
-	// menu$.find('a[href$="/home/update-kodi/"]').addClass('btn').html('<i class="sgicon-kodi"></i>Update Kodi');
-	// menu$.find('a[href$="/home/update-xbmc/"]').addClass('btn').html('<i class="sgicon-xbmc"></i>Update XBMC');
-	// menu$.find('a:contains("Update show in Emby")').addClass('btn').html('<i class="sgicon-emby"></i>Emby Update Show');
-	// menu$.find('a:contains("Update show in Kodi")').addClass('btn').html('<i class="sgicon-kodi"></i>Kodi Update Show ');
-	// menu$.find('a:contains("Update show in XBMC")').addClass('btn').html('<i class="sgicon-xbmc"></i>Update show in XBMC');
-
-	$(window).on('resize', updateMenus).resize(); // also executes func immediately on load
-}
-
 function updateMenus(){
 	const items = ['home', 'manage', 'config', 'tools'];
 	for (let i = 0; i < items.length; i++) {
@@ -93,7 +51,7 @@ function updateMenu(menuHeader) {
 	});
 }
 
-function setStyle(theme){
+function setStyle(){
 	let style$, fromTheme='light', toTheme = 'dark';
 
 	if (!(style$ = $('link[rel*="stylesheet"][href*="light"]')).length){
@@ -110,8 +68,10 @@ function setStyle(theme){
 }
 
 $(function(){
-	initActions();
+	// handle menus heights on init and when window is resized
+	$(window).on('resize', updateMenus).resize(); // also executes func immediately on load
 
+	// handle menus heights on init and when window is resized
 	let activemenu$ = $('.dropdown.active .dropdown-menu li');
 	let tailloc = location.href.replace(/.*\/([^\/]+)\/?$/, '/$1');
 	if (-1 !== tailloc.indexOf('view-show')){
@@ -120,8 +80,12 @@ $(function(){
 	if (!activemenu$.find('a[href$="' + tailloc + '/"]').addClass('active').length)
 		activemenu$.find('a[href*="' + tailloc + '"]').addClass('active');
 
+	// use library to enable dropdown menus on the jquery selected elements
 	$('.dropdown-toggle').dropdownHover();
+
+	// add event to change theme on click of the selected element
 	$('#theme').click(function(){setStyle();});
+
 	(/undefined/i.test(document.createElement('input').placeholder)) && $('body').addClass('no-placeholders');
 
 	$('.bubblelist').on('click', '.list .item a', function(){
