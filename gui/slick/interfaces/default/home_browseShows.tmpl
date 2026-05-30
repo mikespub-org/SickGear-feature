@@ -416,7 +416,7 @@ $(function() {
 .person-bg{height:300px; width:215px; display:block; background-color:#181818 !important; border:1px solid #181818; object-fit: contain; font-family: 'object-fit: contain;'; -moz-border-radius:10px; -webkit-border-radius:10px; border-radius:10px; background:url(/images/poster-person.jpg) center center no-repeat}
 .person-bg{margin:0 auto !important}
 </style>
-<div class="bfr"><img src="$sg_root/images/loading16${theme_suffix}.gif" /></div>
+<div class="bfr"><img src="$sg_root/images/loading16${theme_suffix}.gif"></div>
 
 #if $varExists('header')
     #set $heading = ('header', $header)
@@ -747,7 +747,7 @@ $browse_title
 					<span style='float:right'>Click for more at <span class='boldest'>$browse_type</span></span>">
             #if 'poster' in $this_show['images']
                 #set $image = $this_show['images']['poster']['thumb']
-					<img id="poster-$poster_id" alt="" class="browse-image" data-original="#if $image and 'http' != $image[:4]#$sg_root/#end if#$image" />
+					<img id="poster-$poster_id" alt="" class="browse-image" data-original="#if $image and 'http' != $image[:4]#$sg_root/#end if#$image">
 					<span id="loading-poster-$poster_id" class="lazy-loading-image"><i class="spinner"></i></span>
             #else
 					<span>&nbsp;</span>
@@ -770,7 +770,7 @@ $browse_title
             #if 'url_tvdb' in $this_show and $this_show['url_tvdb']
 				<a class="service" href="<%= anon_url(this_show['url_tvdb']) %>" onclick="window.open(this.href, '_blank'); return false;"
 				title="View <span class='boldest'>tvdb</span> detail for <span style='color: rgb(66, 139, 202)'>$title_html</span>">
-				<i><img style="margin-top:5px" alt="tvdb" height="16" width="16" src="$sg_root/images/$sickgear.TVInfoAPI($sickgear.indexers.indexer_config.TVINFO_TVDB).config['icon']" /></i></a>
+				<i><img style="margin-top:5px" alt="tvdb" height="16" width="16" src="$sg_root/images/$sickgear.TVInfoAPI($sickgear.indexers.indexer_config.TVINFO_TVDB).config['icon']"></i></a>
             #end if
 
 				<div class="browse-add-show-holder">
@@ -798,7 +798,7 @@ $browse_title
 				">
             #if 'poster' in $this_show['images']
                 #set $image = $this_show['images']['poster']['thumb']
-					<img id="poster-$poster_id" alt="" class="browse-person-image" data-original="#if $image and 'http' != $image[:4]#$sg_root/#end if#$image" />
+					<img id="poster-$poster_id" alt="" class="browse-person-image" data-original="#if $image and 'http' != $image[:4]#$sg_root/#end if#$image">
 					<span id="loading-poster-$poster_id" class="lazy-loading-image"><i class="spinner"></i></span>
             #else
 					<span>&nbsp;</span>

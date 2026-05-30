@@ -43,15 +43,15 @@
 	<meta name="msapplication-config" content="$sbRoot/css/browserconfig.xml">
 	<meta name="theme-color" content="#echo '#%s' % ('333', '15528F')['dark' == $sg_str('THEME_NAME', 'dark')]#">
 
-	<link rel="stylesheet" href="$sbRoot/css/lib/bootstrap.min.css?v=$sbPID"/>
-	<link rel="stylesheet" href="$sbRoot/css/lib/bootstrap-theme.min.css?v=$sbPID"/>
-	<link rel="stylesheet" href="$sbRoot/css/browser.css?v=$sbPID" />
-	<link rel="stylesheet" href="$sbRoot/css/lib/jquery-ui.min.css?v=$sbPID" />
-	<link rel="stylesheet" href="$sbRoot/css/lib/jquery.qtip.min.css?v=$sbPID"/>
-	<link rel="stylesheet" href="$sbRoot/css/lib/pnotify.custom.min.css?v=$sbPID" />
-	<link rel="stylesheet" href="$sbRoot/css/lib/token-input.min.css?v=$sbPID" />
-	<link rel="stylesheet" href="$sbRoot/css/style.css?v=$sbPID"/>
-	<link rel="stylesheet" href="$sbRoot/css/${sg_str('THEME_NAME', 'dark')}.css?v=$sbPID" />
+	<link rel="stylesheet" href="$sbRoot/css/lib/bootstrap.min.css?v=$sbPID">
+	<link rel="stylesheet" href="$sbRoot/css/lib/bootstrap-theme.min.css?v=$sbPID">
+	<link rel="stylesheet" href="$sbRoot/css/browser.css?v=$sbPID">
+	<link rel="stylesheet" href="$sbRoot/css/lib/jquery-ui.min.css?v=$sbPID">
+	<link rel="stylesheet" href="$sbRoot/css/lib/jquery.qtip.min.css?v=$sbPID">
+	<link rel="stylesheet" href="$sbRoot/css/lib/pnotify.custom.min.css?v=$sbPID">
+	<link rel="stylesheet" href="$sbRoot/css/lib/token-input.min.css?v=$sbPID">
+	<link rel="stylesheet" href="$sbRoot/css/style.css?v=$sbPID">
+	<link rel="stylesheet" href="$sbRoot/css/${sg_str('THEME_NAME', 'dark')}.css?v=$sbPID">
 #if $getVar('inc_top_glide', None)
 ##	Required Core Stylesheet
 	<link rel="stylesheet" href="$sbRoot/css/lib/glide.core.min.css">
@@ -89,7 +89,7 @@
 	<script charset="utf-8">
 	<!--
 		var sbRoot = '$sbRoot', anonURL = '$sg_str('ANON_REDIRECT')', themeSpinner = '#echo ('', '-dark')['dark' == $sg_str('THEME_NAME', 'dark')]#',
-			top_image_html = '<img src="$sbRoot/images/top.gif" width="31" height="11" alt="Jump to top" />';
+			top_image_html = '<img src="$sbRoot/images/top.gif" width="31" height="11" alt="Jump to top">';
 		\$.SickGear = {Root: '${sbRoot}', PID: '${sbPID}', anonURL: '$sg_str('ANON_REDIRECT')'};
 	//-->
 	</script>
@@ -130,7 +130,7 @@
 				</button>
 #set date = $datetime.datetime.today().timetuple()
 #set logo = ('', '-xmas')[(12 <= $date.tm_mon) or (3 > $date.tm_yday) or (3 == $date.tm_yday and 5 > $date.tm_hour)]
-				<a href="$sbRoot/home/" class="navbar-brand" tabindex="-1" title="SickGear"><img alt="SickGear" src="$sbRoot/images/sickgear${logo}.png" style="height: 50px;" class="img-responsive pull-left" /></a>
+				<a href="$sbRoot/home/" class="navbar-brand" tabindex="-1" title="SickGear"><img alt="SickGear" src="$sbRoot/images/sickgear${logo}.png" style="height: 50px;" class="img-responsive pull-left"></a>
 			</div>
 #set $current_menu_home = ' active' if 'home' == $topmenu else ''
 #set $current_menu_manage = ' active' if 'manage' == $topmenu else ''
@@ -300,7 +300,7 @@
 					</li>
 
 					<li id="NAVconfig" class="dropdown$current_menu_config">
-						<a href="$sbRoot/config/general/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18.png" class="navbaricon hidden-xs" /><b class="caret hidden-xs"></b><span class="visible-xs">Config <b class="caret"></b></span></a>
+						<a href="$sbRoot/config/general/" class="dropdown-toggle" data-toggle="dropdown" $hover_dropdown tabindex="$tab#set $tab += 1#"><img src="$sbRoot/images/menu/system18.png" class="navbaricon hidden-xs"><b class="caret hidden-xs"></b><span class="visible-xs">Config <b class="caret"></b></span></a>
 						<ul class="dropdown-menu">
         					<li><a href="#" id="theme" tabindex="$tab#set $tab += 1#"><i class="glyphicon glyphicon-lamp"></i>Light or Dark</a></li>
 							<li class="divider"></li>

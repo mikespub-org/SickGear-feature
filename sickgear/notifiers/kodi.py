@@ -451,7 +451,7 @@ class KodiNotifier(Notifier):
                 if response_notify:
                     message += ['%s: %s' % ((response_notify, 'OK')['OK' in response_notify], cur_host)]
 
-        return self._choose(('Success, all hosts tested', '<br />\n'.join(message))[not success], success)
+        return self._choose(('Success, all hosts tested', '<br>\n'.join(message))[not success], success)
 
 
 notifier = KodiNotifier

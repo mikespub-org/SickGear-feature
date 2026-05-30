@@ -468,7 +468,7 @@ class XBMCNotifier(Notifier):
                 result += [cur_host + ':No response']
                 success = False
 
-        return self._choose(('Success, all hosts tested', '<br />\n'.join(result))[not bool(success)], bool(success))
+        return self._choose(('Success, all hosts tested', '<br>\n'.join(result))[not bool(success)], bool(success))
 
     def update_library(self, show_name=None, **kwargs):
         """Public wrapper for the update library functions to branch the logic for JSON-RPC or legacy HTTP API

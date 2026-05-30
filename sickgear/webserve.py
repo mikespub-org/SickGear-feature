@@ -1113,7 +1113,7 @@ class MainHandler(WebHandler):
             <title>%s</title>
         </head>
         <body>
-            <br />
+            <br>
             <font color="#0000FF">Error %s: You need to provide a valid username and password.</font>
         </body>
     </html>
@@ -1127,8 +1127,8 @@ class MainHandler(WebHandler):
             self.redirect(sickgear.WEB_ROOT + '/home/')
         elif self.settings.get('debug') and 'exc_info' in kwargs:
             exc_info = kwargs['exc_info']
-            trace_info = ''.join(['%s<br />' % strip_html_tags(line) for line in traceback.format_exception(*exc_info)])
-            request_info = ''.join(['<strong>%s</strong>: %s<br />' % (k, strip_html_tags(self.request.__dict__[k]))
+            trace_info = ''.join(['%s<br>' % strip_html_tags(line) for line in traceback.format_exception(*exc_info)])
+            request_info = ''.join(['<strong>%s</strong>: %s<br>' % (k, strip_html_tags(self.request.__dict__[k]))
                                     for k in iterkeys(self.request.__dict__)])
             error = strip_html_tags(exc_info[1])
 
@@ -3748,7 +3748,7 @@ class Home(MainHandler):
         if previous_subtitles != ep_obj.subtitles:
             status = 'New subtitles downloaded: %s' % ' '.join([
                 "<img src='" + sickgear.WEB_ROOT + "/images/flags/" + x.alpha2 +
-                ".png' alt='" + x.name + "'/>" for x in
+                ".png' alt='" + x.name + "'>" for x in
                 sorted(list(ep_obj.subtitles.difference(previous_subtitles)))])
         else:
             status = 'No subtitles downloaded'

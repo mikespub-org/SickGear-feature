@@ -412,14 +412,14 @@
         #end if
     #end for
 									</select>
-									<input type="button" class="btn btn-inline" value="Delete" id="imdb-list-del" disabled="disabled" />
+									<input type="button" class="btn btn-inline" value="Delete" id="imdb-list-del" disabled="disabled">
 								</span>
 							</label>
 							<label for="imdb-url">
 								<span class="component-title">&nbsp</span>
 								<span class="component-desc">
-									<input type="text" id="imdb-url" value="" class="form-control input-sm input250" />
-									<input type="button" class="btn btn-inline" value="Enable" id="imdb-list-onoff" />
+									<input type="text" id="imdb-url" value="" class="form-control input-sm input250">
+									<input type="button" class="btn btn-inline" value="Enable" id="imdb-list-onoff">
 									<div class="clear-left">
 									<p><code>imdb.com/user/ur64552276</code> or <code>ur64552276</code> to <span id="view-list">view list</span><a class="hide" id="link-list" href="$sbRoot/add-shows/browse_imdb?api_method=watchlist&account=64552276">view list</a> at "Add from IMDb"
 									</p></div>
@@ -679,7 +679,7 @@
 								<span class="component-title">Reverse proxy headers</span>
 								<span class="component-desc">
 									<input type="checkbox" name="handle_reverse_proxy" id="handle_reverse_proxy"#echo ('', $checked)[$sg_var('HANDLE_REVERSE_PROXY')]#>
-									<p>accept the following reverse proxy headers (advanced)...<br />(X-Forwarded-For, X-Forwarded-Host, and X-Forwarded-Proto)</p>
+									<p>accept the following reverse proxy headers (advanced)...<br>(X-Forwarded-For, X-Forwarded-Host, and X-Forwarded-Proto)</p>
 								</span>
 							</label>
 						</div>
@@ -689,7 +689,7 @@
 								<span class="component-title">Send security headers</span>
 								<span class="component-desc">
 									<input type="checkbox" name="send_security_headers" id="send_security_headers"#echo ('', $checked)[$sg_var('SEND_SECURITY_HEADERS')]#>
-									<p>send the following headers to increase browser security...<br />(X-Frame-Options:SAMEORIGIN)</p>
+									<p>send the following headers to increase browser security...<br>(X-Frame-Options:SAMEORIGIN)</p>
 								</span>
 							</label>
 						</div>
@@ -879,7 +879,7 @@
 					</fieldset>
 				</div><!-- /component-group3 //-->
 
-				<br/>
+				<br>
 				<h6 class="pull-right"><b>All non-absolute folder locations are relative to <span class="path">$sg_str('DATA_DIR')</span></b></h6>
 				<input type="submit" class="btn pull-left config_submitter button" value="Save Changes">
 

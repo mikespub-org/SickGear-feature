@@ -4,7 +4,7 @@
 /** @namespace JSONData.num_accounts */
 /** @namespace JSONData.chatid */
 $(document).ready(function(){
-	var loading = '<img src="' + sbRoot + '/images/loading16' + themeSpinner + '.gif" height="16" width="16" />';
+	var loading = '<img src="' + sbRoot + '/images/loading16' + themeSpinner + '.gif" height="16" width="16">';
 
 	$('#test-growl').click(function () {
 		var growlHost = $.trim($('#growl-host').val());
@@ -669,7 +669,7 @@ $(document).ready(function(){
 			if ('new' !== elSelected.val()) {
 				$.confirm({
 					'title'		: 'Replace Trakt Account',
-					'message'	: 'Are you sure you want to replace <span class="footerhighlight">' + elSelected.text() + '</span> ?<br /><br />',
+					'message'	: 'Are you sure you want to replace <span class="footerhighlight">' + elSelected.text() + '</span> ?<br><br>',
 					'buttons'	: {
 						'Yes'	: {
 							'class'	: 'green',
@@ -704,7 +704,7 @@ $(document).ready(function(){
 		that.prop('disabled', !0);
 		$.confirm({
 			'title'		: 'Remove Trakt Account',
-			'message'	: 'Are you sure you want to remove <span class="footerhighlight">' + elSelected.text() + '</span> ?<br /><br />',
+			'message'	: 'Are you sure you want to remove <span class="footerhighlight">' + elSelected.text() + '</span> ?<br><br>',
 			'buttons'	: {
 				'Yes'	: {
 					'class'	: 'green',
