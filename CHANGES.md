@@ -67,6 +67,9 @@
 * Fix hide the media process config button on the submenu of the media process config page
 * Change begin PageTemplate variable migration (let new variables populate for a while)
 * Change the deprecated browser reload with a modern equivalent
+* Update jquery confirm 1.x to 2.7.0
+* Change the confirmations logic to the new library
+* Change refactor some CSS to improve browser processing time
 
 
 [develop]
@@ -85,6 +88,7 @@
 * Fix save states on browse shows when a tab is open on a page and sg restarts e.g. for an upgrade
 * Change restore filters
 * Fix for old Pythons that don't support certain quotation use in f-string
+* Fix hover styling of Remove and Edit buttons on light theme
 
 
 ### 3.35.7 (2026-05-19 20:00:00 UTC)
