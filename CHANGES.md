@@ -69,6 +69,9 @@
 * Change the deprecated browser reload with a modern equivalent
 * Update jquery confirm 1.x to 2.7.0
 * Change the confirmations logic to the new library
+* Change reword text of remove show dialog
+* Change color headings of 'Logout', 'Restart', 'Shutdown' and show 'Remove' confirmation dialogs
+* Change add confirmation dialog to 'Clear errors' button on 'View Errors' page
 * Change refactor some CSS to improve browser processing time
 
 
