@@ -66,6 +66,7 @@
 * Change move "About" page from /config/about to root /about
 * Fix hide the media process config button on the submenu of the media process config page
 * Change begin PageTemplate variable migration (let new variables populate for a while)
+* Change the deprecated browser reload with a modern equivalent
 
 
 [develop]

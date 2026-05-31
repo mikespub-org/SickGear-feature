@@ -137,7 +137,7 @@ $(document).ready(function () {
 							},
 							function(data){
 								var result = $.parseJSON(data);
-								result.success && window.location.reload(true);
+								result.success && $.hardReload();
 								/* using window.location as the following is
 								   sluggish when deleting 20 of 100 records
 								*/

@@ -404,7 +404,7 @@ $(document).ready(function () {
 
 function config_success(response) {
 	if ('reload' == response) {
-		window.location.reload(true);
+		$.hardReload();
 	} else if ('restart' == response) {
 		window.location.href = sbRoot + $('a.restart').attr('href')
 	}
