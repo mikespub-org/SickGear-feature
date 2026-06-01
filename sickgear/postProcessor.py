@@ -110,7 +110,7 @@ class PostProcessor(object):
         logger_msg = re.sub(r'(?i)<br[\s/]+>\.*', '', message)
         logger_msg = re.sub('(?i)<a[^>]+>([^<]+)</a>', r'\1', logger_msg)
         logger.log(f'{logger_msg}', level)
-        self.log += message + '\n'
+        self.log += f'{message}\n'
 
     def _check_for_existing_file(self, existing_file):
         """
@@ -182,7 +182,7 @@ class PostProcessor(object):
         base_name = re.sub(r'[\[\]*?]', r'[\g<0>]', base_name)
 
         for meta_ext in ['', '-thumb', '.ext', '.ext.cover', '.metathumb']:
-            for associated_file_path in glob.glob('%s%s.*' % (base_name, meta_ext)):
+            for associated_file_path in glob.glob(f'{base_name}{meta_ext}.*'):
                 # only add associated to list
                 if associated_file_path == file_path:
                     continue
@@ -303,7 +303,7 @@ class PostProcessor(object):
 
             # If new base name then convert name
             if new_base_name:
-                new_file_name = new_base_name + '.' + cur_extension
+                new_file_name = f'{new_base_name}.{cur_extension}'
             # if we're not renaming we still want to change extensions sometimes
             else:
                 new_file_name = helpers.replace_extension(cur_file_name, cur_extension)
@@ -481,7 +481,7 @@ class PostProcessor(object):
             search_name = re.sub(r'[ .\-]', '_', curName)
             # noinspection SqlResolve
             sql_result = my_db.select('SELECT * FROM history WHERE (%s) AND resource LIKE ? ORDER BY date DESC'
-                                      ' LIMIT 1' % ' OR '.join(['action LIKE "%%%02d"' % x for x in
+                                      ' LIMIT 1' % ' OR '.join(["action LIKE '%%%02d'" % x for x in
                                                                 common.Quality.SNATCHED_ANY]),
                                       [search_name])
 
@@ -833,13 +833,13 @@ class PostProcessor(object):
 
             self._log(f'Executing command {script_cmd}')
         except (BaseException, Exception) as e:
-            self._log('Error creating extra script command: %s' % ex(e), logger.ERROR)
+            self._log(f'Error creating extra script command: {ex(e)}', logger.ERROR)
             return
 
         try:
             # run the command and capture output
             output, err, exit_status = cmdline_runner(script_cmd)
-            self._log('Script result: %s' % output, logger.DEBUG)
+            self._log(f'Script result: {output}', logger.DEBUG)
 
         except OSError as e:
             self._log(f'Unable to run extra_script: {ex(e)}', logger.ERROR)
@@ -1153,7 +1153,7 @@ class PostProcessor(object):
         # figure out the base name of the resulting episode file
         if sickgear.RENAME_EPISODES:
             new_base_name = os.path.basename(proper_path)
-            new_file_name = new_base_name + '.' + self.file_name.rpartition('.')[-1]
+            new_file_name = f'{new_base_name}.{self.file_name.rpartition(".")[-1]}'
 
         else:
             # if we're not renaming then there's no new base name, we'll just use the existing name
@@ -1186,7 +1186,7 @@ class PostProcessor(object):
                          'action_tmpl': ' %s<br>.. to %s'}
             args_cpmv.update(args_link)
             if self.webhandler:
-                self.webhandler('Processing method is "%s"' % self.process_method)
+                self.webhandler(f'Processing method is "{self.process_method}"')
                 keepalive.start()
             if 'copy' == self.process_method:
                 self._copy(**args_cpmv)

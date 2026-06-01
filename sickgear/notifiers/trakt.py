@@ -92,7 +92,7 @@ class TraktNotifier(BaseNotifier):
                 if tid not in list(sickgear.TRAKT_ACCOUNTS):
                     continue
                 for loc in locations:
-                    if not ep_obj.location.startswith('%s%s' % (loc.rstrip(os.path.sep), os.path.sep)):
+                    if not ep_obj.location.startswith(f'{loc.rstrip(os.path.sep)}{os.path.sep}'):
                         continue
 
                     warn, msg = False, ''
@@ -116,7 +116,7 @@ class TraktNotifier(BaseNotifier):
                         warn, msg = True, f'{e} to'
                     except (ConnectionSkipException, exceptions.TraktAuthException, exceptions.TraktException):
                         warn, msg = True, 'Error adding episode to'
-                    msg = 'Trakt: %s your %s collection' % (msg, sickgear.TRAKT_ACCOUNTS[tid].name)
+                    msg = f'Trakt: {msg} your {sickgear.TRAKT_ACCOUNTS[tid].name} collection'
                     if not warn:
                         self._log(msg)
                     else:

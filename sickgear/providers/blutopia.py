@@ -35,7 +35,7 @@ class BlutopiaProvider(generic.TorrentProvider):
 
         self.url_base = 'https://blutopia.xyz/'
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'login': self.url_base + 'pages/1',
+                     'login': f'{self.url_base}pages/1',
                      'search': self.url_base + 'torrents/filter?%s' % '&'.join(
                          ['_token=%s', 'search=%s', 'categories[]=%s', 'freeleech=%s', 'doubleupload=%s', 'featured=%s',
                           'username=', 'imdb=', 'tvdb=', 'tmdb=', 'mal=', 'view=list', 'sorting=created_at', 'qty=50',
@@ -78,7 +78,7 @@ class BlutopiaProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v))
+        rc = dict([(k, re.compile(f'(?i){v}'))
                    for (k, v) in iteritems({'info': 'torrents', 'get': '(.*?download)(?:_check)?(.*)'})])
         log = ''
         if self.filter:
@@ -118,7 +118,7 @@ class BlutopiaProvider(generic.TorrentProvider):
                     if not resp:
                         raise generic.HaltParseException
 
-                    html = '<html><body>%s</body></html>' % resp
+                    html = f'<html><body>{resp}</body></html>'
                     with BS4Parser(html, parse_only=dict(table={'class': (lambda at: at and 'table' in at)})) as tbl:
                         tbl_rows = [] if not tbl else tbl.find_all('tr')
 

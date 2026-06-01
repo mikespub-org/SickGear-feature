@@ -129,7 +129,7 @@ class SceneExceptionTestCase(test.SickbeardTestDBCase):
 if '__main__' == __name__:
     if 1 < len(sys.argv):
         suite = unittest.TestLoader().loadTestsFromName(
-            'scene_helpers_tests.SceneExceptionTestCase.test_' + sys.argv[1])
+            f'scene_helpers_tests.SceneExceptionTestCase.test_{sys.argv[1]}')
         unittest.TextTestRunner(verbosity=2).run(suite)
     else:
         suite = unittest.TestLoader().loadTestsFromTestCase(SceneTests)

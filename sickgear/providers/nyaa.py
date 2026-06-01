@@ -31,7 +31,7 @@ class NyaaProvider(generic.TorrentProvider):
         generic.TorrentProvider.__init__(self, 'Nyaa', anime_only=True)
 
         self.url_base = 'https://www.nyaa.si/'
-        self.urls = {'config_provider_home_uri': self.url_base, 'search': self.url_base + '?f=%s&c=1_0&q=%s'}
+        self.urls = {'config_provider_home_uri': self.url_base, 'search': f'{self.url_base}?f=%s&c=1_0&q=%s'}
 
         self.url = self.urls['config_provider_home_uri']
 
@@ -47,7 +47,7 @@ class NyaaProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v)) for (k, v) in iteritems({'info': 'view', 'get': '(?:torrent|magnet:)'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({'info': 'view', 'get': '(?:torrent|magnet:)'})])
         for mode in search_params:
             for search_string in search_params[mode]:
                 search_url = self.urls['search'] % ((0, 2)[self.confirmed], search_string.replace('.', ' '))

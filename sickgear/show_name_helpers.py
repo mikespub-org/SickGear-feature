@@ -66,10 +66,10 @@ def pass_wordlist_checks(name,  # type: AnyStr
         try:
             NameParser(indexer_lookup=indexer_lookup).parse(name)
         except InvalidNameException:
-            logger.debug(err_msg + 'episode')
+            logger.debug(f'{err_msg}episode')
             return False
         except InvalidShowException:
-            logger.debug(err_msg + 'show')
+            logger.debug(f'{err_msg}show')
             return False
 
     word_list = {'sub(bed|ed|pack|s)', '(dk|fin|heb|kor|nor|nordic|pl|swe)sub(bed|ed|s)?',
@@ -188,7 +188,7 @@ def compile_word_list(lookup_words,  # type: Union[AnyStr, Set[AnyStr]]
             try:
                 # !0 == regex and subject = s / 'what\'s the "time"' / what\'s\ the\ \"time\"
                 subject = search_raw and re.escape(word) or re.sub(r'([\" \'])', r'\\\1', word)
-                result.append(re.compile('(?i)%s%s%s' % (re_prefix, subject, re_suffix)))
+                result.append(re.compile(f'(?i){re_prefix}{subject}{re_suffix}'))
             except re.error as e:
                 logger.debug(f'Failure to compile filter expression: {word} ... Reason: {ex(e)}')
 
@@ -295,7 +295,7 @@ def make_scene_season_search_string(show_obj,  # type: sickgear.tv.TVShow
             [show_obj.tvid, show_obj.prodid])
 
         numseasons = int(sql_result[0][0])
-        season_strings = ["S%02d" % int(ep_obj.scene_season)]
+        season_strings = [f'S{int(ep_obj.scene_season):02}']
 
     show_names = get_show_names_all_possible(show_obj, ep_obj.scene_season)
 
@@ -315,9 +315,9 @@ def make_scene_season_search_string(show_obj,  # type: sickgear.tv.TVShow
                             and None is not show_obj.release_groups and show_obj.release_groups.allowlist:
                         for keyword in show_obj.release_groups.allowlist:
 
-                            to_return.append(keyword + '.' + cur_name + "." + cur_season)
+                            to_return.append(f'{keyword}.{cur_name}.{cur_season}')
                     else:
-                        to_return.append(cur_name + "." + cur_season)
+                        to_return.append(f'{cur_name}.{cur_season}')
 
     return to_return
 
@@ -348,8 +348,8 @@ def make_scene_search_string(show_obj,  # type: sickgear.tv.TVShow
         ep_strings = ['%02i' % int(ep_obj.scene_absolute_number
                                    if 0 < ep_obj.scene_absolute_number else ep_obj.scene_episode)]
     else:
-        ep_strings = ['S%02iE%02i' % (int(ep_obj.scene_season), int(ep_obj.scene_episode)),
-                      '%ix%02i' % (int(ep_obj.scene_season), int(ep_obj.scene_episode))]
+        ep_strings = [f'S{int(ep_obj.scene_season):02}E{int(ep_obj.scene_episode):02}',
+                      f'{int(ep_obj.scene_season)}x{int(ep_obj.scene_episode):02}']
 
     # for single-season shows just search for the show name -- if total ep count (exclude s0) is less than 11
     # due to the amount of qualities and releases, it is easy to go over the 50 result limit on rss feeds otherwise
@@ -365,9 +365,9 @@ def make_scene_search_string(show_obj,  # type: sickgear.tv.TVShow
             if not ignore_allowlist and ep_obj.show_obj.is_anime and \
                     None is not ep_obj.show_obj.release_groups and ep_obj.show_obj.release_groups.allowlist:
                 for keyword in ep_obj.show_obj.release_groups.allowlist:
-                    to_return.append(keyword + '.' + cur_show_obj + '.' + cur_ep_string)
+                    to_return.append(f'{keyword}.{cur_show_obj}.{cur_ep_string}')
             else:
-                to_return.append(cur_show_obj + '.' + cur_ep_string)
+                to_return.append(f'{cur_show_obj}.{cur_ep_string}')
 
     return to_return
 
@@ -404,12 +404,12 @@ def all_possible_show_names(show_obj, season=-1, force_anime=False):
             # any countries defined in common.countryList
             # (and vice versa)
             for cur_country in country_list:
-                if cur_name.endswith(' ' + cur_country):
-                    new_show_names.append(cur_name.replace(' ' + cur_country,
-                                                           ' (' + country_list[cur_country] + ')'))
-                elif cur_name.endswith(' (' + cur_country + ')'):
-                    new_show_names.append(cur_name.replace(' (' + cur_country + ')',
-                                                           ' (' + country_list[cur_country] + ')'))
+                if cur_name.endswith(f' {cur_country}'):
+                    new_show_names.append(cur_name.replace(f' {cur_country}',
+                                                           f' ({country_list[cur_country]})'))
+                elif cur_name.endswith(f' ({cur_country})'):
+                    new_show_names.append(cur_name.replace(f' ({cur_country})',
+                                                           f' ({country_list[cur_country]})'))
 
             # if we have "Show Name (2013)" this will strip the (2013) show year from the show name
             # newShowNames.append(re.sub('\(\d{4}\)','',curName))
@@ -465,7 +465,7 @@ def abbr_showname(name):
     for cur_from, cur_to in (
             (r'^Star Trek\s*:\s*', r'ST: '), (r'^The Walking Dead\s*:\s*', r'TWD: '),
     ):
-        result = re.sub('(?i)%s' % cur_from, cur_to, result)
+        result = re.sub(f'(?i){cur_from}', cur_to, result)
         if name != result:
             break
     return result

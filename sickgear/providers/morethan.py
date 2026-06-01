@@ -36,7 +36,7 @@ class MoreThanProvider(generic.TorrentProvider):
 
         self.url_base = 'https://www.morethantv.me/'
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'login_action': self.url_base + 'login',
+                     'login_action': f'{self.url_base}login',
                      'search': self.url_base + 'torrents.php?searchtext=' + '&'.join([
                          '%s', '%s', 'order_by=time', 'order_way=desc'])}
 
@@ -62,7 +62,7 @@ class MoreThanProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v))
+        rc = dict([(k, re.compile(f'(?i){v}'))
                    for (k, v) in iteritems({'info': r'torrents.php\?id', 'get': 'download', 'nuked': 'nuked'})])
         for mode in search_params:
             for search_string in search_params[mode]:

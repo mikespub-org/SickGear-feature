@@ -59,7 +59,7 @@ def db_filename(filename='sickbeard.db', suffix=None):
     @return: the correct location of the database file.
     """
     if suffix:
-        filename = '%s.%s' % (filename, suffix)
+        filename = f'{filename}.{suffix}'
     return os.path.join(sickgear.DATA_DIR, filename)
 
 
@@ -78,7 +78,7 @@ def mass_upsert_sql(table_name, value_dict, key_dict, sanitise=True):
     """
     cl = []
 
-    gen_params = (lambda my_dict: [x + ' = ?' for x in iterkeys(my_dict)])
+    gen_params = (lambda my_dict: [f'{x} = ?' for x in iterkeys(my_dict)])
 
     # sanity: remove k, v pairs in keyDict from valueDict
     if sanitise:
@@ -155,7 +155,7 @@ class DBConnection(object):
 
         # noinspection PyUnusedLocal
         def progress(status, remaining, total):
-            logger.debug('Copied %s of %s pages...' % (total - remaining, total))
+            logger.debug(f'Copied {total - remaining} of {total} pages...')
 
         backup_con = None
 
@@ -165,9 +165,9 @@ class DBConnection(object):
             with backup_con:
                 with db_lock:
                     self.connection.backup(backup_con, progress=progress)
-            logger.debug('%s backup successful' % self.filename)
+            logger.debug(f'{self.filename} backup successful')
         except sqlite3.Error as error:
-            logger.error("Error while taking backup: %s" % ex(error))
+            logger.error(f'Error while taking backup: {ex(error)}')
             return False, 'Backup failed'
         finally:
             if backup_con:
@@ -189,7 +189,7 @@ class DBConnection(object):
                 if version:
                     self.action('PRAGMA user_version = 0')
                     self.action('CREATE TABLE db_version (db_version INTEGER);')
-                    self.action('INSERT INTO db_version (db_version) VALUES (%s);' % version)
+                    self.action(f'INSERT INTO db_version (db_version) VALUES ({version});')
                 return version
         except (BaseException, Exception):
             return 0
@@ -276,10 +276,10 @@ class DBConnection(object):
             while 5 > attempt:
                 try:
                     if None is args:
-                        logger.log('%s: %s' % (self.filename, query), logger.DB)
+                        logger.log(f'{self.filename}: {query}', logger.DB)
                         sql_result = self.connection.execute(query)
                     else:
-                        logger.log('%s: %s with args %s' % (self.filename, query, str(args)), logger.DB)
+                        logger.log(f'{self.filename}: {query} with args {args!s}', logger.DB)
                         sql_result = self.connection.execute(query, args)
                     self.connection.commit()
                     # get out of the connection attempt loop since we were successful
@@ -309,26 +309,27 @@ class DBConnection(object):
 
         changes_before = self.connection.total_changes
 
-        gen_params = (lambda my_dict: [x + ' = ?' for x in iterkeys(my_dict)])
+        gen_params = (lambda my_dict: [f'{x} = ?' for x in iterkeys(my_dict)])
 
         # noinspection SqlResolve
-        query = 'UPDATE [%s] SET %s WHERE %s' % (
-            table_name, ', '.join(gen_params(value_dict)), ' AND '.join(gen_params(key_dict)))
+        query = (f'UPDATE [{table_name}]'
+                 f' SET {", ".join(gen_params(value_dict))}'
+                 f' WHERE {" AND ".join(gen_params(key_dict))}')
 
         self.action(query, list(value_dict.values()) + list(key_dict.values()))
 
         if self.connection.total_changes == changes_before:
             # noinspection SqlResolve
-            query = 'INSERT INTO [' + table_name + ']' \
-                    + ' (%s)' % ', '.join(itertools.chain(iterkeys(value_dict), iterkeys(key_dict))) \
-                    + ' VALUES (%s)' % ', '.join(['?'] * (len(value_dict) + len(key_dict)))
+            query = (f'INSERT INTO [{table_name}]'
+                     f' ({", ".join(itertools.chain(iterkeys(value_dict), iterkeys(key_dict)))})'
+                     f' VALUES ({", ".join(["?"] * (len(value_dict) + len(key_dict)))})')
             self.action(query, list(value_dict.values()) + list(key_dict.values()))
 
     def table_info(self, table_name):
         # type: (AnyStr) -> Dict[AnyStr, Dict[AnyStr, AnyStr]]
 
         # FIXME ? binding is not supported here, but I cannot find a way to escape a string manually
-        sql_result = self.select('PRAGMA table_info([%s])' % table_name)
+        sql_result = self.select(f'PRAGMA table_info([{table_name}])')
         columns = {}
         for cur_column in sql_result:
             columns[cur_column['name']] = {'type': cur_column['type']}
@@ -352,7 +353,7 @@ class DBConnection(object):
 
     def has_index(self, table_name, index):
         # type: (AnyStr, AnyStr) -> bool
-        sql_results = self.select('PRAGMA index_list([%s])' % table_name)
+        sql_results = self.select(f'PRAGMA index_list([{table_name}])')
         for result in sql_results:
             if result['name'] == index:
                 return True
@@ -361,12 +362,12 @@ class DBConnection(object):
     def remove_index(self, table, name):
         # type: (AnyStr, AnyStr) -> None
         if self.has_index(table, name):
-            self.action('DROP INDEX' + ' [%s]' % name)
+            self.action(f'DROP INDEX [{name}]')
 
     def remove_table(self, name):
         # type: (AnyStr) -> None
         if self.has_table(name):
-            self.action('DROP TABLE' + ' [%s]' % name)
+            self.action(f'DROP TABLE [{name}]')
 
     def has_flag(self, flag_name):
         # type: (AnyStr) -> bool
@@ -417,7 +418,7 @@ class DBConnection(object):
 
     def upgrade_log(self, to_log, log_level=logger.MESSAGE):
         # type: (AnyStr, int) -> None
-        logger.load_log('Upgrading %s' % self.filename, to_log, log_level)
+        logger.load_log(f'Upgrading {self.filename}', to_log, log_level)
 
 
 def sanity_check_db(connection, sanity_check):
@@ -448,7 +449,7 @@ def _pretty_name(class_name):
 
 def _restore_database(filename, version):
     logger.log('Restoring database before trying upgrade again')
-    if not sickgear.helpers.restore_versioned_file(db_filename(filename=filename, suffix='v%s' % version), version):
+    if not sickgear.helpers.restore_versioned_file(db_filename(filename=filename, suffix=f'v{version}'), version):
         logger.log_error_and_exit('Database restore failed, abort upgrading database')
         return False
     return True
@@ -456,11 +457,11 @@ def _restore_database(filename, version):
 
 def _process_upgrade(connection, upgrade_class):
     instance = upgrade_class(connection)
-    logger.debug('Checking %s database upgrade' % _pretty_name(upgrade_class.__name__))
+    logger.debug(f'Checking {_pretty_name(upgrade_class.__name__)} database upgrade')
     if not instance.test():
         connection.is_upgrading = True
         connection.upgrade_log(getattr(upgrade_class, 'pretty_name', None) or _pretty_name(upgrade_class.__name__))
-        logger.log('Database upgrade required: %s' % _pretty_name(upgrade_class.__name__), logger.MESSAGE)
+        logger.log(f'Database upgrade required: {_pretty_name(upgrade_class.__name__)}', logger.MESSAGE)
         db_version = connection.check_db_version()
         try:
             # only do backup if it's not a new db
@@ -474,15 +475,15 @@ def _process_upgrade(connection, upgrade_class):
                 connection.close()
 
                 if _restore_database(connection.filename, db_version):
-                    logger.log_error_and_exit('Successfully restored database version: %s' % db_version)
+                    logger.log_error_and_exit(f'Successfully restored database version: {db_version}')
                 else:
-                    logger.log_error_and_exit('Failed to restore database version: %s' % db_version)
+                    logger.log_error_and_exit(f'Failed to restore database version: {db_version}')
             else:
                 logger.log_error_and_exit('Database upgrade failed, can\'t determine old db version, not restoring.')
 
-        logger.debug('%s upgrade completed' % upgrade_class.__name__)
+        logger.debug(f'{upgrade_class.__name__} upgrade completed')
     else:
-        logger.debug('%s upgrade not required' % upgrade_class.__name__)
+        logger.debug(f'{upgrade_class.__name__} upgrade not required')
 
     for upgradeSubClass in upgrade_class.__subclasses__():
         _process_upgrade(connection, upgradeSubClass)
@@ -519,7 +520,7 @@ class SchemaUpgrade(object):
     def add_column(self, table, column, data_type='NUMERIC', default=0, set_default=False):
         self.connection.action('ALTER TABLE [%s] ADD %s %s%s' %
                                (table, column, data_type, ('', ' DEFAULT "%s"' % default)[set_default]))
-        self.connection.action('UPDATE [%s] SET %s = ?' % (table, column), (default,))
+        self.connection.action(f'UPDATE [{table}] SET {column} = ?', (default,))
 
     # noinspection SqlResolve
     def add_columns(self, table, column_list=None):
@@ -536,14 +537,14 @@ class SchemaUpgrade(object):
                             (table, column, data_type, '' if list_len < 3 else
                                 ' DEFAULT %s' % ('""' if 'TEXT' == data_type and '' == default else default))])
                 if 2 < list_len:
-                    sql.append(['UPDATE [%s] SET %s = ?' % (table, column), (default,)])
+                    sql.append([f'UPDATE [{table}] SET {column} = ?', (default,)])
             if sql:
                 self.connection.mass_action(sql)
 
     def drop_columns(self, table, column):
         # type: (AnyStr, Union[AnyStr, List[AnyStr]]) -> None
         # get old table columns and store the ones we want to keep
-        result = self.connection.select('pragma table_info([%s])' % table)
+        result = self.connection.select(f'pragma table_info([{table}])')
         columns_list = ([column], column)[isinstance(column, list)]
         kept_columns = list(filter(lambda col: col['name'] not in columns_list, result))
 
@@ -579,24 +580,24 @@ class SchemaUpgrade(object):
 
         # generate sql for the new table creation
         if 0 == len(pk):
-            sql = 'CREATE TABLE [%s_new] (%s)' % (table, final)
+            sql = f'CREATE TABLE [{table}_new] ({final})'
         else:
             pk = ', '.join(pk)
-            sql = 'CREATE TABLE [%s_new] (%s, PRIMARY KEY(%s))' % (table, final, pk)
+            sql = f'CREATE TABLE [{table}_new] ({final}, PRIMARY KEY({pk}))'
 
         # create new temporary table and copy the old table data across, barring the removed column
         self.connection.action(sql)
         # noinspection SqlResolve
-        self.connection.action('INSERT INTO [%s_new] SELECT %s FROM [%s]' % (table, kept_columns_names, table))
+        self.connection.action(f'INSERT INTO [{table}_new] SELECT {kept_columns_names} FROM [{table}]')
 
         # copy the old indexes from the old table
         result = self.connection.select("SELECT sql FROM sqlite_master WHERE tbl_name=? AND type='index'", [table])
 
         # remove the old table and rename the new table to take its place
         # noinspection SqlResolve
-        self.connection.action('DROP TABLE [%s]' % table)
+        self.connection.action(f'DROP TABLE [{table}]')
         # noinspection SqlResolve
-        self.connection.action('ALTER TABLE [%s_new] RENAME TO [%s]' % (table, table))
+        self.connection.action(f'ALTER TABLE [{table}_new] RENAME TO [{table}]')
 
         # write any indexes to the new table
         if 0 < len(result):
@@ -858,16 +859,16 @@ def backup_all_dbs(target, compress=True, prefer_7z=True):
     now = sgdatetime.SGDatetime.now()
     d = sgdatetime.SGDatetime.sbfdate(now, d_preset='%Y-%m-%d')
     t = sgdatetime.SGDatetime.sbftime(now, t_preset='%H-%M')
-    ds = '%s_%s' % (d, t)
+    ds = f'{d}_{t}'
     for cur_db in ['sickbeard', 'cache', 'failed']:
-        db_conn = DBConnection('%s.db' % cur_db)
-        name = '%s_%s.db' % (cur_db, ds)
+        db_conn = DBConnection(f'{cur_db}.db')
+        name = f'{cur_db}_{ds}.db'
         success, msg = db_conn.backup_db(target=target, backup_filename=name)
         if not success:
             return False, msg
         if compress:
             full_path = os.path.join(target, name)
-            if not compress_file(full_path, '%s.db' % cur_db, prefer_7z=prefer_7z):
+            if not compress_file(full_path, f'{cur_db}.db', prefer_7z=prefer_7z):
                 return False, 'Failure to compress backup'
     delete_old_db_backups(target)
     my_db.upsert('lastUpdate',

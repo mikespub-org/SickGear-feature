@@ -81,7 +81,7 @@ class SearchQueue(generic_queue.GenericQueue):
                     continue
                 self.add_item(item, add_to_db=False)
         except (BaseException, Exception) as e:
-            logger.error('Exception loading queue %s: %s' % (self.__class__.__name__, ex(e)))
+            logger.error(f'Exception loading queue {self.__class__.__name__}: {ex(e)}')
 
     def _clear_sql(self):
         return [
@@ -95,7 +95,7 @@ class SearchQueue(generic_queue.GenericQueue):
                 ['INSERT OR IGNORE INTO search_queue (indexer, indexer_id, segment, standard_backlog, limited_backlog,'
                  ' forced, torrent_only, action_id, uid) VALUES (?,?,?,?,?,?,?,?,?)',
                  [item.show_obj.tvid, item.show_obj.prodid,
-                  ','.join('%sx%s' % (i.season, i.episode) for i in item.segment), int(item.standard_backlog),
+                  ','.join(f'{i.season}x{i.episode}' for i in item.segment), int(item.standard_backlog),
                   int(item.limited_backlog), int(item.forced), int(item.torrent_only), BACKLOG_SEARCH, item.uid]]
             ]
         elif isinstance(item, FailedQueueItem):
@@ -103,13 +103,13 @@ class SearchQueue(generic_queue.GenericQueue):
                 ['INSERT OR IGNORE INTO search_queue (indexer, indexer_id, segment, action_id, uid)'
                  ' VALUES (?,?,?,?,?)',
                  [item.show_obj.tvid, item.show_obj.prodid,
-                  ','.join('%sx%s' % (i.season, i.episode) for i in item.segment), FAILED_SEARCH, item.uid]]
+                  ','.join(f'{i.season}x{i.episode}' for i in item.segment), FAILED_SEARCH, item.uid]]
             ]
         elif isinstance(item, ManualSearchQueueItem):
             return [
                 ['INSERT OR IGNORE INTO search_queue (indexer, indexer_id, segment, action_id, uid)'
                  ' VALUES (?,?,?,?,?)',
-                 [item.show_obj.tvid, item.show_obj.prodid, '%sx%s' % (item.segment.season, item.segment.episode),
+                 [item.show_obj.tvid, item.show_obj.prodid, f'{item.segment.season}x{item.segment.episode}',
                   MANUAL_SEARCH, item.uid]]
             ]
         return []
@@ -413,7 +413,7 @@ class RecentSearchQueueItem(generic_queue.QueueItem):
         propers = {}
         my_db = db.DBConnection('cache.db')
         sql_result = my_db.select('SELECT * FROM provider_cache')
-        re_p = r'\brepack|proper|real%s\b' % ('', '|v[2-9]')[needed.need_anime]
+        re_p = rf"\brepack|proper|real{('', '|v[2-9]')[needed.need_anime]}\b"
 
         proper_regex = re.compile(re_p, flags=re.I)
 
@@ -527,7 +527,7 @@ class RecentSearchQueueItem(generic_queue.QueueItem):
             # spawn a thread for each provider to save time waiting for slow response providers
             threads.append(threading.Thread(target=cur_provider.cache.update_cache,
                                             kwargs={'needed': needed},
-                                            name='%s :: [%s]' % (orig_thread_name, cur_provider.name)))
+                                            name=f'{orig_thread_name} :: [{cur_provider.name}]'))
             # start the thread we just created
             threads[-1].start()
 
@@ -560,7 +560,7 @@ class ProperSearchQueueItem(generic_queue.QueueItem):
             self.finish()
 
     def __str__(self):
-        return '<%s - %s>' % (self.__class__.__name__, ('recent', 'native')[None is self.propers])
+        return f'<{self.__class__.__name__} - {("recent", "native")[None is self.propers]}>'
 
     def __repr__(self):
         return self.__str__()
@@ -611,7 +611,7 @@ class BaseSearchQueueItem(generic_queue.QueueItem):
                                      for s in ([self.segment], self.segment)[isinstance(self.segment, list)]]))
         else:
             segment_str = ''
-        return '<%s%s>' % (self.__class__.__name__, segment_str)
+        return f'<{self.__class__.__name__}{segment_str}>'
 
     def __repr__(self):
         return self.__str__()
@@ -628,7 +628,7 @@ class ManualSearchQueueItem(BaseSearchQueueItem):
         """
         super(ManualSearchQueueItem, self).__init__(show_obj, segment, 'Manual Search', MANUAL_SEARCH, uid=uid)
         self.priority = generic_queue.QueuePriorities.HIGH  # type: int
-        self.name = 'MANUAL-%s' % show_obj.tvid_prodid  # type: AnyStr
+        self.name = f'MANUAL-{show_obj.tvid_prodid}'  # type: AnyStr
         self.started = None
 
     def run(self):
@@ -716,7 +716,7 @@ class BacklogQueueItem(BaseSearchQueueItem):
         """
         super(BacklogQueueItem, self).__init__(show_obj, segment, 'Backlog', BACKLOG_SEARCH, uid=uid)
         self.priority = generic_queue.QueuePriorities.LOW  # type: int
-        self.name = 'BACKLOG-%s' % show_obj.tvid_prodid  # type: AnyStr
+        self.name = f'BACKLOG-{show_obj.tvid_prodid}'  # type: AnyStr
         self.standard_backlog = standard_backlog  # type: bool
         self.limited_backlog = limited_backlog  # type: bool
         self.forced = forced  # type: bool
@@ -780,7 +780,7 @@ class FailedQueueItem(BaseSearchQueueItem):
         """
         super(FailedQueueItem, self).__init__(show_obj, segment, 'Retry', FAILED_SEARCH, uid=uid)
         self.priority = generic_queue.QueuePriorities.HIGH  # type: int
-        self.name = 'RETRY-%s' % show_obj.tvid_prodid  # type: AnyStr
+        self.name = f'RETRY-{show_obj.tvid_prodid}'  # type: AnyStr
         self.started = None
 
     def run(self):

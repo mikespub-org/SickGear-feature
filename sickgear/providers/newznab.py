@@ -164,7 +164,7 @@ class NewznabProvider(generic.NZBProvider):
         self._last_recent_search = None
         self._caps_last_updated = datetime.datetime.fromordinal(1)
         self.cache = NewznabCache(self)
-        self._noname = ('ni.s%sn' % 'bz')[::-1]
+        self._noname = f'ni.sbzn'[::-1]
         self._or_providers = [self._noname, 'drunkenslug.com', 'nzbfinder.ws',
                               'dognzb.cr', 'scenenzbs.com']
         if any(_p in (self.url or '').lower() for _p in self._or_providers):
@@ -336,7 +336,7 @@ class NewznabProvider(generic.NZBProvider):
                             except (BaseException, Exception):
                                 continue
             except (BaseException, Exception):
-                logger.debug('Error parsing result for [%s]' % self.name)
+                logger.debug(f'Error parsing result for [{self.name}]')
 
         if not caps and self._caps and not all_cats and self._caps_all_cats and not cats and self._caps_cats:
             self._check_excludes(cats)
@@ -404,18 +404,18 @@ class NewznabProvider(generic.NZBProvider):
         if 'error' == data.tag:
             code = try_int(data.get('code'))
             description = data.get('description') or ''
-            msg = ('', ': %s' % description)[bool(description)]
+            msg = ('', f': {description}')[bool(description)]
 
             if code not in (100, 101, 102, 401, 429, 500, 910):
-                logger.warning('Unknown error given from %s%s' % (self.name, msg))
+                logger.warning(f'Unknown error given from {self.name}{msg}')
             else:
                 if 100 == code:
-                    raise AuthException('API key for %s is incorrect, check your config' % self.name)
+                    raise AuthException(f'API key for {self.name} is incorrect, check your config')
                 elif 101 == code:
-                    raise AuthException('Account suspended on %s, contact the admin' % self.name)
+                    raise AuthException(f'Account suspended on {self.name}, contact the admin')
                 elif 401 == code:
-                    logger.warning('Error code 401 (Unauthorized) from provider%s' % msg)
-                    raise AuthException('Account disabled on %s (code 401), contact the admin%s' % (self.name, msg))
+                    logger.warning(f'Error code 401 (Unauthorized) from provider{msg}')
+                    raise AuthException(f'Account disabled on {self.name} (code 401), contact the admin{msg}')
                 elif code in (102, 429, 500):
                     try:
                         retry_time, unit = re.findall(r'(?i)(?:Try again|Retry) in (\d+)\W+([a-z]+)', description)[0]
@@ -441,17 +441,17 @@ class NewznabProvider(generic.NZBProvider):
 
     def config_str(self):
         # type: (...) -> AnyStr
-        return (f"{self.name or ''}"
-                f"|{self.url or ''}"
-                f"|{self.maybe_apikey() or ''}"
-                f"|{self.cat_ids or ''}"
-                f"|{self.enabled}"
-                f"|{self.search_mode or ''}"
-                f"|{self.search_fallback}"
-                f"|{getattr(self, 'enable_recentsearch', False)}"
-                f"|{getattr(self, 'enable_backlog', False)}"
-                f"|{getattr(self, 'enable_scheduled_backlog', False)}"
-                f"|{self.server_type}")
+        return (f'{self.name or ""}'
+                f'|{self.url or ""}'
+                f'|{self.maybe_apikey() or ""}'
+                f'|{self.cat_ids or ""}'
+                f'|{self.enabled}'
+                f'|{self.search_mode or ""}'
+                f'|{self.search_fallback}'
+                f'|{getattr(self, "enable_recentsearch", False)}'
+                f'|{getattr(self, "enable_backlog", False)}'
+                f'|{getattr(self, "enable_scheduled_backlog", False)}'
+                f'|{self.server_type}')
 
     def _season_strings(self,
                         ep_obj  # type: TVEpisode
@@ -471,7 +471,7 @@ class NewznabProvider(generic.NZBProvider):
             base_params['season'] = airdate
             base_params['q'] = airdate
             if ep_obj.show_obj.air_by_date:
-                ep_detail = '+"%s"' % airdate
+                ep_detail = f'+"{airdate}"'
         elif ep_obj.show_obj.is_anime:
             base_params['season'] = '%d' % ep_obj.scene_absolute_number
         else:
@@ -502,12 +502,12 @@ class NewznabProvider(generic.NZBProvider):
         for cur_exception in name_exceptions:
             params = base_params.copy()
             if 'q' in params:
-                params['q'] = '%s%s%s' % (cur_exception, search_spacer, params['q'])
+                params['q'] = f'{cur_exception}{search_spacer}{params["q"]}'
                 search_params.append(params)
 
             if ep_detail:
                 params = base_params.copy()
-                params['q'] = '%s%s%s' % (cur_exception, search_spacer, ep_detail)
+                params['q'] = f'{cur_exception}{search_spacer}{ep_detail}'
                 'season' in params and params.pop('season')
                 'ep' in params and params.pop('ep')
                 search_params.append(params)
@@ -534,7 +534,7 @@ class NewznabProvider(generic.NZBProvider):
             base_params['season'] = airdate[0]
             if ep_obj.show_obj.air_by_date:
                 base_params['ep'] = '/'.join(airdate[1:])
-                ep_detail = '+"%s.%s"' % (base_params['season'], '.'.join(airdate[1:]))
+                ep_detail = f'+"{base_params["season"]}.{".".join(airdate[1:])}"'
         elif ep_obj.show_obj.is_anime:
             base_params['ep'] = '%i' % (try_int(ep_obj.scene_absolute_number) or try_int(ep_obj.scene_episode))
             ep_detail = '%02d' % try_int(base_params['ep'])
@@ -558,7 +558,7 @@ class NewznabProvider(generic.NZBProvider):
         # query search and exceptions
         name_exceptions = get_show_names(ep_obj, spacer)
         if sickgear.scene_exceptions.has_abs_episodes(ep_obj):
-            search_params.append({'q': '%s%s%s' % (ep_obj.show_obj.name, spacer, base_params['ep'])})
+            search_params.append({'q': f'{ep_obj.show_obj.name}{spacer}{base_params["ep"]}'})
         for cur_exception in name_exceptions:
             params = base_params.copy()
             params['q'] = cur_exception
@@ -566,7 +566,7 @@ class NewznabProvider(generic.NZBProvider):
 
             if ep_detail:
                 params = base_params.copy()
-                params['q'] = '%s%s%s' % (cur_exception, spacer, ep_detail)
+                params['q'] = f'{cur_exception}{spacer}{ep_detail}'
                 'season' in params and params.pop('season')
                 'ep' in params and params.pop('ep')
                 search_params.append(params)
@@ -589,7 +589,7 @@ class NewznabProvider(generic.NZBProvider):
             if ('apikey' not in url and 'releases/' in url and
                     isinstance(api_key, string_types) and api_key not in ('0', '')):
                 url = f'{self.url}api?t=get&apikey={api_key}&id={re.findall(r"(?i).*/([a-z0-9-]+)$", url)[0]}'
-            title = ('%s' % item.findtext('title')).strip()
+            title = f'{item.findtext("title")}'.strip()
             title = re.sub(r'\s+', '.', title)
             # remove indexer specific release name parts
             r_found = True
@@ -601,7 +601,7 @@ class NewznabProvider(generic.NZBProvider):
                         r_found = True
                         title = re.sub(pattern, repl, title)
             parts = re.findall('(.*(?:(?:h.?|x)26[45]|vp9|av1|hevc|xvid|divx)[^-]*)(.*)', title, re.I)[0]
-            title = '%s-%s' % (parts[0], remove_non_release_groups(parts[1].split('-')[1]))
+            title = f'{parts[0]}-{remove_non_release_groups(parts[1].split("-")[1])}'
         except (BaseException, Exception):
             pass
 
@@ -844,7 +844,7 @@ class NewznabProvider(generic.NZBProvider):
         uid = None
         try:
             if ns and 'newznab' in ns:
-                for attr in item.findall('%sattr' % ns['newznab']):
+                for attr in item.findall(f'{ns["newznab"]}attr'):
                     if 'size' == attr.get('name', ''):
                         parsed_size = try_int(attr.get('value'), -1)
                     elif 'guid' == attr.get('name', ''):
@@ -994,20 +994,20 @@ class NewznabProvider(generic.NZBProvider):
 
                     # hack this in until it's fixed server side
                     if not data.startswith('<?xml'):
-                        data = '<?xml version="1.0" encoding="ISO-8859-1" ?>%s' % data
+                        data = f'<?xml version="1.0" encoding="ISO-8859-1" ?>{data}'
 
                     try:
                         parsed_xml, n_spaces = self.cache.parse_and_get_ns(data)
                         items = parsed_xml.findall('channel/item')
                     except (BaseException, Exception):
-                        logger.warning('Error trying to load %s RSS feed' % self.name)
+                        logger.warning(f'Error trying to load {self.name} RSS feed')
                         break
 
                     if not self._check_auth_from_data(parsed_xml, search_url):
                         break
 
                     if 'rss' != parsed_xml.tag:
-                        logger.warning('Resulting XML from %s isn\'t RSS, not parsing it' % self.name)
+                        logger.warning(f'Resulting XML from {self.name} isn\'t RSS, not parsing it')
                         break
 
                     i and time.sleep(2.1)
@@ -1018,16 +1018,16 @@ class NewznabProvider(generic.NZBProvider):
                         if title and url:
                             results.append(item)
                         else:
-                            logger.debug('The data returned from %s is incomplete, this result is unusable' % self.name)
+                            logger.debug(f'The data returned from {self.name} is incomplete, this result is unusable')
 
                     # get total and offset attributes
                     try:
                         if 0 == total:
                             total = (try_int(parsed_xml.find(
-                                './/%sresponse' % n_spaces['newznab']).get('total', 0)), 1000)['Cache' == mode]
+                                f'.//{n_spaces["newznab"]}response').get('total', 0)), 1000)['Cache' == mode]
                             hits = (total // self.limits + int(0 < (total % self.limits)))
                             hits += int(0 == hits)
-                        offset = try_int(parsed_xml.find('.//%sresponse' % n_spaces['newznab']).get('offset', 0))
+                        offset = try_int(parsed_xml.find(f'.//{n_spaces["newznab"]}response').get('offset', 0))
                     except (AttributeError, KeyError):
                         if not use_rss:
                             break
@@ -1109,12 +1109,12 @@ class NewznabProvider(generic.NZBProvider):
             else:
                 search_terms += ['.proper.', '.repack.', '.real.']
             regex += ['proper|repack', Quality.real_check]
-            proper_check = re.compile(r'(?i)(\b%s\b)' % '|'.join(regex))
+            proper_check = re.compile(rf'(?i)(\b{"|".join(regex)}\b)')
         if anime:
             terms = 'v2|v3|v4|v5|v6|v7|v8|v9'
             search_terms += [terms]
             regex += [terms]
-            proper_check = re.compile(r'(?i)(%s)' % '|'.join(regex))
+            proper_check = re.compile(rf'(?i)({"|".join(regex)})')
 
         urls = []
         while index < len(search_terms):
@@ -1228,7 +1228,7 @@ class NewznabCache(tvcache.TVCache):
                 else:
                     (items, n_spaces) = self.provider.cache_data(needed=needed)
             except (BaseException, Exception) as e:
-                logger.error('Error updating Cache: %s' % ex(e))
+                logger.error(f'Error updating Cache: {ex(e)}')
                 items = None
 
             if items:
@@ -1259,7 +1259,7 @@ class NewznabCache(tvcache.TVCache):
         """
         ids = {}
         if 'newznab' in ns:
-            for attr in item.findall('%sattr' % ns['newznab']):
+            for attr in item.findall(f'{ns["newznab"]}attr'):
                 if attr.get('name', '') in NewznabConstants.providerToIndexerMapping:
                     v = try_int((str(attr.get('value')) or '').replace('tt', ''))
                     if 0 < v:
@@ -1284,4 +1284,4 @@ class NewznabCache(tvcache.TVCache):
         if title and url:
             return self.add_cache_entry(title, url, tvid_prodid=ids)
 
-        logger.debug('Data returned from the %s feed is incomplete, this result is unusable' % self.provider.name)
+        logger.debug(f'Data returned from the {self.provider.name} feed is incomplete, this result is unusable')

@@ -73,6 +73,7 @@
 * Change color headings of 'Logout', 'Restart', 'Shutdown' and show 'Remove' confirmation dialogs
 * Change add confirmation dialog to 'Clear errors' button on 'View Errors' page
 * Change refactor some CSS to improve browser processing time
+* Change py2 strings to py3 f-strings and make use of quoted string types consistent
 
 
 [develop]

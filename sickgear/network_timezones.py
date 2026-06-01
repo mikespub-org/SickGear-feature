@@ -183,7 +183,7 @@ def _update_zoneinfo():
     try:
         (new_zoneinfo, zoneinfo_md5) = url_data.strip().rsplit(' ')
     except (BaseException, Exception):
-        logger.debug('Fetching zoneinfo.txt failed, update contains unparsable data: %s' % url_data)
+        logger.debug(f'Fetching zoneinfo.txt failed, update contains unparsable data: {url_data}')
         return
 
     current_file = zoneinfo.ZONEFILENAME
@@ -332,8 +332,8 @@ def load_network_dict(load=True):
     my_db = db.DBConnection('cache.db')
     sql_name = 'REPLACE(LOWER(network_name), " ", "")'
     try:
-        sql = 'SELECT %s AS network_name, timezone FROM [network_timezones] ' % sql_name + \
-              'GROUP BY %s HAVING COUNT(*) = 1 ORDER BY %s;' % (sql_name, sql_name)
+        sql = f'SELECT {sql_name} AS network_name, timezone FROM [network_timezones] ' + \
+              f'GROUP BY {sql_name} HAVING COUNT(*) = 1 ORDER BY {sql_name};'
         cur_network_list = my_db.select(sql)
         if load and (None is cur_network_list or 1 > len(cur_network_list)):
             update_network_dict()
@@ -344,10 +344,10 @@ def load_network_dict(load=True):
 
     try:
 
-        case_dupes = my_db.select('SELECT * FROM [network_timezones] WHERE %s IN ' % sql_name +
-                                  '(SELECT %s FROM [network_timezones]' % sql_name +
-                                  ' GROUP BY %s HAVING COUNT(*) > 1)' % sql_name +
-                                  ' ORDER BY %s;' % sql_name)
+        case_dupes = my_db.select(f'SELECT * FROM [network_timezones] WHERE {sql_name} IN ' +
+                                  f'(SELECT {sql_name} FROM [network_timezones]' +
+                                  f' GROUP BY {sql_name} HAVING COUNT(*) > 1)' +
+                                  f' ORDER BY {sql_name};')
         network_dupes = dict(case_dupes)
     except (BaseException, Exception):
         network_dupes = {}
@@ -607,7 +607,7 @@ def get_episode_time(d,  # type: int
         try:
             return SGDatetime.from_timestamp(ep_timestamp, tzinfo=tzinfo, tz_aware=True, local_time=False)
         except OverflowError:
-            logger.debug('Invalid timestamp: %s, using fallback' % ep_timestamp)
+            logger.debug(f'Invalid timestamp: {ep_timestamp}, using fallback')
 
     ep_time = None
     if isinstance(ep_airtime, integer_types):

@@ -154,7 +154,7 @@ class QualityTests(unittest.TestCase):
         for case, level in cases:
             p = np.parse(case)
             second = common.Quality.get_proper_level(p.extra_info_no_name(), p.version, is_anime)
-            self.assertEqual(level, second, 'fail %s != %s for case: %s' % (level, second, case))
+            self.assertEqual(level, second, f'fail {level} != {second} for case: {case}')
 
     def check_wantedquality_list(self, cases):
         for show_quality, result in cases:
@@ -164,7 +164,7 @@ class QualityTests(unittest.TestCase):
             for w, v in iteritems(wd):
                 if w == sq:
                     for u, o in sorted(iteritems(v)):
-                        self.assertEqual(o, result.get(u), msg='%s' % show_quality)
+                        self.assertEqual(o, result.get(u), msg=f'{show_quality}')
 
     def check_wantedquality_get_wantedlist(self, cases):
         for show_quality, result in cases:

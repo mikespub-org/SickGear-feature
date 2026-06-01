@@ -30,12 +30,12 @@ class GitterNotifier(Notifier):
 
         api_url = 'https://api.gitter.im/v1/'
         params = [('headers', dict(
-            Authorization='Bearer %s' % self._choose(access_token, sickgear.GITTER_ACCESS_TOKEN))), ('json', True)]
+            Authorization=f'Bearer {self._choose(access_token, sickgear.GITTER_ACCESS_TOKEN)}')), ('json', True)]
         is_locked = False
 
         # get user of token
         # noinspection PyTypeChecker
-        resp = sickgear.helpers.get_url(**dict([('url', '%suser' % api_url)] + params))
+        resp = sickgear.helpers.get_url(**dict([('url', f'{api_url}user')] + params))
         user_id = resp and 1 == len(resp) and resp[0].get('id') or None
         if None is user_id:
             result = self._failed('bad oath access token?')
@@ -43,7 +43,7 @@ class GitterNotifier(Notifier):
             # get a room
             # noinspection PyTypeChecker
             resp = sickgear.helpers.get_url(**dict(
-                [('url', '%srooms' % api_url),
+                [('url', f'{api_url}rooms'),
                  ('post_json', dict(uri=self._choose(room_name, sickgear.GITTER_ROOM)))] + params))
             room_id = resp and resp.get('id') or None
             if None is room_id:
@@ -54,21 +54,21 @@ class GitterNotifier(Notifier):
                 # join room
                 # noinspection PyTypeChecker
                 if not sickgear.helpers.get_url(**dict(
-                                [('url', '%suser/%s/rooms' % (api_url, user_id)),
+                                [('url', f'{api_url}user/{user_id}/rooms'),
                                  ('post_json', dict(id=room_id))] + params)):
                     result = self._failed('failed to join room')
                 else:
                     # send text
                     # noinspection PyTypeChecker
                     resp = sickgear.helpers.get_url(**dict(
-                        [('url', '%srooms/%s/chatMessages' % (api_url, room_id)),
+                        [('url', f'{api_url}rooms/{room_id}/chatMessages'),
                          ('post_json', dict(text=self._body_only(title, body)))] + params))
                     if None is (resp and resp.get('id') or None):
                         result = self._failed('failed to send text', append=False)
                     else:
                         result = True
 
-        return self._choose(('Error sending notification, %s' % result,
+        return self._choose((f'Error sending notification, {result}',
                              'Successful test notice sent%s. (Note: %s clients display icon once in a sequence).' %
                              (('', ' to locked room')[is_locked], self.name))[True is result], result)
 

@@ -135,7 +135,7 @@ class SickGear(object):
         """
         global is_win
         help_msg = ['']
-        help_msg += ['Usage: %s <option> <another option>\n' % sickgear.MY_FULLNAME]
+        help_msg += [f'Usage: {sickgear.MY_FULLNAME} <option> <another option>\n']
         help_msg += ['Options:\n']
 
         help_tmpl = '    %-10s%-17s%s'
@@ -165,10 +165,10 @@ class SickGear(object):
             ('-p <port>', '--port=<port>', 'Override default/configured port to listen on'),
             ('', '--datadir=<path>', 'Override folder (full path) as location for'),
             ('', '', 'storing database, configfile, cache, logfiles'),
-            ('', '', 'Default: %s' % sickgear.PROG_DIR),
+            ('', '', f'Default: {sickgear.PROG_DIR}'),
             ('', '--config=<path>', 'Override config filename (full path including filename)'),
             ('', '', 'to load configuration from'),
-            ('', '', 'Default: config.ini in %s or --datadir location' % sickgear.PROG_DIR),
+            ('', '', f'Default: config.ini in {sickgear.PROG_DIR} or --datadir location'),
             ('', '--noresize', 'Prevent resizing of the banner/posters even if PIL is installed')
         ]:
             help_msg += [help_tmpl % ln]
@@ -241,7 +241,7 @@ class SickGear(object):
                 try:
                     self.forced_port = int(a)
                 except ValueError:
-                    sys.exit('Port: %s is not a number. Exiting.' % a)
+                    sys.exit(f'Port: {a} is not a number. Exiting.')
 
             # Run as a double forked daemon
             if o in ('-d', '--daemon'):
@@ -267,7 +267,7 @@ class SickGear(object):
 
                 # If the pidfile already exists, sickgear may still be running, so exit
                 if os.path.exists(self.pid_file):
-                    sys.exit('PID file: %s already exists. Exiting.' % self.pid_file)
+                    sys.exit(f'PID file: {self.pid_file} already exists. Exiting.')
 
             # Specify folder to load the config file from
             if o in ('--config',):
@@ -286,7 +286,7 @@ class SickGear(object):
             if self.run_as_daemon:
                 pid_dir = os.path.dirname(self.pid_file)
                 if not os.access(pid_dir, os.F_OK):
-                    sys.exit(f"PID dir: {pid_dir} doesn't exist. Exiting.")
+                    sys.exit(f'PID dir: {pid_dir} doesn\'t exist. Exiting.')
                 if not os.access(pid_dir, os.W_OK):
                     sys.exit(f'PID dir: {pid_dir} must be writable (write permissions). Exiting.')
 
@@ -337,7 +337,7 @@ class SickGear(object):
             try:
                 threading.stack_size(stack_size)
             except (BaseException, Exception) as er:
-                print('Stack Size %s not set: %s' % (stack_size, ex(er)))
+                print(f'Stack Size {stack_size} not set: {ex(er)}')
 
         if self.run_as_daemon:
             self.daemonize()
@@ -426,7 +426,7 @@ class SickGear(object):
             cur_db_version = db.DBConnection(d).check_db_version()
 
             # handling of standalone TEST db versions
-            load_msg = 'Downgrading %s to production version' % d
+            load_msg = f'Downgrading {d} to production version'
             if 100000 <= cur_db_version != max_v:
                 sickgear.classes.loading_msg.set_msg_progress(load_msg, 'Rollback')
                 print('Your [%s] database version (%s) is a test db version and doesn\'t match SickGear required '
@@ -589,9 +589,9 @@ class SickGear(object):
                 except (BaseException, Exception):
                     pass
 
-            sickgear.classes.loading_msg.set_msg_progress(l_msg, '0/%s' % total_result)
+            sickgear.classes.loading_msg.set_msg_progress(l_msg, f'0/{total_result}')
             for i, cur_switch in enumerate(sql_result, 1):
-                sickgear.classes.loading_msg.set_msg_progress(l_msg, '%s/%s' % (i, total_result))
+                sickgear.classes.loading_msg.set_msg_progress(l_msg, f'{i}/{total_result}')
                 try:
                     show_obj = sickgear.helpers.find_show_by_id(
                         {cur_switch['old_indexer']: cur_switch['old_indexer_id']})
@@ -665,7 +665,7 @@ class SickGear(object):
             pid = str(os.getpid())
             logger.log(f'Writing PID: {pid} to {self.pid_file}')
             try:
-                os.fdopen(os.open(self.pid_file, os.O_CREAT | os.O_WRONLY, 0o644), 'w').write('%s\n' % pid)
+                os.fdopen(os.open(self.pid_file, os.O_CREAT | os.O_WRONLY, 0o644), 'w').write(f'{pid}\n')
             except (BaseException, Exception) as er:
                 logger.log_error_and_exit('Unable to write PID file: %s Error: %s [%s]' % (
                     self.pid_file, er.strerror, er.errno))
@@ -743,7 +743,7 @@ class SickGear(object):
                 sickgear.showDict[show_obj.sid_int] = show_obj
                 _ = show_obj.ids
             except (BaseException, Exception) as err:
-                logger.error('There was an error creating the show in %s: %s' % (cur_result['location'], ex(err)))
+                logger.error(f'There was an error creating the show in {cur_result["location"]}: {ex(err)}')
         sickgear.webserve.Home.make_showlist_unique_names()
 
     @staticmethod
@@ -752,7 +752,7 @@ class SickGear(object):
             for filename in os.listdir(src_dir):
                 src_file = os.path.join(src_dir, filename)
                 dst_file = os.path.join(dst_dir, filename)
-                bak_file = os.path.join(dst_dir, '%s.bak' % filename)
+                bak_file = os.path.join(dst_dir, f'{filename}.bak')
                 shutil.move(dst_file, bak_file)
                 shutil.move(src_file, dst_file)
 
@@ -825,8 +825,8 @@ if '__main__' == __name__:
             if e.errno != errno.EINTR:
                 raise
     except SystemExit as e:
-        print('%s' % ex(e))
+        print(f'{ex(e)}')
     except (BaseException, Exception) as e:
         import traceback
         print(traceback.format_exc())
-        logger.log('SickGear.Start() exception caught %s: %s' % (ex(e), traceback.format_exc()))
+        logger.log(f'SickGear.Start() exception caught {ex(e)}: {traceback.format_exc()}')

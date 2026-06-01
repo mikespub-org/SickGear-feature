@@ -366,12 +366,12 @@ def set_scene_numbering(tvid=None, prodid=None, season=None, episode=None, absol
             update, values = ('scene_season = ?, scene_episode = ?, scene_absolute_number = ?',
                               [scene_season, scene_episode, scene_absolute])
         my_db.action(
-            """
+            f"""
             UPDATE scene_numbering
-            SET %s
+            SET {update}
             WHERE indexer = ? AND indexer_id = ?
             AND season = ? AND episode = ?
-            """ % update, values + [tvid, prodid, season, episode])
+            """, values + [tvid, prodid, season, episode])
 
         my_db.action(
             """
@@ -779,7 +779,7 @@ def xem_refresh(tvid, prodid, force=False):
 
     # XEM API URL
     # noinspection HttpUrlsUsage
-    url = 'http://thexem.info/map/all?id=%s&origin=%s&destination=scene' % (prodid, xem_origin)
+    url = f'http://thexem.info/map/all?id={prodid}&origin={xem_origin}&destination=scene'
 
     max_refresh_age_secs = 86400  # 1 day
 
@@ -816,7 +816,7 @@ def xem_refresh(tvid, prodid, force=False):
                         UPDATE tv_episodes
                         SET scene_season = ?, scene_episode = ?, scene_absolute_number = ?
                         WHERE indexer = ? AND showid = ? AND season = ? AND episode = ?
-                        """, [entry.get('scene%s' % ('', '_2')['scene_2' in entry]).get(v)
+                        """, [entry.get(f'scene{("", "_2")["scene_2" in entry]}').get(v)
                               for v in ('season', 'episode', 'absolute')]
                         + [tvid, prodid]
                         + [entry.get(xem_origin).get(v) for v in ('season', 'episode')]

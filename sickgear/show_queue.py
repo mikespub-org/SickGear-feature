@@ -124,7 +124,7 @@ class ShowQueue(generic_queue.GenericQueue):
                         lang=cur_row['lang'], uid=cur_row['uid'], add_to_db=False)
 
         except (BaseException, Exception) as e:
-            logger.error('Exception loading queue %s: %s' % (self.__class__.__name__, ex(e)))
+            logger.error(f'Exception loading queue {self.__class__.__name__}: {ex(e)}')
 
     def save_item(self, item):
         # type: (ShowQueueItem) -> None
@@ -221,7 +221,7 @@ class ShowQueue(generic_queue.GenericQueue):
                 else:
                     my_db.action('DELETE FROM tv_src_switch WHERE uid = ?', [item.uid])
             except (BaseException, Exception) as e:
-                logger.error('Exception deleting item %s from db: %s' % (item, ex(e)))
+                logger.error(f'Exception deleting item {item} from db: {ex(e)}')
         else:
             generic_queue.GenericQueue.delete_item(self, item)
 
@@ -774,7 +774,7 @@ class ShowQueueItem(generic_queue.QueueItem):
         return False
 
     def __str__(self):
-        return '<%s (%s)>' % (self.__class__.__name__, (self.show_obj and self.show_obj.name))
+        return f'<{self.__class__.__name__} ({self.show_obj and self.show_obj.name})>'
 
     def __repr__(self):
         return self.__str__()
@@ -966,7 +966,7 @@ class QueueItemAdd(ShowQueueItem):
 
         ShowQueueItem.run(self)
 
-        logger.log('Starting to add show %s' % self.showDir)
+        logger.log(f'Starting to add show {self.showDir}')
         # make sure the TV info source IDs are valid
         try:
 
@@ -999,7 +999,7 @@ class QueueItemAdd(ShowQueueItem):
                 self._finish_early()
                 return
         except (BaseException, Exception):
-            logger.error('Unable to find show ID:%s on TV info: %s' % (self.prodid, sickgear.TVInfoAPI(self.tvid).name))
+            logger.error(f'Unable to find show ID:{self.prodid} on TV info: {sickgear.TVInfoAPI(self.tvid).name}')
             ui.notifications.error('Unable to add show',
                                    'Unable to look up the show in %s on %s using ID %s, not using the NFO.'
                                    ' Delete .nfo and try adding manually again.' %
@@ -1051,18 +1051,18 @@ class QueueItemAdd(ShowQueueItem):
                                        % (self.show_obj.unique_name, sickgear.TVInfoAPI(self.tvid).name))
             else:
                 ui.notifications.error(
-                    'Unable to add show due to an error with %s' % sickgear.TVInfoAPI(self.tvid).name)
+                    f'Unable to add show due to an error with {sickgear.TVInfoAPI(self.tvid).name}')
             self._finish_early()
             return
 
         except exceptions_helper.MultipleShowObjectsException:
-            logger.error('The show in %s is already in your show list, skipping' % self.showDir)
-            ui.notifications.error('Show skipped', 'The show in %s is already in your show list' % self.showDir)
+            logger.error(f'The show in {self.showDir} is already in your show list, skipping')
+            ui.notifications.error('Show skipped', f'The show in {self.showDir} is already in your show list')
             self._finish_early()
             return
 
         except (BaseException, Exception) as e:
-            logger.error('Error trying to add show: %s' % ex(e))
+            logger.error(f'Error trying to add show: {ex(e)}')
             logger.error(traceback.format_exc())
             self._finish_early()
             raise
@@ -1072,7 +1072,7 @@ class QueueItemAdd(ShowQueueItem):
         try:
             self.show_obj.save_to_db()
         except (BaseException, Exception) as e:
-            logger.error('Error saving the show to the database: %s' % ex(e))
+            logger.error(f'Error saving the show to the database: {ex(e)}')
             logger.error(traceback.format_exc())
             self._finish_early()
             raise
@@ -1096,7 +1096,7 @@ class QueueItemAdd(ShowQueueItem):
         try:
             self.show_obj.load_episodes_from_dir()
         except (BaseException, Exception) as e:
-            logger.error('Error searching directory for episodes: %s' % ex(e))
+            logger.error(f'Error searching directory for episodes: {ex(e)}')
             logger.error(traceback.format_exc())
 
         # if they gave a custom status then change all the eps to it
@@ -1145,7 +1145,7 @@ class QueueItemAdd(ShowQueueItem):
         try:
             self.show_obj.save_to_db()
         except (BaseException, Exception) as e:
-            logger.error('Error saving the show to the database: %s' % ex(e))
+            logger.error(f'Error saving the show to the database: {ex(e)}')
             logger.error(traceback.format_exc())
             self._finish_early()
             raise
@@ -1244,7 +1244,7 @@ class QueueItemRefresh(ShowQueueItem):
     def run(self):
         ShowQueueItem.run(self)
 
-        logger.log('Performing refresh on %s' % self.show_obj.unique_name)
+        logger.log(f'Performing refresh on {self.show_obj.unique_name}')
 
         self.show_obj.refresh_dir()
         self.show_obj.write_metadata(force=self.force)
@@ -1279,7 +1279,7 @@ class QueueItemRename(ShowQueueItem):
 
         ShowQueueItem.run(self)
 
-        logger.log('Performing rename on %s' % self.show_obj.unique_name)
+        logger.log(f'Performing rename on {self.show_obj.unique_name}')
 
         try:
             _ = self.show_obj.location
@@ -1331,7 +1331,7 @@ class QueueItemSubtitle(ShowQueueItem):
             self.finish()
             return
 
-        logger.log('Downloading subtitles for %s' % self.show_obj.unique_name)
+        logger.log(f'Downloading subtitles for {self.show_obj.unique_name}')
 
         self.show_obj.download_subtitles()
 
@@ -1379,9 +1379,9 @@ class QueueItemUpdate(ShowQueueItem):
                                                               after_update=True)
             return
 
-        logger.log('Beginning update of %s' % self.show_obj.unique_name)
+        logger.log(f'Beginning update of {self.show_obj.unique_name}')
 
-        logger.debug('Retrieving show info from %s' % sickgear.TVInfoAPI(self.show_obj.tvid).name)
+        logger.debug(f'Retrieving show info from {sickgear.TVInfoAPI(self.show_obj.tvid).name}')
         try:
             result = self.show_obj.load_from_tvinfo(cache=not self.force, tvinfo_data=self.tvinfo_data,
                                                     scheduled_update=self.scheduled_update, switch=self.switch)
@@ -1394,7 +1394,7 @@ class QueueItemUpdate(ShowQueueItem):
                          f' aborting: {ex(e)}')
             return
         except BaseTVinfoError as e:
-            logger.warning('Unable to contact %s, aborting: %s' % (sickgear.TVInfoAPI(self.show_obj.tvid).name, ex(e)))
+            logger.warning(f'Unable to contact {sickgear.TVInfoAPI(self.show_obj.tvid).name}, aborting: {ex(e)}')
             return
 
         if self.force_web:
@@ -1403,7 +1403,7 @@ class QueueItemUpdate(ShowQueueItem):
         try:
             self.show_obj.save_to_db()
         except (BaseException, Exception) as e:
-            logger.error('Error saving the show to the database: %s' % ex(e))
+            logger.error(f'Error saving the show to the database: {ex(e)}')
             logger.error(traceback.format_exc())
 
         # get episode list from DB
@@ -1411,7 +1411,7 @@ class QueueItemUpdate(ShowQueueItem):
         db_ep_obj_list = self.show_obj.load_episodes_from_db(update=True)
 
         # get episode list from TVDB
-        logger.debug('Loading all episodes from %s' % sickgear.TVInfoAPI(self.show_obj.tvid).name)
+        logger.debug(f'Loading all episodes from {sickgear.TVInfoAPI(self.show_obj.tvid).name}')
         try:
             tvinfo_ep_list = self.show_obj.load_episodes_from_tvinfo(cache=not self.force, update=True,
                                                                      tvinfo_data=self.tvinfo_data, switch=self.switch,
@@ -1431,7 +1431,7 @@ class QueueItemUpdate(ShowQueueItem):
             # for each ep we found on TVDB delete it from the DB list
             for cur_season in tvinfo_ep_list:
                 for cur_episode in tvinfo_ep_list[cur_season]:
-                    logger.debug('Removing %sx%s from the DB list' % (cur_season, cur_episode))
+                    logger.debug(f'Removing {cur_season}x{cur_episode} from the DB list')
                     if cur_season in db_ep_obj_list and cur_episode in db_ep_obj_list[cur_season]:
                         del db_ep_obj_list[cur_season][cur_episode]
 
@@ -1597,9 +1597,9 @@ class QueueItemSwitchSource(ShowQueueItem):
             if self.show_obj:
                 which_show = self.show_obj.unique_name
             else:
-                which_show = '%s:%s' % (self.old_tvid, self.old_prodid)
+                which_show = f'{self.old_tvid}:{self.old_prodid}'
             self._set_switch_tbl_status(TVSWITCH_SAME_ID)
-            logger.error('Unchanged ids given, nothing to do for %s' % which_show)
+            logger.error(f'Unchanged ids given, nothing to do for {which_show}')
             return True
         return False
 
@@ -1607,7 +1607,7 @@ class QueueItemSwitchSource(ShowQueueItem):
         ShowQueueItem.run(self)
         td = None
         if self.resume:
-            logger.log('Resume switching show: %s' % self.show_obj.unique_name)
+            logger.log(f'Resume switching show: {self.show_obj.unique_name}')
             self.progress = 'Resume switching show'
             with self.show_obj.lock:
                 pausestatus_after = None
@@ -1619,7 +1619,7 @@ class QueueItemSwitchSource(ShowQueueItem):
                 elif not self.show_obj.paused:
                     self.show_obj.paused = True
         else:
-            logger.log('Start switching show: %s' % self.show_obj.unique_name)
+            logger.log(f'Start switching show: {self.show_obj.unique_name}')
             # verify show before switching
             self.progress = 'Verifying validity of new id'
 
@@ -1637,10 +1637,10 @@ class QueueItemSwitchSource(ShowQueueItem):
                 if self.show_obj:
                     which_show = self.show_obj.unique_name
                 else:
-                    which_show = '%s:%s' % (self.old_tvid, self.old_prodid)
-                ui.notifications.message('TV info source switch: %s' % which_show,
+                    which_show = f'{self.old_tvid}:{self.old_prodid}'
+                ui.notifications.message(f'TV info source switch: {which_show}',
                                          'Error: could not find a id for show on new tv info source')
-                logger.warning('Error: could not find a id for show on new tv info source: %s' % which_show)
+                logger.warning(f'Error: could not find a id for show on new tv info source: {which_show}')
                 self._set_switch_tbl_status(TVSWITCH_NO_NEW_ID)
                 return
 
@@ -1654,9 +1654,9 @@ class QueueItemSwitchSource(ShowQueueItem):
                 if self.show_obj:
                     which_show = self.show_obj.unique_name
                 else:
-                    which_show = '%s:%s' % (self.old_tvid, self.old_prodid)
-                logger.warning('Duplicate shows in DB for show: %s' % which_show)
-                ui.notifications.message('TV info source switch: %s' % which_show, 'Error: %s' % msg)
+                    which_show = f'{self.old_tvid}:{self.old_prodid}'
+                logger.warning(f'Duplicate shows in DB for show: {which_show}')
+                ui.notifications.message(f'TV info source switch: {which_show}', f'Error: {msg}')
 
                 self._set_switch_tbl_status(TVSWITCH_DUPLICATE_SHOW)
                 return
@@ -1665,11 +1665,11 @@ class QueueItemSwitchSource(ShowQueueItem):
                 if self.show_obj:
                     which_show = self.show_obj.unique_name
                 else:
-                    which_show = '%s:%s' % (self.old_tvid, self.old_prodid)
-                ui.notifications.message('TV info source switch: %s' % which_show, 'Error: %s' % msg)
+                    which_show = f'{self.old_tvid}:{self.old_prodid}'
+                ui.notifications.message(f'TV info source switch: {which_show}', f'Error: {msg}')
 
                 self._set_switch_tbl_status(TVSWITCH_SOURCE_NOT_FOUND_ERROR)
-                logger.warning('Unable to find the specified show: %s' % which_show)
+                logger.warning(f'Unable to find the specified show: {which_show}')
                 return
 
             tvinfo_config = sickgear.TVInfoAPI(self.new_tvid).api_params.copy()
@@ -1697,9 +1697,9 @@ class QueueItemSwitchSource(ShowQueueItem):
                 if self.show_obj:
                     which_show = self.show_obj.unique_name
                 else:
-                    which_show = '%s:%s' % (self.old_tvid, self.old_prodid)
-                ui.notifications.message('TV info source switch: %s' % which_show, 'Error: %s' % msg)
-                logger.warning('show: %s not found on new tv source' % self.show_obj.tvid_prodid)
+                    which_show = f'{self.old_tvid}:{self.old_prodid}'
+                ui.notifications.message(f'TV info source switch: {which_show}', f'Error: {msg}')
+                logger.warning(f'show: {self.show_obj.tvid_prodid} not found on new tv source')
                 return
 
             try:
@@ -1730,13 +1730,13 @@ class QueueItemSwitchSource(ShowQueueItem):
                              and (str(existing_show_startyear) == str(new_show_startyear)
                              or abs(try_int(existing_show_startyear, 10) - try_int(new_show_startyear, 1)) <= 1)):
                 self._set_switch_tbl_status(TVSWITCH_VERIFY_ERROR)
-                logger.warning('Failed to verify new ids for show %s' % self.show_obj.unique_name)
+                logger.warning(f'Failed to verify new ids for show {self.show_obj.unique_name}')
                 msg = 'Failed to verify the show on new source'
                 if self.show_obj:
                     which_show = self.show_obj.unique_name
                 else:
-                    which_show = '%s:%s' % (self.old_tvid, self.old_prodid)
-                ui.notifications.message('TV info source switch: %s' % which_show, 'Error: %s' % msg)
+                    which_show = f'{self.old_tvid}:{self.old_prodid}'
+                ui.notifications.message(f'TV info source switch: {which_show}', f'Error: {msg}')
                 return
             # switch show to new id
             with self.show_obj.lock:
@@ -1795,8 +1795,8 @@ class QueueItemSwitchSource(ShowQueueItem):
         self.progress = 'Finished Switch'
         # now remove from switch tbl
         self._set_switch_tbl_status()
-        logger.log('Finished switching show: %s' % self.show_obj.unique_name)
-        ui.notifications.message('TV info source switch: %s' % self.show_obj.unique_name, 'Finished switching show')
+        logger.log(f'Finished switching show: {self.show_obj.unique_name}')
+        ui.notifications.message(f'TV info source switch: {self.show_obj.unique_name}', 'Finished switching show')
 
     def __str__(self):
         return '<Show Switch Queue Item: %s (%s to %s)>' % \

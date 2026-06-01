@@ -55,7 +55,7 @@ class MigrationBasicTests(test.SickbeardTestDBCase):
             except (BaseException, Exception):
                 pass
 
-            for filename in glob.glob(os.path.join(test.TESTDIR, test.TESTDBNAME) + '*'):
+            for filename in glob.glob(f'{os.path.join(test.TESTDIR, test.TESTDBNAME)}*'):
                 os.remove(filename)
 
             sleep(0.1)

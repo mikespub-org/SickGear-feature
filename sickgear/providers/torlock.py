@@ -33,7 +33,7 @@ class TorLockProvider(generic.TorrentProvider):
         generic.TorrentProvider.__init__(self, 'TorLock')
 
         self.url_home = ['https://www.torlock.com/'] + \
-                        ['https://%s/' % b64decodestring(x) for x in [''.join(x) for x in [
+                        [f'https://{b64decodestring(x)}/' for x in [''.join(x) for x in [
                             [re.sub(r'[g\sF]+', '', x[::-1]) for x in [
                                 'y9FFGd', 'j9FgGb', '15 Fya', 'sF Jmb', 'rN 2Fb', 'uQW FZ', '0Vmg Y']],
                             [re.sub(r'[O\si]+', '', x[::-1]) for x in [
@@ -60,7 +60,7 @@ class TorLockProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v)) for (k, v) in iteritems({
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
             'info': r'torrent.?(\d+)', 'versrc': r'ver\.', 'verified': 'Verified'})])
 
         for mode in search_params:

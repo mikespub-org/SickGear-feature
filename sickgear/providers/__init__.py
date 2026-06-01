@@ -48,7 +48,7 @@ __all__ = [
     ]
 for module in __all__:
     try:
-        m = importlib.import_module('.' + module, 'sickgear.providers')
+        m = importlib.import_module(f'.{module}', 'sickgear.providers')
         globals().update({n: getattr(m, n) for n in m.__all__} if hasattr(m, '__all__')
                          else dict(filter(lambda t: '_' != t[0][0], iteritems(m.__dict__))))
     except ImportError as e:
@@ -243,7 +243,7 @@ def _get_module_by_name(name):
         return sys.modules[prefix + name]
     elif cprov in name:
         return None
-    raise Exception('Can\'t find %s%s in providers' % (prefix, name))
+    raise Exception(f'Can\'t find {prefix}{name} in providers')
 
 
 def get_by_id(provider_id):

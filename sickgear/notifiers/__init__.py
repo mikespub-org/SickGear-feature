@@ -106,7 +106,7 @@ class NotifierFactory(object):
         :return: Notifier instance
         :rtype: Notifier
         """
-        for n in getattr(self, 'enabled' + ('' if None is kind else ('_' + kind))):
+        for n in getattr(self, f'enabled{"" if None is kind else f"_{kind}"}'):
             yield self.get(n)
 
 
@@ -149,7 +149,7 @@ def notify_update_library(ep_obj, flush_q=False, include_online=True):
                                 continue
                             shows.add(show_name)
                         else:
-                            parent_dir = re.sub(r'[/\\]+%s.*' % show_name, '', os.path.dirname(location))
+                            parent_dir = re.sub(rf'[/\\]+{show_name}.*', '', os.path.dirname(location))
                             parent_dir = re.sub(r'^(.{,2})[/\\]', '', parent_dir)
                             if parent_dir in locations:
                                 continue

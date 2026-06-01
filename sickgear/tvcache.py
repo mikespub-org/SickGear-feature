@@ -111,7 +111,7 @@ class TVCache(object):
                 try:
                     my_db.mass_action(cl)
                 except (BaseException, Exception) as e:
-                    logger.log('Warning could not save cache value [%s], caught err: %s' % (cl, ex(e)))
+                    logger.log(f'Warning could not save cache value [{cl}], caught err: {ex(e)}')
 
             # set updated as time the attempt to fetch data is
             self.set_last_update()
@@ -157,7 +157,7 @@ class TVCache(object):
 
             return self.add_cache_entry(title, url)
 
-        logger.debug('Data returned from the %s feed is incomplete, this result is unusable' % self.provider.name)
+        logger.debug(f'Data returned from the {self.provider.name} feed is incomplete, this result is unusable')
 
     def _get_last_update(self):
         """
@@ -273,7 +273,7 @@ class TVCache(object):
                 parser = NameParser(show_obj=show_obj, convert=True, indexer_lookup=False)
                 parse_result = parser.parse(name)
             except InvalidNameException:
-                logger.debug('Unable to parse the filename %s into a valid episode' % name)
+                logger.debug(f'Unable to parse the filename {name} into a valid episode')
                 return
             except InvalidShowException:
                 return
@@ -295,7 +295,7 @@ class TVCache(object):
 
         if season_number and episode_numbers:
             # store episodes as a separated string
-            episode_text = '|%s|' % '|'.join(map(str, episode_numbers))
+            episode_text = f'|{"|".join(map(str, episode_numbers))}|'
 
             # get the current timestamp
             cur_timestamp = SGDatetime.timestamp_near()
@@ -309,7 +309,7 @@ class TVCache(object):
             # get version
             version = parse_result.version
 
-            logger.debug('Add to cache: [%s]' % name)
+            logger.debug(f'Add to cache: [{name}]')
 
             return [
                 'INSERT OR IGNORE INTO provider_cache'
@@ -351,7 +351,7 @@ class TVCache(object):
               "OR name LIKE '%.REAL.%' AND provider = ?"
 
         if date:
-            sql += ' AND time >= ' + str(int(time.mktime(date.timetuple())))
+            sql += f' AND time >= {int(time.mktime(date.timetuple()))!s}'
 
         return list(filter(lambda x: x['indexerid'] != 0, my_db.select(sql, [self.providerID])))
 
@@ -376,10 +376,10 @@ class TVCache(object):
                 + ' WHERE provider = ?'
                 + ' AND indexer = ? AND indexerid = ?'
                 + ' AND season = ? AND episodes LIKE ?'
-                + ' AND quality IN (%s)' % ','.join([str(x) for x in ep_obj.wanted_quality]),
+                + f' AND quality IN ({",".join([str(x) for x in ep_obj.wanted_quality])})',
                 [self.providerID,
                  ep_obj.show_obj.tvid, ep_obj.show_obj.prodid,
-                 ep_obj.season, '%|' + str(ep_obj.episode) + '|%']])
+                 ep_obj.season, f'%|{ep_obj.episode!s}|%']])
         sql_result = my_db.mass_action(cl)
         if sql_result:
             sql_result = list(itertools.chain(*sql_result))
@@ -421,8 +421,8 @@ class TVCache(object):
 
             # if the show says we want that episode then add it to the list
             if not show_obj.want_episode(season, ep_obj_list, quality, manual_search):
-                logger.debug(f"Skipping {cur_result['name']}"
-                             f" because we don't want an episode that's {Quality.qualityStrings[quality]}")
+                logger.debug(f'Skipping {cur_result["name"]}'
+                             f' because we don"t want an episode that\'s {Quality.qualityStrings[quality]}')
                 continue
 
             ep_obj = show_obj.get_episode(season, ep_obj_list)

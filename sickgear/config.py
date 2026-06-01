@@ -43,8 +43,8 @@ sports_ep_type = ('%(seasonnumber)dx%(episodenumber)02d',
 naming_ep_type_text = ('1x02', 's01e02', 'S01E02', '01x02')
 
 naming_multi_ep_type = {0: ['-%(episodenumber)02d'] * len(naming_ep_type),
-                        1: [' - %s' % x for x in naming_ep_type],
-                        2: [x + '%(episodenumber)02d' for x in ('x', 'e', 'E', 'x')]}
+                        1: [f' - {x}' for x in naming_ep_type],
+                        2: [f'{x}%(episodenumber)02d' for x in ('x', 'e', 'E', 'x')]}
 naming_multi_ep_type_text = ('extend', 'duplicate', 'repeat')
 
 naming_sep_type = (' - ', ' ')
@@ -306,13 +306,13 @@ def clean_host(host, default_port=None, allow_base=False):
         if cleaned_host:
 
             if cleaned_port:
-                host = '%s:%s%s' % (cleaned_host, cleaned_port, cleaned_base)
+                host = f'{cleaned_host}:{cleaned_port}{cleaned_base}'
 
             elif default_port:
-                host = '%s:%s%s' % (cleaned_host, default_port, cleaned_base)
+                host = f'{cleaned_host}:{default_port}{cleaned_base}'
 
             else:
-                host = '%s%s' % (cleaned_host, cleaned_base)
+                host = f'{cleaned_host}{cleaned_base}'
 
         else:
             host = ''
@@ -346,7 +346,7 @@ def clean_url(url, add_slash=True):
         url = url.strip()
 
         if '://' not in url:
-            url = '//' + url
+            url = f'//{url}'
 
         scheme, netloc, path, query, fragment = urlsplit(url, 'http')
 
@@ -410,7 +410,7 @@ def check_setting_int(config, cfg_name, item_name, def_val):
         except (BaseException, Exception):
             config[cfg_name] = {}
             config[cfg_name][item_name] = my_val
-    logger.debug('%s -> %s' % (item_name, my_val))
+    logger.debug(f'{item_name} -> {my_val}')
     return my_val
 
 
@@ -425,7 +425,7 @@ def check_setting_float(config, cfg_name, item_name, def_val):
             config[cfg_name] = {}
             config[cfg_name][item_name] = my_val
 
-    logger.debug('%s -> %s' % (item_name, my_val))
+    logger.debug(f'{item_name} -> {my_val}')
     return my_val
 
 
@@ -452,9 +452,9 @@ def check_setting_str(config, cfg_name, item_name, def_val, log=True):
             config[cfg_name][item_name] = helpers.encrypt(my_val, encryption_version)
 
     if log:
-        logger.debug('%s -> %s' % (item_name, my_val))
+        logger.debug(f'{item_name} -> {my_val}')
     else:
-        logger.debug('%s -> ******' % item_name)
+        logger.debug(f'{item_name} -> ******')
 
     return (my_val, def_val)['None' == my_val]
 
@@ -610,7 +610,7 @@ class ConfigMigrator(object):
             next_version = self.config_version + 1
 
             if next_version in self.migration_names:
-                migration_name = ': %s' % self.migration_names[next_version]
+                migration_name = f': {self.migration_names[next_version]}'
             else:
                 migration_name = ''
 
@@ -622,7 +622,7 @@ class ConfigMigrator(object):
 
             # do the migration, expect a method named _migrate_v<num>
             logger.log(f'Migrating config up to version {next_version} {migration_name}')
-            getattr(self, '_migrate_v%s' % next_version)()
+            getattr(self, f'_migrate_v{next_version}')()
             self.config_version = next_version
 
             # save new config after migration
@@ -646,13 +646,13 @@ class ConfigMigrator(object):
         """
 
         sickgear.NAMING_PATTERN = self._name_to_pattern()
-        logger.log('Based on your old settings I am setting your new naming pattern to: %s' % sickgear.NAMING_PATTERN)
+        logger.log(f'Based on your old settings I am setting your new naming pattern to: {sickgear.NAMING_PATTERN}')
 
         sickgear.NAMING_CUSTOM_ABD = bool(check_setting_int(self.config_obj, 'General', 'naming_dates', 0))
 
         if sickgear.NAMING_CUSTOM_ABD:
             sickgear.NAMING_ABD_PATTERN = self._name_to_pattern(True)
-            logger.log('Adding a custom air-by-date naming pattern to your config: %s' % sickgear.NAMING_ABD_PATTERN)
+            logger.log(f'Adding a custom air-by-date naming pattern to your config: {sickgear.NAMING_ABD_PATTERN}')
         else:
             sickgear.NAMING_ABD_PATTERN = naming.name_abd_presets[0]
 
@@ -830,7 +830,7 @@ class ConfigMigrator(object):
             cur_metadata = metadata.split('|')
             # if target has the old number of values, do upgrade
             if 6 == len(cur_metadata):
-                logger.log('Upgrading ' + metadata_name + ' metadata, old value: ' + metadata)
+                logger.log(f'Upgrading {metadata_name} metadata, old value: {metadata}')
                 cur_metadata.insert(4, '0')
                 cur_metadata.append('0')
                 cur_metadata.append('0')
@@ -876,7 +876,7 @@ class ConfigMigrator(object):
         for curProvider in sickgear.providers.sorted_sources():
             if hasattr(curProvider, 'enable_recentsearch'):
                 curProvider.enable_recentsearch = bool(check_setting_int(
-                    self.config_obj, curProvider.get_id().upper(), curProvider.get_id() + '_enable_dailysearch', 1))
+                    self.config_obj, curProvider.get_id().upper(), f'{curProvider.get_id()}_enable_dailysearch', 1))
 
     def _migrate_v7(self):
         sickgear.EPISODE_VIEW_LAYOUT = check_setting_str(self.config_obj, 'GUI', 'coming_eps_layout', 'banner')
@@ -932,18 +932,18 @@ class ConfigMigrator(object):
         old_id = 'transmithe_net'
         old_id_uc = old_id.upper()
         neb.enabled = bool(check_setting_int(self.config_obj, old_id_uc, old_id, 0))
-        setattr(neb, 'username', check_setting_str(self.config_obj, old_id_uc, old_id + '_username', ''))
-        neb.password = check_setting_str(self.config_obj, old_id_uc, old_id + '_password', '')
-        neb.minseed = check_setting_int(self.config_obj, old_id_uc, old_id + '_minseed', 0)
-        neb.minleech = check_setting_int(self.config_obj, old_id_uc, old_id + '_minleech', 0)
-        neb.freeleech = bool(check_setting_int(self.config_obj, old_id_uc, old_id + '_freeleech', 0))
+        setattr(neb, 'username', check_setting_str(self.config_obj, old_id_uc, f'{old_id}_username', ''))
+        neb.password = check_setting_str(self.config_obj, old_id_uc, f'{old_id}_password', '')
+        neb.minseed = check_setting_int(self.config_obj, old_id_uc, f'{old_id}_minseed', 0)
+        neb.minleech = check_setting_int(self.config_obj, old_id_uc, f'{old_id}_minleech', 0)
+        neb.freeleech = bool(check_setting_int(self.config_obj, old_id_uc, f'{old_id}_freeleech', 0))
         neb.enable_recentsearch = bool(check_setting_int(
-            self.config_obj, old_id_uc, old_id + '_enable_recentsearch', 1)) or not getattr(neb, 'supports_backlog')
-        neb.enable_backlog = bool(check_setting_int(self.config_obj, old_id_uc, old_id + '_enable_backlog', 1))
-        neb.search_mode = check_setting_str(self.config_obj, old_id_uc, old_id + '_search_mode', 'eponly')
-        neb.search_fallback = bool(check_setting_int(self.config_obj, old_id_uc, old_id + '_search_fallback', 0))
-        neb.seed_time = check_setting_int(self.config_obj, old_id_uc, old_id + '_seed_time', '')
-        neb._seed_ratio = check_setting_str(self.config_obj, old_id_uc, old_id + '_seed_ratio', '')
+            self.config_obj, old_id_uc, f'{old_id}_enable_recentsearch', 1)) or not getattr(neb, 'supports_backlog')
+        neb.enable_backlog = bool(check_setting_int(self.config_obj, old_id_uc, f'{old_id}_enable_backlog', 1))
+        neb.search_mode = check_setting_str(self.config_obj, old_id_uc, f'{old_id}_search_mode', 'eponly')
+        neb.search_fallback = bool(check_setting_int(self.config_obj, old_id_uc, f'{old_id}_search_fallback', 0))
+        neb.seed_time = check_setting_int(self.config_obj, old_id_uc, f'{old_id}_seed_time', '')
+        neb._seed_ratio = check_setting_str(self.config_obj, old_id_uc, f'{old_id}_seed_ratio', '')
 
     # Migration v16: Purge old cache image folder name
     @staticmethod
@@ -952,7 +952,7 @@ class ConfigMigrator(object):
             cache_default = sickgear.CACHE_DIR
             dead_paths = ['anidb', 'imdb', 'trakt']
             for path in dead_paths:
-                sickgear.CACHE_DIR = '%s/images/%s' % (cache_default, path)
+                sickgear.CACHE_DIR = f'{cache_default}/images/{path}'
                 helpers.clear_cache(True)
                 try:
                     os.rmdir(sickgear.CACHE_DIR)
@@ -1002,7 +1002,7 @@ class ConfigMigrator(object):
         growl_host = check_setting_str(self.config_obj, 'Growl', 'growl_host', '')
         growl_password = check_setting_str(self.config_obj, 'Growl', 'growl_password', '')
         if growl_password:
-            sickgear.GROWL_HOST = '%s@%s' % (growl_password, growl_host)
+            sickgear.GROWL_HOST = f'{growl_password}@{growl_host}'
 
     def _migrate_v21(self):
         sickgear.MEDIAPROCESS_INTERVAL = check_setting_int(

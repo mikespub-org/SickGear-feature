@@ -1403,13 +1403,13 @@ def init_stage_1(console_logging):
         # check int with a default of str, don't add to block settings
         attr = 'seed_time'
         if hasattr(torrent_prov, attr):
-            torrent_prov.seed_time = check_setting_int(CFG, prov_id_uc, '%s_%s' % (prov_id, attr), '')
+            torrent_prov.seed_time = check_setting_int(CFG, prov_id_uc, f'{prov_id}_{attr}', '')
 
         # custom cond, don't add to block settings
         attr = 'enable_recentsearch'
         if hasattr(torrent_prov, attr):
             torrent_prov.enable_recentsearch = bool(check_setting_int(
-                CFG, prov_id_uc, '%s_%s' % (prov_id, attr), True)) or not getattr(torrent_prov, 'supports_backlog')
+                CFG, prov_id_uc, f'{prov_id}_{attr}', True)) or not getattr(torrent_prov, 'supports_backlog')
 
         # check str with a default of list, don't add to block settings
         if hasattr(torrent_prov, 'filter'):
@@ -1427,7 +1427,7 @@ def init_stage_1(console_logging):
             ('search_mode', 'eponly'), ('search_fallback', False)
         ]:
             if hasattr(torrent_prov, attr):
-                attr_check = '%s_%s' % (prov_id, attr.strip('_'))
+                attr_check = f'{prov_id}_{attr.strip("_")}'
                 if isinstance(default, bool):
                     setattr(torrent_prov, attr, bool(check_setting_int(CFG, prov_id_uc, attr_check, default)))
                 elif isinstance(default, string_types):
@@ -1444,7 +1444,7 @@ def init_stage_1(console_logging):
         attr = 'enable_recentsearch'
         if hasattr(nzb_prov, attr):
             nzb_prov.enable_recentsearch = bool(check_setting_int(
-                CFG, prov_id_uc, '%s_%s' % (prov_id, attr), True)) or not getattr(nzb_prov, 'supports_backlog')
+                CFG, prov_id_uc, f'{prov_id}_{attr}', True)) or not getattr(nzb_prov, 'supports_backlog')
 
         for (attr, default) in [
             ('enable_backlog', True), ('enable_scheduled_backlog', True),
@@ -1454,7 +1454,7 @@ def init_stage_1(console_logging):
             ('search_mode', 'eponly'), ('search_fallback', False), ('server_type', NewznabConstants.SERVER_DEFAULT)
         ]:
             if hasattr(nzb_prov, attr):
-                attr_check = '%s_%s' % (prov_id, attr.strip('_'))
+                attr_check = f'{prov_id}_{attr.strip("_")}'
                 if isinstance(default, bool):
                     setattr(nzb_prov, attr, bool(check_setting_int(CFG, prov_id_uc, attr_check, default)))
                 elif isinstance(default, string_types):
@@ -1770,7 +1770,7 @@ def start():
                 if p.is_active() and getattr(p, 'ping_iv', None):
                     # noinspection PyProtectedMember
                     provider_ping_thread_pool[p.get_id()] = threading.Thread(
-                        name='PING-PROVIDER %s' % p.name, target=p._ping)
+                        name=f'PING-PROVIDER {p.name}', target=p._ping)
                     provider_ping_thread_pool[p.get_id()].start()
 
             for thread in enabled_schedulers(is_init=True):  # type: threading.Thread
@@ -1800,10 +1800,10 @@ def sig_handler(signum=None, _=None):
     msg = 'Signal "%s" found' % (signal.SIGINT == signum and 'CTRL-C' or is_ctrlbreak and 'CTRL+BREAK' or
                                  signal.SIGTERM == signum and 'Termination' or signum)
     if None is signum or signum in (signal.SIGINT, signal.SIGTERM) or is_ctrlbreak:
-        logger.log('%s, saving and exiting...' % msg)
+        logger.log(f'{msg}, saving and exiting...')
         events.put(events.SystemEvent.SHUTDOWN)
     else:
-        logger.log('%s, not exiting' % msg)
+        logger.log(f'{msg}, not exiting')
 
 
 def halt():
@@ -1828,9 +1828,9 @@ def halt():
             for p in provider_ping_thread_pool:
                 try:
                     provider_ping_thread_pool[p].join(10)
-                    logger.log('Thread %s has exit' % provider_ping_thread_pool[p].name)
+                    logger.log(f'Thread {provider_ping_thread_pool[p].name} has exit')
                 except RuntimeError:
-                    logger.log('Fail, thread %s did not exit' % provider_ping_thread_pool[p].name)
+                    logger.log(f'Fail, thread {provider_ping_thread_pool[p].name} did not exit')
                     pass
 
             if ADBA_CONNECTION:
@@ -1840,9 +1840,9 @@ def halt():
                     pass
                 try:
                     ADBA_CONNECTION.join(10)
-                    logger.log('Thread %s has exit' % ADBA_CONNECTION.name)
+                    logger.log(f'Thread {ADBA_CONNECTION.name} has exit')
                 except (BaseException, Exception):
-                    logger.log('Fail, thread %s did not exit' % ADBA_CONNECTION.name)
+                    logger.log(f'Fail, thread {ADBA_CONNECTION.name} did not exit')
 
             for thread in enabled_schedulers():  # type: scheduler.Scheduler
                 try:
@@ -1853,17 +1853,17 @@ def halt():
                         except (BaseException, Exception):
                             pass
                 except Exception as e:
-                    logger.log('Thread %s stop failed with: %s' % (thread.name, e))
+                    logger.log(f'Thread {thread.name} stop failed with: {e}')
 
             for thread in enabled_schedulers():  # type: threading.Thread
                 try:
                     thread.join(10)
-                    logger.log('Thread %s has exit' % thread.name)
+                    logger.log(f'Thread {thread.name} has exit')
                 except RuntimeError:
                     # this just means it's the current thread, can be ignored
-                    logger.log('Thread %s is exiting' % thread.name)
+                    logger.log(f'Thread {thread.name} is exiting')
                 except (BaseException, Exception) as e:
-                    logger.log('Thread %s exception %s' % (thread.name, e))
+                    logger.log(f'Thread {thread.name} exception {e}')
 
             try:
                 config_events.join(10)
@@ -2094,7 +2094,7 @@ def _save_config(force=False, **kwargs):
             if (value and not ('search_mode' == attr and 'eponly' == value)
                     # must allow the following to save '0' not '1' because default is enable (1) instead of disable (0)
                     and (attr not in default_not_zero) or not value and (attr in default_not_zero)):
-                new_config[src_id_uc]['%s_%s' % (src_id, attr)] = value
+                new_config[src_id_uc][f'{src_id}_{attr}'] = value
 
         if getattr(src, '_seed_ratio', None):
             new_config[src_id_uc][src_id + '_seed_ratio'] = src.seed_ratio()
@@ -2115,7 +2115,7 @@ def _save_config(force=False, **kwargs):
         for attr in filter(lambda _a: None is not getattr(src, _a, None),
                            ('api_key', 'digest', 'username', 'search_mode')):
             if 'search_mode' != attr or 'eponly' != getattr(src, attr):
-                new_config[src_id_uc]['%s_%s' % (src_id, attr)] = getattr(src, attr)
+                new_config[src_id_uc][f'{src_id}_{attr}'] = getattr(src, attr)
 
         for attr in filter(lambda _a: None is not getattr(src, _a, None), (
                 'enable_recentsearch', 'enable_backlog', 'enable_scheduled_backlog',
@@ -2125,11 +2125,11 @@ def _save_config(force=False, **kwargs):
             value = helpers.try_int(getattr(src, attr, None))
             # must allow the following to save '0' not '1' because default is enable (1) instead of disable (0)
             if (value and (attr not in default_not_zero)) or (not value and (attr in default_not_zero)):
-                new_config[src_id_uc]['%s_%s' % (src_id, attr)] = value
+                new_config[src_id_uc][f'{src_id}_{attr}'] = value
 
         attr = 'scene_or_contain'
         if getattr(src, attr, None):
-            new_config[src_id_uc]['%s_%s' % (src_id, attr)] = getattr(src, attr, '')
+            new_config[src_id_uc][f'{src_id}_{attr}'] = getattr(src, attr, '')
 
         if not new_config[src_id_uc]:
             del new_config[src_id_uc]
@@ -2369,11 +2369,11 @@ def _save_config(force=False, **kwargs):
     ]:
         if any([onsnatch, ondownload, onsubtitledownload]):
             if onsnatch:
-                new_config[notifier]['%s_notify_onsnatch' % notifier.lower()] = int(onsnatch)
+                new_config[notifier][f'{notifier.lower()}_notify_onsnatch'] = int(onsnatch)
             if ondownload:
-                new_config[notifier]['%s_notify_ondownload' % notifier.lower()] = int(ondownload)
+                new_config[notifier][f'{notifier.lower()}_notify_ondownload'] = int(ondownload)
             if onsubtitledownload:
-                new_config[notifier]['%s_notify_onsubtitledownload' % notifier.lower()] = int(onsubtitledownload)
+                new_config[notifier][f'{notifier.lower()}_notify_onsubtitledownload'] = int(onsubtitledownload)
 
     # remove empty stanzas
     for k in filter(lambda c: not new_config[c], cfg_keys):

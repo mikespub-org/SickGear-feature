@@ -92,7 +92,7 @@ class IPTorrentsProvider(generic.TorrentProvider):
         results = []
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict((k, re.compile('(?i)' + v)) for (k, v) in iteritems(dict(
+        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in iteritems(dict(
             info='/t/', get='download', id=r'download.*?/([\d]+)')))
         lrs_found = False
         lrs_new = True

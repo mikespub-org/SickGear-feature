@@ -46,7 +46,7 @@ FILENAME = f'show name - s0{SEASON}e0{EPISODE}.mkv'
 FILEDIR = os.path.join(TESTDIR, SHOWNAME)
 FILEPATH = os.path.join(FILEDIR, FILENAME)
 
-SHOWDIR = os.path.join(TESTDIR, SHOWNAME + ' final')
+SHOWDIR = os.path.join(TESTDIR, f'{SHOWNAME} final')
 
 # sickgear.logger.sb_log_instance = sickgear.logger.SBRotatingLogHandler(
 #     os.path.join(TESTDIR, 'sickgear.log'), sickgear.logger.NUM_LOGS, sickgear.logger.LOG_SIZE)
@@ -167,7 +167,7 @@ class TestCacheDBConnection(TestDBConnection, object):
             self.connection.execute(sql)
             self.connection.commit()
         except sqlite3.OperationalError as e:
-            if 'table %s already exists' % provider_name != str(e):
+            if f'table {provider_name} already exists' != str(e):
                 raise
 
         # Create the table if it's not already there
@@ -225,17 +225,17 @@ def teardown_test_db():
     except (BaseException, Exception):
         pass
 
-    for filename in glob.glob(os.path.join(TESTDIR, TESTDBNAME) + '*'):
+    for filename in glob.glob(f'{os.path.join(TESTDIR, TESTDBNAME)}*'):
         try:
             os.remove(filename)
         except (BaseException, Exception):
             pass
-    for filename in glob.glob(os.path.join(TESTDIR, TESTCACHEDBNAME) + '*'):
+    for filename in glob.glob(f'{os.path.join(TESTDIR, TESTCACHEDBNAME)}*'):
         try:
             os.remove(filename)
         except (BaseException, Exception):
             pass
-    for filename in glob.glob(os.path.join(TESTDIR, TESTFAILEDDBNAME) + '*'):
+    for filename in glob.glob(f'{os.path.join(TESTDIR, TESTFAILEDDBNAME)}*'):
         try:
             os.remove(filename)
         except (BaseException, Exception):
@@ -280,7 +280,7 @@ if '__main__' == __name__:
     dirList = os.listdir(TESTDIR)
     for fname in dirList:
         if (0 < fname.find('_test')) and (0 > fname.find('pyc')):
-            print('- ' + fname)
+            print(f'- {fname}')
 
     print('=========================')
     print('or just call all_tests.py')
