@@ -8,7 +8,7 @@
 * Update idna library 3.11 (ad949ee) to 3.17 (f48619c)
 * Update imdbpie 5.6.5 (f8ed7a0) to 5.7.0 (2eff17c)
 * Update packaging 26.0 (3b77a26) to 26.2 (84a87ee)
-* Update Requests library 2.33.0 (bc04dfd) to 2.34.0 (0b401c7)
+* Update Requests library 2.33.0 (bc04dfd) to 2.34.2 (6e83187)
 * Update browser_ua from user-agents 2.1.38 (a78437e)
 * Update SimpleJSON 3.20.2 (10e5aaf) to 4.0.0 (1608c05)
 * Update soupsieve 2.8.3 (5aedc41) to 2.8.4 (28108ab)
@@ -86,6 +86,7 @@
 * Update idna library 3.16 (6d1a0de) to 3.17 (f48619c)
 * Update packaging 26.1 (c1a88a3) to 26.2 (84a87ee)
 * Update Requests library 2.33.1 (111d2b7) to 2.34.0 (0b401c7)
+* Update Requests library 2.34.0 (0b401c7) to 2.34.2 (6e83187)
 * Fix import if orjson is not installed that blocked running unittests
 * Change temporary remove browse filters while a bug is being investigated, and remove tag-trait-self from actor lists
 * Fix save states on browse shows when a tab is open on a page and sg restarts e.g. for an upgrade
