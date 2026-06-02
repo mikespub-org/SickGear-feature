@@ -49,7 +49,7 @@ class PeopleQueue(generic_queue.GenericQueue):
                     self.add_cast_update(show_obj=show_obj, show_info_cast=None, uid=q['uid'], force=bool(q['forced']),
                                          scheduled_update=bool(q['scheduled']), add_to_db=False)
         except (BaseException, Exception) as e:
-            logger.error('Exception loading queue %s: %s' % (self.__class__.__name__, ex(e)))
+            logger.error(f'Exception loading queue {self.__class__.__name__}: {ex(e)}')
         try:
             my_db = db.DBConnection()
             if not my_db.has_flag('cast_loaded'):
@@ -188,25 +188,25 @@ class CastQueueItem(PeopleQueueItem):
         PeopleQueueItem.run(self)
 
         if self.show_obj:
-            logger.log('Starting cast update for show %s' % self.show_obj.unique_name)
+            logger.log(f'Starting cast update for show {self.show_obj.unique_name}')
             old_cast = self.show_obj.cast_list_id()
             if not self.scheduled_update and not self.switch:
-                ui.notifications.message('Starting cast update for show %s' % self.show_obj.unique_name)
+                ui.notifications.message(f'Starting cast update for show {self.show_obj.unique_name}')
             try:
                 self.show_obj.load_cast_from_tvinfo(self.show_info_cast, force=self.force, stop_event=self.stop)
                 update_success = True
             except (BaseException, Exception) as e:
                 update_success = False
-                logger.error('Exception in cast update queue: %s' % ex(e))
-                logger.debug('Traceback: %s' % traceback.format_exc())
+                logger.error(f'Exception in cast update queue: {ex(e)}')
+                logger.debug(f'Traceback: {traceback.format_exc()}')
 
             if update_success and (old_cast != self.show_obj.cast_list_id()):
                 logger.debug('Update show nfo with new cast data')
                 self.show_obj.write_show_nfo(force=True)
 
-            logger.log('Finished cast update for show %s' % self.show_obj.unique_name)
+            logger.log(f'Finished cast update for show {self.show_obj.unique_name}')
             if not self.scheduled_update and not self.switch:
-                ui.notifications.message('Finished cast update for show %s' % self.show_obj.unique_name)
+                ui.notifications.message(f'Finished cast update for show {self.show_obj.unique_name}')
 
         self.finish()
 
@@ -215,7 +215,7 @@ class CastQueueItem(PeopleQueueItem):
         super(CastQueueItem, self).finish()
 
     def __str__(self):
-        return '<Cast Queue Item (%s)%s>' % (self.show_obj.unique_name, ('', ' - forced')[self.force])
+        return f'<Cast Queue Item ({self.show_obj.unique_name}){("", " - forced")[self.force]}>'
 
     def __repr__(self):
         return self.__str__()

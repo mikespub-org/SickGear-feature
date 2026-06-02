@@ -35,7 +35,7 @@ class PrivateHDProvider(generic.TorrentProvider):
 
         self.url_base = 'https://privatehd.to/'
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'login': self.url_base + 'rules',
+                     'login': f'{self.url_base}rules',
                      'search': self.url_base + 'torrents?%s' % '&'.join(
                          ['in=1', 'tags=', 'type=2', 'language=0', 'subtitle=0', 'rip_type=0',
                           'video_quality=0', 'uploader=', 'search=%s', 'tv_type[]=%s'])}
@@ -66,7 +66,7 @@ class PrivateHDProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v))
+        rc = dict([(k, re.compile(f'(?i){v}'))
                    for (k, v) in iteritems({'info': r'.*?details\s*-\s*', 'get': 'download'})])
         log = ''
         if self.filter:

@@ -987,7 +987,7 @@ def get_url(url,  # type: AnyStr
     except requests.exceptions.ConnectionError as e:
         raised = e
         if 'mute_connect_err' not in mute:
-            logger.warning(f"Connection error msg:{ex(e)} while loading URL{_maybe_request_url(e)}")
+            logger.warning(f'Connection error msg:{ex(e)} while loading URL{_maybe_request_url(e)}')
         if failure_monitor:
             connection_fail_params = dict(fail_type=ConnectionFailTypes.connection)
     except requests.exceptions.ReadTimeout as e:

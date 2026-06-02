@@ -36,11 +36,11 @@ class NcoreProvider(generic.TorrentProvider):
 
         self.url_base = 'https://ncore.pro/'
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'login_action': self.url_base + 'login.php',
+                     'login_action': f'{self.url_base}login.php',
                      'search': self.url_base + 'torrents.php?mire=%s&' + '&'.join([
                          'miszerint=fid', 'hogyan=DESC', 'tipus=kivalasztottak_kozott',
                          'kivalasztott_tipus=xvidser,dvdser,hdser', 'miben=name']),
-                     'get': self.url_base + '%s&key='}
+                     'get': f'{self.url_base}%s&key='}
 
         self.url = self.urls['config_provider_home_uri']
 
@@ -61,7 +61,7 @@ class NcoreProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v)) for (k, v) in iteritems({
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
             'list': '.*?torrent_all', 'info': 'details', 'key': 'key=([^"]+)">Torrent let'})])
         for mode in search_params:
             for search_string in search_params[mode]:

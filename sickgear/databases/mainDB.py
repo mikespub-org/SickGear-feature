@@ -62,12 +62,12 @@ class MainSanityCheck(db.DBSanityCheck):
             fix_msg = 'Fixing subtitles: %s'
 
             if ep_len:
-                self.connection.upgrade_log(fix_msg % ('%s%%' % 0))
+                self.connection.upgrade_log(fix_msg % f'{0}%')
 
             for _cur_count, cur_ep in enumerate(ep_result):
                 if cur_p < int(_cur_count / ep_step):
                     cur_p = int(_cur_count / ep_step)
-                    self.connection.upgrade_log(fix_msg % ('%s%%' % cur_p))
+                    self.connection.upgrade_log(fix_msg % f'{cur_p}%')
                 if not cleaned:
                     logger.log('Removing duplicate subtitles data in TV Episodes table, this WILL take some time')
                     cleaned = True
@@ -114,7 +114,7 @@ class MainSanityCheck(db.DBSanityCheck):
                 logger.debug(f'Duplicate show detected! {column}: {cur_result[column]} count: {cur_result["count"]}')
 
                 cur_dupe_results = self.connection.select(
-                    'SELECT show_id, ' + column + ' FROM tv_shows WHERE ' + column + ' = ? LIMIT ?',
+                    f'SELECT show_id, {column} FROM tv_shows WHERE {column} = ? LIMIT ?',
                     [cur_result[column], int(cur_result['count']) - 1]
                 )
 
@@ -223,11 +223,11 @@ class MainSanityCheck(db.DBSanityCheck):
                                    'tv_episodes(indexer,showid,season,episode)')
 
         allowtbl, blocktbl = (('allow', 'block'), ('white', 'black'))[not self.connection.has_table('blocklist')]
-        for t in [('%slist' % allowtbl, 'show_id'), ('%slist' % blocktbl, 'show_id'),
+        for t in [(f'{allowtbl}list', 'show_id'), (f'{blocktbl}list', 'show_id'),
                   ('history', 'showid'), ('scene_exceptions', 'indexer_id')]:
-            if not self.connection.has_index('%s' % t[0], 'idx_id_indexer_%s' % t[0]):
+            if not self.connection.has_index(f'{t[0]}', f'idx_id_indexer_{t[0]}'):
                 # noinspection SqlResolve
-                self.connection.action('CREATE INDEX idx_id_indexer_%s ON %s (indexer, %s)' % (t[0], t[0], t[1]))
+                self.connection.action(f'CREATE INDEX idx_id_indexer_{t[0]} ON {t[0]} (indexer, {t[1]})')
 
     def fix_unaired_episodes(self):
 
@@ -298,7 +298,7 @@ class MainSanityCheck(db.DBSanityCheck):
         except(BaseException, Exception):
             import traceback
             logger.error('Error fixing genres separator')
-            logger.debug('%s' % traceback.format_exc())
+            logger.debug(f'{traceback.format_exc()}')
 
 
 class InitialSchema(db.SchemaUpgrade):
@@ -1261,7 +1261,7 @@ class Migrate43(db.SchemaUpgrade):
             db_backed_up = True
             self.upgrade_log('Dropping redundant table tmdb_info')
             # noinspection SqlResolve
-            self.connection.action('DROP TABLE [%s]' % table)
+            self.connection.action(f'DROP TABLE [{table}]')
             db_chg = True
 
         if self.has_column('tv_shows', 'tmdb_id'):
@@ -1448,7 +1448,7 @@ class ChangeMapIndexer(db.SchemaUpgrade):
         remove_tables = list(current_tables - keep_tables)
         for table in remove_tables:
             # noinspection SqlResolve
-            self.connection.action('DROP TABLE [%s]' % table)
+            self.connection.action(f'DROP TABLE [{table}]')
 
         self.connection.action('VACUUM')
 
@@ -1543,7 +1543,7 @@ class AddIndexerToTables(db.SchemaUpgrade):
                     self.connection.select('SELECT indexer AS tv_id, indexer_id AS prod_id FROM tv_shows')}
 
         allowtbl, blocktbl = (('allow', 'block'), ('white', 'black'))[not self.connection.has_table('blocklist')]
-        allowtbl, blocktbl = '%slist' % allowtbl, '%slist' % blocktbl
+        allowtbl, blocktbl = f'{allowtbl}list', f'{blocktbl}list'
         columns = {allowtbl: 'show_id, range, keyword, indexer',
                    blocktbl: 'show_id, range, keyword, indexer',
                    'history': 'action, date, showid, season, episode, quality, resource, provider, version, indexer',
@@ -1558,23 +1558,23 @@ class AddIndexerToTables(db.SchemaUpgrade):
                 cl = []
                 for s_id, i in iteritems(show_ids):
                     # noinspection SqlResolve
-                    cl.append(['UPDATE %s SET indexer = ? WHERE %s = ?' % (t[0], t[1]), [i, s_id]])
+                    cl.append([f'UPDATE {t[0]} SET indexer = ? WHERE {t[1]} = ?', [i, s_id]])
                 self.connection.mass_action(cl)
                 # noinspection SqlResolve
-                self.connection.action('CREATE INDEX idx_id_indexer_%s ON %s (indexer, %s)' % (t[0], t[0], t[1]))
+                self.connection.action(f'CREATE INDEX idx_id_indexer_{t[0]} ON {t[0]} (indexer, {t[1]})')
 
             if 'history' != t[0]:
                 # remove any unknown ids (exception history table)
                 # noinspection SqlResolve
-                self.connection.action('DELETE FROM %s WHERE indexer = ?' % t[0], [0])
+                self.connection.action(f'DELETE FROM {t[0]} WHERE indexer = ?', [0])
                 if 0 < self.connection.connection.total_changes:
-                    self.upgrade_log('Removed orphaned data from %s' % t[0])
+                    self.upgrade_log(f'Removed orphaned data from {t[0]}')
 
-            if self.connection.has_table('backup_%s' % t[0]):
-                self.upgrade_log('Adding backup data to %s' % t[0])
+            if self.connection.has_table(f'backup_{t[0]}'):
+                self.upgrade_log(f'Adding backup data to {t[0]}')
                 self.connection.action('REPLACE INTO %s SELECT %s FROM %s' % ('%s (%s)' % (t[0], columns[t[0]]),
                                                                               columns[t[0]], 'backup_%s' % t[0]))
-                self.connection.remove_table('backup_%s' % t[0])
+                self.connection.remove_table(f'backup_{t[0]}')
 
         # recreate tables that have wrong primary key = indexer_id without indexer
         self.upgrade_log('Adding TV info support to scene_numbering')
@@ -1723,11 +1723,11 @@ class RenameAllowBlockListTables(db.SchemaUpgrade):
             for old, new in (('black', 'block'), ('white', 'allow')):
                 # noinspection SqlResolve
                 self.connection.mass_action([
-                    ['ALTER TABLE %slist RENAME TO tmp_%slist' % (old, new)],
-                    ['CREATE TABLE %slist (show_id INTEGER, range TEXT, keyword TEXT, indexer NUMERIC)' % new],
+                    [f'ALTER TABLE {old}list RENAME TO tmp_{new}list'],
+                    [f'CREATE TABLE {new}list (show_id INTEGER, range TEXT, keyword TEXT, indexer NUMERIC)'],
                     ['INSERT INTO %slist(show_id, range, keyword, indexer)'
                      ' SELECT show_id, range, keyword, indexer FROM tmp_%slist' % (new, new)],
-                    ['DROP TABLE tmp_%slist' % new]
+                    [f'DROP TABLE tmp_{new}list']
                 ])
 
         return self.set_db_version(20013)
@@ -1962,13 +1962,13 @@ class ChangeShowData(db.SchemaUpgrade):
         tables = self.list_tables()
         for t in ('castlist', 'characters', 'character_ids', 'persons', 'person_ids', 'character_person_map',
                   'character_person_years', 'tv_src_switch', 'switch_ep_result'):
-            if 'backup_%s' % t in tables:
+            if f'backup_{t}' in tables:
                 # noinspection SqlResolve
-                cl.append(['ALTER TABLE backup_%s RENAME TO %s' % (t, t)])
+                cl.append([f'ALTER TABLE backup_{t} RENAME TO {t}'])
             elif t not in tables:
                 cl.extend(table_create_sql[t])
-            if 'idx_%s' % t in table_create_sql:
-                cl.extend(table_create_sql['idx_%s' % t])
+            if f'idx_{t}' in table_create_sql:
+                cl.extend(table_create_sql[f'idx_{t}'])
 
         cl.extend(sickgear.tv.TVShow.orphaned_cast_sql())
 
@@ -2001,7 +2001,7 @@ class ChangeTmdbID(db.SchemaUpgrade):
                 try:
                     move_file(_f.path,
                               os.path.join(os.path.dirname(_f.path),
-                                    re.sub('^%s-' % img_src, '%s-' %
+                                    re.sub(f'^{img_src}-', '%s-' %
                                            cache_img_src[(img_src, TVINFO_TMDB)[TVINFO_TMDB_OLD == img_src]], _f.name)))
                 except (BaseException, Exception):
                     pass
@@ -2047,7 +2047,7 @@ class ChangeTmdbID(db.SchemaUpgrade):
                 if dupe_ids:
                     self.upgrade_log('Dupe tmdb id detected, removing from backup')
                     self.connection.action(
-                        'DELETE FROM tv_shows WHERE show_id IN (%s)' % ','.join(['?'] * len(dupe_ids)), list(dupe_ids))
+                        f'DELETE FROM tv_shows WHERE show_id IN ({",".join(["?"] * len(dupe_ids))})', list(dupe_ids))
 
         self.upgrade_log('Changing tmdb id')
         self.connection.mass_action([

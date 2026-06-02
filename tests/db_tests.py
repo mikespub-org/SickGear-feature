@@ -68,7 +68,7 @@ class DBBasicTests(test.SickbeardTestDBCase):
         ])
         for i, f in enumerate(field_list):
             self.assertEqual(str(result[-1][0][f]), str(insert_para[i]),
-                             msg='Field %s: %s != %s' % (f, result[-1][0][f], insert_para[i]))
+                             msg=f'Field {f}: {result[-1][0][f]} != {insert_para[i]}')
 
 
 if '__main__' == __name__:

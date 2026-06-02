@@ -95,7 +95,7 @@ class ReleaseMap(Job):
         """
         result = []
 
-        url = 'https://thexem.info/map/havemap?origin=%s' % xem_origin
+        url = f'https://thexem.info/map/havemap?origin={xem_origin}'
 
         task = 'Fetching show ids with%s xem scene mapping%s for origin'
         logger.log(f'{task % ("", "s")} {infosrc_name}')

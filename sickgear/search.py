@@ -588,7 +588,7 @@ def search_for_needed_episodes(ep_obj_list):
     providers = list(filter(lambda x: x.is_active() and x.enable_recentsearch, sickgear.providers.sorted_sources()))
 
     for cur_provider in providers:
-        threading.current_thread().name = '%s :: [%s]' % (orig_thread_name, cur_provider.name)
+        threading.current_thread().name = f'{orig_thread_name} :: [{cur_provider.name}]'
 
         ep_obj_search_result_list = cur_provider.search_rss(ep_obj_list)
 
@@ -655,23 +655,23 @@ def can_reject(release_name):
     :return: None, None if release has no issue otherwise True/Nuke reason, URLs that rejected
     """
     rej_urls = []
-    srrdb_url = 'https://www.srrdb.com/api/search/r:%s/order:date-desc' % re.sub(r'[][]', '', release_name)
+    srrdb_url = f'https://www.srrdb.com/api/search/r:{re.sub("[][]", "", release_name)}/order:date-desc'
     resp = helpers.get_url(srrdb_url, parse_json=True)
     if not resp:
         srrdb_rej = True
-        rej_urls += ['Failed contact \'%s\'' % srrdb_url]
+        rej_urls += [f'Failed contact \'{srrdb_url}\'']
     else:
         srrdb_rej = (not len(resp.get('results', []))
                      or release_name.lower() != resp.get('results', [{}])[0].get('release', '').lower())
-        rej_urls += ([], ['\'%s\'' % srrdb_url])[srrdb_rej]
+        rej_urls += ([], [f'\'{srrdb_url}\''])[srrdb_rej]
 
     sane_name = helpers.full_sanitize_scene_name(release_name)
     # predb_url = 'https://predb.ovh/api/v1/?q=@name "%s"' % sane_name
-    predb_url = 'https://predb.de/api/?q=%s' % release_name
+    predb_url = f'https://predb.de/api/?q={release_name}'
     resp = helpers.get_url(predb_url, parse_json=True)
     predb_rej = True
     if not resp:
-        rej_urls += ['Failed contact \'%s\'' % predb_url]
+        rej_urls += [f'Failed contact \'{predb_url}\'']
     elif 'success' == resp.get('status', '').lower():
         rows = resp and resp.get('data') or []
         for data in rows:
@@ -682,7 +682,7 @@ def can_reject(release_name):
                 else:
                     predb_rej = nuke_type not in (2, 4) and (data.get('reason') or 'Reason not set')
                 break
-        rej_urls += ([], ['\'%s\'' % predb_url])[bool(predb_rej)]
+        rej_urls += ([], [f'\'{predb_url}\''])[bool(predb_rej)]
 
     pred = any([not srrdb_rej, not predb_rej])
 
@@ -746,11 +746,11 @@ def _search_provider_thread(provider, provider_results, show_obj, ep_obj_list, m
         elif not getattr(provider, 'search_fallback', False) or 2 == search_count:
             break
 
-        search_mode = '%sonly' % ('ep', 'sp')['ep' in search_mode]
+        search_mode = f'{("ep", "sp")["ep" in search_mode]}only'
         logger.log(f'Falling back to {("season pack", "episode")["ep" in search_mode]} search ...')
 
     if not provider_results:
-        logger.log('No suitable result at [%s]' % provider.name)
+        logger.log(f'No suitable result at [{provider.name}]')
 
 
 def cache_torrent_file(
@@ -761,7 +761,7 @@ def cache_torrent_file(
     # type: (...) -> Optional[TorrentSearchResult]
 
     cache_file = os.path.join(sickgear.CACHE_DIR or helpers.get_system_temp_dir(),
-                              '%s.torrent' % (helpers.sanitize_filename(search_result.name)))
+                              f'{helpers.sanitize_filename(search_result.name)}.torrent')
 
     if not helpers.download_file(
             search_result.url, cache_file, session=search_result.provider.session, failure_monitor=False):
@@ -775,7 +775,7 @@ def cache_torrent_file(
 
     try:
         # verify header
-        re.findall(r'\w+\d+:', ('%s' % torrent_content)[0:6])[0]
+        re.findall(r'\w+\d+:', (f'{torrent_content}')[0:6])[0]
     except (BaseException, Exception):
         return
 
@@ -889,7 +889,7 @@ def search_providers(
                                                            show_obj=show_obj, ep_obj_list=ep_obj_list,
                                                            manual_search=manual_search,
                                                            try_other_searches=try_other_searches),
-                                               name='%s :: [%s]' % (orig_thread_name, cur_provider.name)))
+                                               name=f'{orig_thread_name} :: [{cur_provider.name}]'))
 
         # start the provider search thread
         search_threads[-1].start()

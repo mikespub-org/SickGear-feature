@@ -96,7 +96,7 @@ class NameParser(object):
             for cur_pattern_num, (cur_pattern_name, cur_pattern) in enumerate(regexItem):
                 try:
                     cur_pattern = strip_comment.sub('', cur_pattern)
-                    cur_regex = re.compile('(?x)' + cur_pattern, re.VERBOSE | re.IGNORECASE)
+                    cur_regex = re.compile(f'(?x){cur_pattern}', re.VERBOSE | re.IGNORECASE)
                 except re.error as errormsg:
                     logger.log(f'WARNING: Invalid episode_pattern, {errormsg}. {cur_pattern}')
                 else:
@@ -203,8 +203,8 @@ class NameParser(object):
 
                 def _process_epnum(captures, capture_names, grp_name, extra_grp_name, ep_numbers, parse_result):
                     ep_num = self._convert_number(captures.group(grp_name))
-                    extra_grp_name = 'extra_%s' % extra_grp_name
-                    ep_numbers = '%sepisode_numbers' % ep_numbers
+                    extra_grp_name = f'extra_{extra_grp_name}'
+                    ep_numbers = f'{ep_numbers}episode_numbers'
                     if extra_grp_name in capture_names and captures.group(extra_grp_name):
                         try:
                             if hasattr(self.show_obj, 'get_episode'):
@@ -266,7 +266,7 @@ class NameParser(object):
                         continue
                     if tmp_extra_info:
                         if result.extra_info:
-                            tmp_extra_info = '%s %s' % (result.extra_info, tmp_extra_info)
+                            tmp_extra_info = f'{result.extra_info} {tmp_extra_info}'
                         result.extra_info = tmp_extra_info
                     result.score += 1
 
@@ -365,7 +365,7 @@ class NameParser(object):
                                 src_num = str(re.findall(patt % r'\w+', best_result.extra_info)[0])
                                 alt_num = nums.get(src_num) or list(iterkeys(nums))[
                                     list(itervalues(nums)).index(src_num)]
-                                re_partnum = re.compile(patt % ('%s|%s' % (src_num, alt_num)))
+                                re_partnum = re.compile(patt % (f'{src_num}|{alt_num}'))
                                 for ep_details in sql_result:
                                     if re_partnum.search(ep_details['name']):
                                         season_number = int(ep_details['season'])
@@ -644,7 +644,7 @@ class NameParser(object):
         # if there's no useful info in it then raise an exception
         if None is final_result.season_number and not final_result.episode_numbers and None is final_result.air_date \
                 and not final_result.ab_episode_numbers and not final_result.series_name:
-            raise InvalidNameException('Unable to parse %s' % name.encode(sickgear.SYS_ENCODING, 'xmlcharrefreplace'))
+            raise InvalidNameException(f'Unable to parse {name.encode(sickgear.SYS_ENCODING, "xmlcharrefreplace")}')
 
         if final_result.show_obj and final_result.show_obj.is_anime \
                 and not final_result.release_group and None is not release_group:
@@ -764,25 +764,25 @@ class ParseResult(LegacyParseResult):
         else:
             to_return = ''
         if None is not self.season_number:
-            to_return += 'S' + str(self.season_number)
+            to_return += f'S{self.season_number!s}'
         if self.episode_numbers and len(self.episode_numbers):
             for e in self.episode_numbers:
-                to_return += 'E' + str(e)
+                to_return += f'E{e!s}'
 
         if self.is_air_by_date:
             to_return += str(self.air_date)
         if self.ab_episode_numbers:
-            to_return += ' [ABS: %s]' % str(self.ab_episode_numbers)
+            to_return += f' [ABS: {self.ab_episode_numbers!s}]'
         if self.is_anime:
             if self.version:
-                to_return += ' [ANIME VER: %s]' % str(self.version)
+                to_return += f' [ANIME VER: {self.version!s}]'
 
         if self.release_group:
-            to_return += ' [GROUP: %s]' % self.release_group
+            to_return += f' [GROUP: {self.release_group}]'
 
-        to_return += ' [ABD: %s]' % str(self.is_air_by_date)
-        to_return += ' [ANIME: %s]' % str(self.is_anime)
-        to_return += ' [whichReg: %s]' % str(self.which_regex)
+        to_return += f' [ABD: {self.is_air_by_date!s}]'
+        to_return += f' [ANIME: {self.is_anime!s}]'
+        to_return += f' [whichReg: {self.which_regex!s}]'
 
         return decode_str(to_return, errors='xmlcharrefreplace')
 
@@ -871,7 +871,7 @@ class NameParserCache(object):
                         key = self._previous_parsed.first_key()
                         del self._previous_parsed[key]
                     except KeyError:
-                        logger.debug('Could not remove old NameParserCache entry: %s' % key)
+                        logger.debug(f'Could not remove old NameParserCache entry: {key}')
 
     def get(self, name):
         # type: (AnyStr) -> ParseResult
@@ -884,7 +884,7 @@ class NameParserCache(object):
         """
         with self.lock:
             if name in self._previous_parsed:
-                logger.debug('Using cached parse result for: ' + name)
+                logger.debug(f'Using cached parse result for: {name}')
                 self._previous_parsed.move_to_end(name)
                 return self._previous_parsed[name]
 

@@ -83,7 +83,7 @@ class GenericQueue(Job):
                     # launch the queue item in a thread
                     self.currentItem = self.queue.pop(0)
                     if 'SEARCHQUEUE' != self.queue_name:
-                        self.currentItem.name = self.queue_name + '-' + self.currentItem.name
+                        self.currentItem.name = f'{self.queue_name}-{self.currentItem.name}'
                     self.currentItem.start()
 
                 self.check_events()
@@ -95,9 +95,9 @@ class GenericQueue(Job):
 
         """
         my_db = db.DBConnection('cache.db')
-        cr = my_db.mass_action([['SELECT max(uid) as max_id FROM %s' % t] for t in self.cache_db_tables])
+        cr = my_db.mass_action([[f'SELECT max(uid) as max_id FROM {t}'] for t in self.cache_db_tables])
         my_db = db.DBConnection()
-        mr = my_db.mass_action([['SELECT max(uid) as max_id FROM %s' % t] for t in self.main_db_tables])
+        mr = my_db.mass_action([[f'SELECT max(uid) as max_id FROM {t}'] for t in self.main_db_tables])
         return max([c[0]['max_id'] or 0 for c in cr] + [s[0]['max_id'] or 0 for s in mr] + [0])
 
     def _get_new_id(self):
@@ -119,7 +119,7 @@ class GenericQueue(Job):
                 my_db = db.DBConnection('cache.db')
                 my_db.mass_action(cl)
         except (BaseException, Exception) as e:
-            logger.error('Exception saving queue %s to db: %s' % (self.__class__.__name__, ex(e)))
+            logger.error(f'Exception saving queue {self.__class__.__name__} to db: {ex(e)}')
 
     def _clear_sql(self):
         # type: (...) -> List[List]
@@ -133,7 +133,7 @@ class GenericQueue(Job):
                     my_db = db.DBConnection('cache.db')
                     my_db.mass_action(item_sql)
         except (BaseException, Exception) as e:
-            logger.error('Exception saving item %s to db: %s' % (item, ex(e)))
+            logger.error(f'Exception saving item {item} to db: {ex(e)}')
 
     def delete_item(self, item, finished_run=False):
         # type: (Union[QueueItem, CastQueueItem], bool) -> None
@@ -149,7 +149,7 @@ class GenericQueue(Job):
                     my_db = db.DBConnection('cache.db')
                     my_db.mass_action(item_sql)
             except (BaseException, Exception) as e:
-                logger.error('Exception deleting item %s from db: %s' % (item, ex(e)))
+                logger.error(f'Exception deleting item {item} from db: {ex(e)}')
 
     def _get_item_sql(self, item):
         # type: (Union[QueueItem, CastQueueItem]) -> List[List]
@@ -184,11 +184,11 @@ class GenericQueue(Job):
                     to_remove = [r for r in to_remove for q in self.queue
                                  if r == q.uid and (q.action_id not in excluded_types)]
                 del_sql = [
-                    ['DELETE FROM %s WHERE uid IN (%s)' % (t, ','.join(['?'] * len(to_remove))), to_remove]
+                    [f'DELETE FROM {t} WHERE uid IN ({",".join(["?"] * len(to_remove))})', to_remove]
                     for t in self.cache_db_tables
                 ]
                 del_main_sql = [
-                    ['DELETE FROM %s WHERE uid IN (%s)' % (t, ','.join(['?'] * len(to_remove))), to_remove]
+                    [f'DELETE FROM {t} WHERE uid IN ({",".join(["?"] * len(to_remove))})', to_remove]
                     for t in self.main_db_tables
                 ]
 
@@ -218,20 +218,20 @@ class GenericQueue(Job):
             if action_types:
                 self.queue = [q for q in self.queue if q.action_id in excluded_types or q.action_id not in action_types]
                 del_sql = [
-                    ['DELETE FROM %s WHERE action_id IN (%s)' % (t, ','.join(['?'] * len(action_types))), action_types]
+                    [f'DELETE FROM {t} WHERE action_id IN ({",".join(["?"] * len(action_types))})', action_types]
                     for t in self.cache_db_tables
                 ]
                 del_main_sql = [
-                    ['DELETE FROM %s WHERE action_id IN (%s)' % (t, ','.join(['?'] * len(action_types))), action_types]
+                    [f'DELETE FROM {t} WHERE action_id IN ({",".join(["?"] * len(action_types))})', action_types]
                     for t in self.main_db_tables
                 ]
             else:
                 self.queue = [q for q in self.queue if q.action_id in excluded_types]
                 del_sql = [
-                    ['DELETE FROM %s' % t] for t in self.cache_db_tables
+                    [f'DELETE FROM {t}'] for t in self.cache_db_tables
                 ]
                 del_main_sql = [
-                    ['DELETE FROM %s' % t] for t in self.main_db_tables
+                    [f'DELETE FROM {t}'] for t in self.main_db_tables
                 ]
             if del_sql:
                 my_db = db.DBConnection('cache.db')
@@ -288,7 +288,7 @@ class GenericQueue(Job):
                     if 0 == len(self.events[event_type]):
                         del self.events[event_type]
                 except (BaseException, Exception) as e:
-                    logger.error('Error removing event method from queue: %s' % ex(e))
+                    logger.error(f'Error removing event method from queue: {ex(e)}')
 
     def execute_events(self, event_type, *args, **kwargs):
         # type: (int, Tuple, Dict) -> None
@@ -297,7 +297,7 @@ class GenericQueue(Job):
                 try:
                     event(*args, **kwargs)
                 except (BaseException, Exception) as e:
-                    logger.error('Error executing Event: %s' % ex(e))
+                    logger.error(f'Error executing Event: {ex(e)}')
 
 
 class QueueItem(threading.Thread):

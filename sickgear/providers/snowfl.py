@@ -41,9 +41,9 @@ class SnowflProvider(generic.TorrentProvider):
         self.url_base = 'https://snowfl.com/'
 
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'browse': self.url_base + '%(token)s/Q/%(ent)s/0/DATE/24/0?_=%(ts)s',
-                     'search': self.url_base + '%(token)s/%(ss)s/%(ent)s/0/DATE/NONE/1?_=%(ts)s',
-                     'get': self.url_base + '%(token)s/%(src)s/%(url)s?_=%(ts)s'}
+                     'browse': f'{self.url_base}%(token)s/Q/%(ent)s/0/DATE/24/0?_=%(ts)s',
+                     'search': f'{self.url_base}%(token)s/%(ss)s/%(ent)s/0/DATE/NONE/1?_=%(ts)s',
+                     'get': f'{self.url_base}%(token)s/%(src)s/%(url)s?_=%(ts)s'}
 
         self.minseed, self.minleech = 2 * [None]
         self.confirmed = False
@@ -132,7 +132,7 @@ class SnowflProvider(generic.TorrentProvider):
             if not html:
                 raise generic.HaltParseException
 
-            rc = dict([(k, re.compile('(?i)' + v)) for (k, v) in iteritems({
+            rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
                 'js': r'<script[^>]+?src="([^"]+?js\?v=[\w]{8,})"',
                 'token': r'\w\s*=\s*"(\w{30,40})"', 'seed': r'n random[^"]+"([^"]+)'})])
 

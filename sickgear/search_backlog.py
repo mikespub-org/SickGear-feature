@@ -130,7 +130,7 @@ class BacklogSearcher(Job):
                             sickgear.search_queue_scheduler.action.is_in_queue(segment[0].show_obj, segment):
                         continue
 
-                    self.currentSearchInfo = {'title': segment[0].show_obj.name + ' Season ' + str(season)}
+                    self.currentSearchInfo = {'title': f'{segment[0].show_obj.name} Season {season!s}'}
 
                     backlog_queue_item = search_queue.BacklogQueueItem(
                         segment[0].show_obj, segment,
@@ -342,7 +342,7 @@ class BacklogSearcher(Job):
         return last_run_time
 
     def _set_last_runtime(self, when):
-        logger.debug('Setting the last backlog runtime in the DB to %s' % when)
+        logger.debug(f'Setting the last backlog runtime in the DB to {when}')
 
         my_db = db.DBConnection()
         sql_result = my_db.select('SELECT * FROM info')
@@ -355,7 +355,7 @@ class BacklogSearcher(Job):
             my_db.action('INSERT INTO info (last_backlog, last_indexer, last_run_backlog) VALUES (?,?,?)', [1, 0, when])
         else:
             # noinspection SqlConstantCondition
-            my_db.action('UPDATE info SET last_run_backlog=%s WHERE 1=1' % when)
+            my_db.action(f'UPDATE info SET last_run_backlog={when} WHERE 1=1')
 
         self.nextBacklog = datetime.datetime.fromtimestamp(1)
 
@@ -381,7 +381,7 @@ class BacklogSearcher(Job):
     @staticmethod
     def _set_last_backlog(when):
 
-        logger.debug('Setting the last backlog in the DB to %s' % when)
+        logger.debug(f'Setting the last backlog in the DB to {when}')
 
         my_db = db.DBConnection()
         sql_result = my_db.select('SELECT * FROM info')
@@ -391,7 +391,7 @@ class BacklogSearcher(Job):
                          [str(when), 0, 1])
         else:
             # noinspection SqlConstantCondition
-            my_db.action('UPDATE info SET last_backlog=%s WHERE 1=1' % when)
+            my_db.action(f'UPDATE info SET last_backlog={when} WHERE 1=1')
 
     def job_run(self):
         try:

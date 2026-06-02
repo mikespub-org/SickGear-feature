@@ -38,11 +38,11 @@ class ShazbatProvider(generic.TorrentProvider):
 
         self.url_base = 'https://www.shazbat.tv/'
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'login_action': self.url_base + 'login',
-                     'feeds': self.url_base + 'rss_feeds',
-                     'browse': self.url_base + 'torrents?portlet=true',
-                     'search': self.url_base + 'search?portlet=true&search=%s',
-                     'show': self.url_base + 'show?id=%s&show_mode=torrents'}
+                     'login_action': f'{self.url_base}login',
+                     'feeds': f'{self.url_base}rss_feeds',
+                     'browse': f'{self.url_base}torrents?portlet=true',
+                     'search': f'{self.url_base}search?portlet=true&search=%s',
+                     'show': f'{self.url_base}show?id=%s&show_mode=torrents'}
 
         self.url = self.urls['config_provider_home_uri']
 
@@ -62,7 +62,7 @@ class ShazbatProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v)) for (k, v) in iteritems({'show_id': r'"show\?id=(\d+)[^>]+>([^<]+)<\/a>',
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({'show_id': r'"show\?id=(\d+)[^>]+>([^<]+)<\/a>',
                                                                         'get': 'load_torrent'})])
         search_types = sorted([x for x in iteritems(search_params)], key=lambda tup: tup[0], reverse=True)
         maybe_only = search_types[0][0]

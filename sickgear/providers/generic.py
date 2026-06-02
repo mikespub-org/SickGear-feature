@@ -313,10 +313,10 @@ class GenericProvider(object):
     def _save_fail_value(self, field, value):
         my_db = db.DBConnection('cache.db')
         if my_db.has_table('provider_fails_count'):
-            r = my_db.action('UPDATE provider_fails_count SET %s = ? WHERE prov_name = ?' % field,
+            r = my_db.action(f'UPDATE provider_fails_count SET {field} = ? WHERE prov_name = ?',
                              [value, self.get_id()])
             if 0 == r.rowcount:
-                my_db.action('REPLACE INTO provider_fails_count (prov_name, %s) VALUES (?,?)' % field,
+                my_db.action(f'REPLACE INTO provider_fails_count (prov_name, {field}) VALUES (?,?)',
                              [self.get_id(), value])
 
     @property
@@ -511,7 +511,7 @@ class GenericProvider(object):
             if time_left > datetime.timedelta(seconds=0):
                 if log_warning:
                     # Ensure provider name output (e.g. when displaying config/provs) instead of e.g. thread "Tornado"
-                    prepend = ('[%s] :: ' % self.name, '')[any(x.name in threading.current_thread().name
+                    prepend = (f'[{self.name}] :: ', '')[any(x.name in threading.current_thread().name
                                                                for x in sickgear.providers.sorted_sources())]
                     logger.warning(f'{prepend}Too many requests reached at {self.fmt_delta(self.tmr_limit_time)},'
                                    f' waiting for {self.fmt_delta(time_left)}')
@@ -542,7 +542,7 @@ class GenericProvider(object):
             self._last_fail_type = fail_type
             self.fails.add_fail(*args, **kwargs)
         else:
-            logger.debug('%s: Not logging same failure within 3 seconds' % self.name)
+            logger.debug(f'{self.name}: Not logging same failure within 3 seconds')
 
     def get_url(self, url, skip_auth=False, use_tmr_limit=True, use_failure_counter=True, *args, **kwargs):
         # type: (AnyStr, bool, bool, bool, Any, Any) -> Optional[AnyStr, Dict]
@@ -590,7 +590,7 @@ class GenericProvider(object):
             if data and not isinstance(data, tuple) \
                     or isinstance(data, tuple) and data[0]:
                 if 0 != self.failure_count:
-                    logger.debug('Unblocking provider: %s' % self.get_id())
+                    logger.debug(f'Unblocking provider: {self.get_id()}')
                 self.failure_count = 0
                 self.failure_time = None
             else:
@@ -636,10 +636,10 @@ class GenericProvider(object):
         if self.should_skip(log_warning=False):
             post = []
             if post_data:
-                post += [' .. Post params: [%s]' % '&'.join([post_data])]
+                post += [f' .. Post params: [{post_data}]']
             if post_json:
-                post += [' .. Json params: [%s]' % '&'.join([post_json])]
-            logger.warning('Failure URL: %s%s' % (url, ''.join(post)))
+                post += [f' .. Json params: [{post_json}]']
+            logger.warning(f'Failure URL: {url}{"".join(post)}')
 
     def get_id(self):
         # type: (...) -> AnyStr
@@ -661,11 +661,11 @@ class GenericProvider(object):
         :param default_name:
         :return:
         """
-        for name in ['%s.%s' % (self.get_id(), image_ext) for image_ext in ['png', 'gif', 'jpg']]:
+        for name in [f'{self.get_id()}.{image_ext}' for image_ext in ['png', 'gif', 'jpg']]:
             if os.path.isfile(os.path.join(sickgear.PROG_DIR, 'gui', sickgear.GUI_NAME, 'images', 'providers', name)):
                 return name
 
-        return '%s.png' % ('newznab', default_name[0])[any(default_name)]
+        return f'{("newznab", default_name[0])[any(default_name)]}.png'
 
     def _authorised(self):
         # type: (...) -> bool
@@ -726,14 +726,14 @@ class GenericProvider(object):
             (sickgear.PUSHALOT_AUTHORIZATIONTOKEN, 'pushalot_authorizationtoken'),
             (sickgear.SLACK_ACCESS_TOKEN, 'slack_access_token'),
             (sickgear.TELEGRAM_ACCESS_TOKEN, 'telegram_access_token'),
-        ] + [(_k[1], 'sg_apikey_%s' % _k[0]) for _k in sickgear.API_KEYS if _k[1]] +\
+        ] + [(_k[1], f'sg_apikey_{_k[0]}') for _k in sickgear.API_KEYS if _k[1]] +\
             ([], [(sickgear.SUBTITLES_SERVICES_AUTH[0][1],
-                   'opensubs_%s' % sickgear.SUBTITLES_SERVICES_AUTH[0][0])])[any(sickgear.SUBTITLES_SERVICES_AUTH)] +\
+                   f'opensubs_{sickgear.SUBTITLES_SERVICES_AUTH[0][0]}')])[any(sickgear.SUBTITLES_SERVICES_AUTH)] +\
             [(sickgear.TRAKT_CLIENT_SECRET, 'trakt_client_secret')] +\
-            [(_t, 'trakt_tk_%s' % _n) for (_t, _n) in [
+            [(_t, f'trakt_tk_{_n}') for (_t, _n) in [
                 (getattr(x, 'token', ''), getattr(x, 'name', ''))
                 for x in sickgear.TRAKT_ACCOUNTS.values()] if _t] +\
-            [(_t, 'trakt_rt_%s' % _n) for (_t, _n) in [
+            [(_t, f'trakt_rt_{_n}') for (_t, _n) in [
                 (getattr(x, 'refresh_token', ''), getattr(x, 'name', ''))
                 for x in sickgear.TRAKT_ACCOUNTS.values()] if _t]:
             if not cur_auth[0] or 4 > len(cur_auth[0]):
@@ -822,7 +822,7 @@ class GenericProvider(object):
 
                 if not btih or not re.search('(?i)[0-9a-f]{32,40}', btih):
                     assert not result.url.startswith('http')
-                    logger.error('Unable to extract torrent hash from link: ' + ex(result.url))
+                    logger.error(f'Unable to extract torrent hash from link: {ex(result.url)}')
                     return False
 
                 urls = ['http%s://%s/torrent/%s.torrent' % (u + (btih.upper(),))
@@ -877,7 +877,7 @@ class GenericProvider(object):
 
         if not saved and 'magnet' == link_type:
             logger.debug('All torrent cache servers failed to return a downloadable result')
-            final_file = os.path.join(final_dir, '%s.%s' % (helpers.sanitize_filename(result.name), link_type))
+            final_file = os.path.join(final_dir, f'{helpers.sanitize_filename(result.name)}.{link_type}')
             try:
                 with open(final_file, 'wb') as fp:
                     fp.write(decode_bytes(result.url))
@@ -986,7 +986,7 @@ class GenericProvider(object):
         return title, url
 
     def _link(self, url, url_tmpl=None, url_quote=None):
-        url = '%s' % url  # ensure string type
+        url = f'{url}'  # ensure string type
         if url and not re.match('(?i)magnet:', url):
             url = url.strip().replace('&amp;', '&')
         if not url:
@@ -1007,7 +1007,7 @@ class GenericProvider(object):
         :return: dict column indices or None for leech, seeds, and size
         """
         results = {}
-        rc = dict([(k, re.compile('(?i)' + r)) for (k, r) in itertools.chain(iteritems(
+        rc = dict([(k, re.compile(f'(?i){r}')) for (k, r) in itertools.chain(iteritems(
             {'seed': r'(?:seed|s/l)', 'leech': r'(?:leech|peers)', 'size': r'(?:size)'}),
             iteritems(({}, custom_match)[any([custom_match])]))])
         table = table_row.find_parent('table')
@@ -1389,8 +1389,8 @@ class GenericProvider(object):
         :param count: count of successfully processed items
         :param url: source url of item(s)
         """
-        stats = list(map(lambda arg: ('_reject_%s' % arg[0], arg[1]),
-                         filter(lambda _arg: all([getattr(self, '_reject_%s' % _arg[0], None)]),
+        stats = list(map(lambda arg: (f'_reject_{arg[0]}', arg[1]),
+                         filter(lambda _arg: all([getattr(self, f'_reject_{_arg[0]}', None)]),
                                 (('seed', '%s <min seeders'), ('leech', '%s <min leechers'),
                                 ('notfree', '%s not freeleech'), ('unverified', '%s unverified'),
                                 ('container', '%s unwanted containers')))))
@@ -1399,8 +1399,8 @@ class GenericProvider(object):
             setattr(self, attr, None)
 
         if not self.should_skip():
-            str1, thing, str3 = (('', '%s item' % mode.lower(), ''), (' usable', 'proper', ' found'))['Propers' == mode]
-            logger.log(('%s %s in response%s from %s' % (('No' + str1, count)[0 < count], (
+            str1, thing, str3 = (('', f'{mode.lower()} item', ''), (' usable', 'proper', ' found'))['Propers' == mode]
+            logger.log(('%s %s in response%s from %s' % ((f'No{str1}', count)[0 < count], (
                 '%s%s%s%s' % (('', 'freeleech ')[getattr(self, 'freeleech', False)], thing, maybe_plural(count), str3)),
                 ('', ' (rejects: %s)' % rejects)[bool(rejects)], re.sub(r'(\s)\s+', r'\1', url))).replace('%%', '%'))
 
@@ -1417,7 +1417,7 @@ class GenericProvider(object):
                 if callable(ui_string_method):
                     pid = self.get_id()
                     # `cookie_str_only` prevents circular call via _valid_home() in ui_string_method
-                    key = ('%s_digest' % pid, 'cookie_str_only')[
+                    key = (f'{pid}_digest', 'cookie_str_only')[
                         pid in ('ptfiles', 'scenetime', 'torrentday', 'torrentleech')]
                     reqd = 'cf_clearance'
                     if reqd in ui_string_method(key) and reqd not in cookies:
@@ -1446,7 +1446,7 @@ class GenericProvider(object):
     def has_all_cookies(self, cookies=None, pre=''):
 
         cookies = cookies and ([cookies], cookies)[isinstance(cookies, list)] or ['uid', 'pass']
-        return all(['%s%s' % (pre, item) in self.session.cookies for item in cookies])
+        return all([f'{pre}{item}' in self.session.cookies for item in cookies])
 
     def _categories_string(self, mode='Cache', template='c%s=1', delimiter='&'):
 
@@ -1523,7 +1523,7 @@ class NZBProvider(GenericProvider):
             return has_key
         if None is has_key:
             raise AuthException('%s for %s is empty in Media Providers/Options'
-                                % ('API key' + ('', ' and/or Username')[hasattr(self, 'username')], self.name))
+                                % (f'API key{("", " and/or Username")[hasattr(self, "username")]}', self.name))
 
         return GenericProvider._check_auth(self)
 
@@ -1557,12 +1557,12 @@ class NZBProvider(GenericProvider):
         if shows:
             search_terms += ['.proper.', '.repack.', '.real.']
             regex += ['proper|repack', Quality.real_check]
-            proper_check = re.compile(r'(?i)(\b%s\b)' % '|'.join(regex))
+            proper_check = re.compile(rf'(?i)(\b{"|".join(regex)}\b)')
         if anime:
             terms = 'v2|v3|v4|v5|v6|v7|v8|v9'
             search_terms += [terms]
             regex += [terms]
-            proper_check = re.compile(r'(?i)(%s)' % '|'.join(regex))
+            proper_check = re.compile(rf'(?i)({"|".join(regex)})')
 
         urls = []
         while index < len(search_terms):
@@ -1697,7 +1697,7 @@ class TorrentProvider(GenericProvider):
                 (all([container]), 'container'),
         )):
             reject = True
-            attr = '_reject_%s' % attr
+            attr = f'_reject_{attr}'
             rejected = getattr(self, attr, None)
             setattr(self, attr, 1 if not rejected else 1 + rejected)
 
@@ -1799,7 +1799,7 @@ class TorrentProvider(GenericProvider):
                 if 'date_detail' not in kwargs else kwargs['date_detail'](ep_obj.airdate)
             if show_obj.is_sports:
                 month = ep_obj.airdate.strftime('%b')
-                ep_detail = (ep_detail + [month], ['%s|%s' % (x, month) for x in ep_detail])[date_or]
+                ep_detail = (ep_detail + [month], [f'{x}|{month}' for x in ep_detail])[date_or]
         elif show_obj.is_anime:
             ep_detail = ep_obj.scene_absolute_number \
                 if 'ep_detail_anime' not in kwargs else kwargs['ep_detail_anime'](ep_obj.scene_absolute_number)
@@ -1845,7 +1845,7 @@ class TorrentProvider(GenericProvider):
         for name in get_show_names_all_possible(self.show_obj, scenify=process_name and getattr(self, 'scene', True),
                                                 season=season):
             for detail in ep_detail:
-                search_params += [crop.sub(r'\1', '%s %s%s' % (name, x, detail)) for x in prefix]
+                search_params += [crop.sub(r'\1', f'{name} {x}{detail}') for x in prefix]
         return search_params
 
     @staticmethod
@@ -1883,7 +1883,7 @@ class TorrentProvider(GenericProvider):
 
         seen_attr = 'PROVIDER_SEEN'
         if obf and self.__module__ not in getattr(sickgear, seen_attr, []):
-            file_path = '%s.py' % os.path.join(sickgear.PROG_DIR, *self.__module__.split('.'))
+            file_path = f'{os.path.join(sickgear.PROG_DIR, *self.__module__.split("."))}.py'
             if os.path.isfile(file_path):
                 with open(file_path, 'rb') as file_hd:
                     c = bytearray(codecs.encode(decode_bytes(str(zlib.crc32(file_hd.read()))), 'hex_codec'))
@@ -1892,7 +1892,7 @@ class TorrentProvider(GenericProvider):
                     if self.__module__.endswith(self._decode(bytearray(b64decode(x)), c)):
                         for ux in obf[x]:
                             urls += [self._decode(bytearray(
-                                b64decode(''.join([re.sub(r'[\s%s]+' % ux[0], '', x[::-1]) for x in ux[1:]]))), c)]
+                                b64decode(''.join([re.sub(rf'[\s{ux[0]}]+', '', x[::-1]) for x in ux[1:]]))), c)]
                         url_exclude = url_exclude or []
                         if url_exclude:
                             urls = urls[1:]
@@ -1941,7 +1941,7 @@ class TorrentProvider(GenericProvider):
         if not url_list and getattr(self, 'url_edit', None) or not any(filter(lambda u: 10 < len(u), url_list)):
             return None
 
-        url_list = list(map(lambda u: '%s/' % u.rstrip('/'), url_list))
+        url_list = list(map(lambda u: f'{u.rstrip("/")}/', url_list))
         last_url, expire = sickgear.PROVIDER_HOMES.get(self.get_id(), ('', None))
         url_drop = (url_exclude or []) + getattr(self, 'url_drop', [])
         if url_drop and any(url in last_url for url in url_drop):  # deprecate url
@@ -1964,7 +1964,7 @@ class TorrentProvider(GenericProvider):
                 return None
             failure_count += self.failure_count
             self.failure_count = 0
-            cur_url = cur_url.replace('{ts}', '%s.' % str(time.time())[2:6])
+            cur_url = cur_url.replace('{ts}', f'{str(time.time())[2:6]}.')
             if 10 < len(cur_url) and ((expire and (expire > int(time.time()))) or
                                       self._has_signature(self.get_url(cur_url, skip_auth=True))):
                 for k, v in iteritems(getattr(self, 'url_tmpl', {})):
@@ -1985,7 +1985,7 @@ class TorrentProvider(GenericProvider):
 
         logger.log('Failed to identify a "%s" page with %s %s (local network issue, site down, or ISP blocked) ' %
                    (self.name, len(url_list), ('URL', 'different URLs')[1 < len(url_list)]) +
-                   (attempt_fetch and ('Suggest; 1) Disable "%s" 2) Use a proxy/VPN' % self.get_id()) or ''),
+                   (attempt_fetch and (f'Suggest; 1) Disable "{self.get_id()}" 2) Use a proxy/VPN') or ''),
                    (logger.WARNING, logger.ERROR)[self.enabled])
         if not hasattr(self, 'url_api'):
             self.urls = {}
@@ -1996,9 +1996,9 @@ class TorrentProvider(GenericProvider):
     def is_valid_mod(self, url):
         # type: (AnyStr) -> bool
         parsed, s, is_valid = urlparse(url), 70000700, True
-        if 2012691328 == s + zlib.crc32(decode_bytes(('.%s' % parsed.netloc).split('.')[-2])):
+        if 2012691328 == s + zlib.crc32(decode_bytes(f'.{parsed.netloc}'.split('.')[-2])):
             is_valid = False
-            file_name = '%s.py' % os.path.join(sickgear.PROG_DIR, *self.__module__.split('.'))
+            file_name = f'{os.path.join(sickgear.PROG_DIR, *self.__module__.split("."))}.py'
             if os.path.isfile(file_name):
                 with open(file_name, 'rb') as file_hd:
                     is_valid = s + zlib.crc32(file_hd.read()) in (1661931498, 472149389)
@@ -2029,7 +2029,7 @@ class TorrentProvider(GenericProvider):
                 if not self._check_auth():
                     return False
             except AuthException as e:
-                logger.error('%s' % ex(e))
+                logger.error(f'{ex(e)}')
                 return False
 
         if isinstance(url, type([])):
@@ -2139,7 +2139,7 @@ class TorrentProvider(GenericProvider):
         else:
             return not is_required and GenericProvider._check_auth(self)
 
-        raise AuthException('%s for %s is empty in Media Providers/Options' % (setting, self.name))
+        raise AuthException(f'{setting} for {self.name} is empty in Media Providers/Options')
 
     def find_propers(self, anime=False, **kwargs):
         # type: (bool, Any) -> List[classes.Proper]
@@ -2172,7 +2172,7 @@ class TorrentProvider(GenericProvider):
             if self.should_skip(log_warning=False):
                 break
 
-            proper_check = re.compile(r'(?i)%s' % clean_term.sub('', proper_term))
+            proper_check = re.compile(rf'(?i){clean_term.sub("", proper_term)}')
             for item in items:
                 if self.should_skip(log_warning=False):
                     break
@@ -2232,7 +2232,7 @@ class TorrentProvider(GenericProvider):
         if not self._last_recent_search:
             try:
                 my_db = db.DBConnection('cache.db')
-                res = my_db.select('SELECT' + ' "datetime" FROM "lastrecentsearch" WHERE "name"=?', [self.get_id()])
+                res = my_db.select("SELECT \"datetime\" FROM \"lastrecentsearch\" WHERE \"name\"=?", [self.get_id()])
                 if res:
                     self._last_recent_search = res[0]['datetime']
             except (BaseException, Exception):
@@ -2241,7 +2241,7 @@ class TorrentProvider(GenericProvider):
 
     @last_recent_search.setter
     def last_recent_search(self, value):
-        value = 0 if not value else re.sub('^(id-)+', r'\1', 'id-%s' % value)
+        value = 0 if not value else re.sub('^(id-)+', r'\1', f'id-{value}')
         try:
             my_db = db.DBConnection('cache.db')
             my_db.action('INSERT OR REPLACE INTO "lastrecentsearch" (name, datetime) VALUES (?,?)',

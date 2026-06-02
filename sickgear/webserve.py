@@ -3224,7 +3224,7 @@ class Home(MainHandler):
                             # show_obj.load_episodes_from_tvinfo()
                             # rescan the episodes in the new folder
                     except exceptions_helper.NoNFOException:
-                        errors.append(f'The folder at <tt>{new_path}</tt> doesn"t contain a tvshow.nfo -'
+                        errors.append(f'The folder at <tt>{new_path}</tt> doesn\'t contain a tvshow.nfo -'
                                       f' copy your files to that folder before you change the directory in SickGear.')
 
             # save it to the DB
@@ -7171,17 +7171,17 @@ class AddShows(Home):
         if os.path.isdir(show_dir) and not full_show_path:
             ui.notifications.error('Unable to add show', f'Found existing folder: {show_dir}')
             return self.redirect(
-                '/add-shows/import?tvid_prodid=%s%s%s&hash_dir=%s%s' %
-                (tvid, TVidProdid.glue, prodid, re.sub('[^a-z]', '', sg_helpers.md5_for_text(show_dir)),
-                 rename_suggest and ('&rename_suggest=%s' % rename_suggest) or ''))
+                f'/add-shows/import?tvid_prodid={tvid}{TVidProdid.glue}{prodid}'
+                f'&hash_dir={re.sub("[^a-z]", "", sg_helpers.md5_for_text(show_dir))}'
+                f'{rename_suggest and ("&rename_suggest=%s" % rename_suggest) or ""}')
 
         # don't create show dir if config says not to
         if sickgear.ADD_SHOWS_WO_DIR:
             logger.log('Skipping initial creation due to config.ini setting (add_shows_wo_dir)')
         else:
             if not helpers.make_dir(show_dir):
-                logger.error(f"Unable to add show because can't create folder: {show_dir}")
-                ui.notifications.error('Unable to add show', f"Can't create folder: {show_dir}")
+                logger.error(f'Unable to add show because can\'t create folder: {show_dir}')
+                ui.notifications.error('Unable to add show', f'Can\'t create folder: {show_dir}')
                 return self.redirect('/home/')
 
             helpers.chmod_as_parent(show_dir)

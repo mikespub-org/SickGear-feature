@@ -37,9 +37,9 @@ class ShowRSSProvider(generic.TorrentProvider):
 
         self.url_base = 'https://showrss.info/'
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'login_action': self.url_base + 'login',
-                     'browse': self.url_base + 'browse/all',
-                     'search': self.url_base + 'browse/%s'}
+                     'login_action': f'{self.url_base}login',
+                     'browse': f'{self.url_base}browse/all',
+                     'search': f'{self.url_base}browse/%s'}
 
         self.url = self.urls['config_provider_home_uri']
 
@@ -67,7 +67,7 @@ class ShowRSSProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v)) for (k, v) in iteritems({'get': 'magnet'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({'get': 'magnet'})])
         urls = []
         for mode in search_params:
             for search_string in search_params[mode]:

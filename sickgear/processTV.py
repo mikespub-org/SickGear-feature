@@ -200,14 +200,14 @@ class ProcessTVShow(object):
             'SELECT indexer, showid'
             ' FROM history' +
             ' WHERE resource = ?' +
-            ' AND (%s)' % ' OR '.join(['action LIKE "%%%02d"' % x for x in SNATCHED_ANY]) +
+            ' AND (%s)' % ' OR '.join(["action LIKE '%%%02d'" % x for x in SNATCHED_ANY]) +
             ' ORDER BY rowid', [name])
         if sql_result:
             try:
                 show_obj = helpers.find_show_by_id({int(sql_result[-1]['indexer']): int(sql_result[-1]['showid'])},
                                                    check_multishow=True)
                 if hasattr(show_obj, 'name'):
-                    logger.debug('Found Show: %s in snatch history for: %s' % (show_obj.name, name))
+                    logger.debug(f'Found Show: {show_obj.name} in snatch history for: {name}')
             except MultipleShowObjectsException:
                 show_obj = None
         return show_obj
@@ -275,7 +275,7 @@ class ProcessTVShow(object):
         :return: Parent root dir that matches path, or None
         :rtype: AnyStr or None
         """
-        build_path = (lambda old_path: '%s%s' % (helpers.real_path(old_path).rstrip(os.path.sep), os.path.sep))
+        build_path = (lambda old_path: f'{helpers.real_path(old_path).rstrip(os.path.sep)}{os.path.sep}')
 
         process_path = build_path(path)
         for parent in map(lambda p: build_path(p), sickgear.ROOT_DIRS.split('|')[1:]):
@@ -334,7 +334,7 @@ class ProcessTVShow(object):
 
         parent = self.find_parent(dir_name)
         if parent:
-            self._log_helper('Dir %s is subdir of show root dir: %s, not processing.' % (dir_name, parent))
+            self._log_helper(f'Dir {dir_name} is subdir of show root dir: {parent}, not processing.')
             return self.result
 
         if dir_name == sickgear.TV_DOWNLOAD_DIR:
@@ -490,7 +490,7 @@ class ProcessTVShow(object):
                                                           self.check_video_filenames(walk_dir, video_pick)))
 
                 except OSError as e:
-                    logger.warning(f'Batch skipped, {ex(e)}{e.filename and (" (file %s)" % e.filename) or ""}')
+                    logger.warning(f'Batch skipped, {ex(e)}{e.filename and f" (file {e.filename})" or ""}')
 
                 if process_method in ('hardlink', 'symlink') and video_in_rar:
                     self._delete_files(walk_path, rar_content)
@@ -803,18 +803,18 @@ class ProcessTVShow(object):
                         new_filename = new_words[::-1] + na_parts.group(1)[::-1]
                     else:
                         new_filename = file_name[::-1]
-                    logger.log('Reversing base filename "%s" to "%s"' % (file_name, new_filename))
+                    logger.log(f'Reversing base filename "{file_name}" to "{new_filename}"')
                     try:
                         os.rename(file_path, os.path.join(_dirpath, new_filename + file_extension))
                         is_renamed[os.path.relpath(file_path, directory)] = \
                             os.path.relpath(new_filename + file_extension, directory)
                     except OSError as _e:
-                        logger.error('Error unable to rename file "%s" because %s' % (cur_filename, ex(_e)))
+                        logger.error(f'Error unable to rename file "{cur_filename}" because {ex(_e)}')
                 elif helpers.has_media_ext(cur_filename) and \
                         None is not garbage_name.search(file_name) and None is not media_pattern.search(base_name):
                     _num_videos += 1
                     _old_name = file_path
-                    _new_name = os.path.join(dir_name, '%s%s' % (base_name, file_extension))
+                    _new_name = os.path.join(dir_name, f'{base_name}{file_extension}')
             return is_renamed, _num_videos, _old_name, _new_name
 
         if files:
@@ -827,12 +827,12 @@ class ProcessTVShow(object):
 
         if all([not is_renamed, 1 == num_videos, old_name, new_name]):
             try_name = os.path.basename(new_name)
-            logger.log('Renaming file "%s" using dirname as "%s"' % (os.path.basename(old_name), try_name))
+            logger.log(f'Renaming file "{os.path.basename(old_name)}" using dirname as "{try_name}"')
             try:
                 os.rename(old_name, new_name)
                 is_renamed[os.path.relpath(old_name, directory)] = os.path.relpath(new_name, directory)
             except OSError as e:
-                logger.error('Error unable to rename file "%s" because %s' % (old_name, ex(e)))
+                logger.error(f'Error unable to rename file "{old_name}" because {ex(e)}')
 
         return is_renamed
 
@@ -867,12 +867,12 @@ class ProcessTVShow(object):
                 chunk_sizes = [os.path.getsize(x) for x in chunk_set]
                 largest_chunk = max(chunk_sizes)
                 if largest_chunk >= base_filesize:
-                    outfile = '%s.001' % base_filepath
+                    outfile = f'{base_filepath}.001'
                     if outfile not in chunk_set:
                         try:
                             os.rename(base_filepath, outfile)
                         except OSError:
-                            logger.error('Error unable to rename file %s' % base_filepath)
+                            logger.error(f'Error unable to rename file {base_filepath}')
                             return result
                         chunk_set.append(outfile)
                         chunk_set.sort()
@@ -891,17 +891,17 @@ class ProcessTVShow(object):
 
             with open(base_filepath, 'ab') as newfile:
                 for f in chunk_set:
-                    logger.log('Joining file %s' % f)
+                    logger.log(f'Joining file {f}')
                     try:
                         with open(f, 'rb') as part:
                             for wdata in iter(partial(part.read, 4096), b''):
                                 try:
                                     newfile.write(wdata)
                                 except (BaseException, Exception):
-                                    logger.log('Failed write to file %s' % f)
+                                    logger.log(f'Failed write to file {f}')
                                     return result
                     except (BaseException, Exception):
-                        logger.log('Failed read from file %s' % f)
+                        logger.log(f'Failed read from file {f}')
                         return result
             result = base_filepath
 
@@ -937,17 +937,18 @@ class ProcessTVShow(object):
                 # processed in the past
                 return False
 
-        showlink = ('for "<a href="%s/home/view-show?tvid_prodid=%s" target="_blank">%s</a>"' % (
-            sickgear.WEB_ROOT, parse_result.show_obj.tvid_prodid, parse_result.show_obj.name),
+        showlink = (
+            f'for "<a href="{sickgear.WEB_ROOT}/home/view-show?tvid_prodid={parse_result.show_obj.tvid_prodid}"'
+            f' target="_blank">{parse_result.show_obj.name}</a>"',
             parse_result.show_obj.name)[self.any_vid_processed]
 
         ep_detail_sql = ''
         if parse_result.show_obj.prodid and parse_result.show_obj.tvid and 0 < len(parse_result.episode_numbers) \
                 and parse_result.season_number:
-            ep_detail_sql = " AND tv_episodes.showid='%s' AND tv_episodes.indexer='%s'" \
-                            " AND tv_episodes.season='%s' AND tv_episodes.episode='%s'" % \
-                            (parse_result.show_obj.prodid, parse_result.show_obj.tvid,
-                             parse_result.season_number, parse_result.episode_numbers[0])
+            ep_detail_sql = (f" AND tv_episodes.showid='{parse_result.show_obj.prodid}'"
+                             f" AND tv_episodes.indexer='{parse_result.show_obj.tvid}'"
+                             f" AND tv_episodes.season='{parse_result.season_number}'"
+                             f" AND tv_episodes.episode='{parse_result.episode_numbers[0]}'")
 
         # Avoid processing the same directory again if we use a process method <> move
         my_db = db.DBConnection()
@@ -984,7 +985,7 @@ class ProcessTVShow(object):
                          + ' ON history.showid=tv_episodes.showid AND history.indexer=tv_episodes.indexer'\
                          + ' WHERE history.season=tv_episodes.season and history.episode=tv_episodes.episode'\
                          + ep_detail_sql\
-                         + ' and tv_episodes.status IN (%s)' % ','.join([str(x) for x in common.Quality.DOWNLOADED])\
+                         + f' and tv_episodes.status IN ({",".join([str(x) for x in common.Quality.DOWNLOADED])})'\
                          + ' and history.resource LIKE ?'
 
             sql_result = my_db.select(search_sql, [f'%{videofile}'])

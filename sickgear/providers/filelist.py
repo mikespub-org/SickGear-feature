@@ -33,8 +33,8 @@ class FLProvider(generic.TorrentProvider):
 
         self.url_base = 'https://filelist.io/'
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'login_action': self.url_base + 'login.php',
-                     'search': self.url_base + 'browse.php?search=%s&%s&incldead=0'}
+                     'login_action': f'{self.url_base}login.php',
+                     'search': f'{self.url_base}browse.php?search=%s&%s&incldead=0'}
 
         self.categories = dict(shows=[13, 21, 23, 27], anime=[24])
 
@@ -54,9 +54,9 @@ class FLProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v)) for (k, v) in iteritems({'info': 'details', 'get': 'download'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({'info': 'details', 'get': 'download'})])
         for mode in search_params:
-            rc['cats'] = re.compile('(?i)cat=(?:%s)' % self._categories_string(mode, template='', delimiter='|'))
+            rc['cats'] = re.compile(f'(?i)cat=(?:{self._categories_string(mode, template="", delimiter="|")})')
             for search_string in search_params[mode]:
 
                 html = self.get_url(self.urls['search'] % ('+'.join(search_string.split()),

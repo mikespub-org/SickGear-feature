@@ -35,7 +35,7 @@ try:
 except ValueError:
     INSTANCE_ID = str(uuid.uuid4())
 
-USER_AGENT = ('SickGear/(%s; %s; %s)' % (platform.system(), platform.release(), INSTANCE_ID))
+USER_AGENT = f'SickGear/({platform.system()}; {platform.release()}; {INSTANCE_ID})'
 
 mediaExtensions = ['avi', 'mkv', 'mpg', 'mpeg', 'wmv', 'ogm', 'mp4', 'iso', 'img', 'divx', 'm2ts', 'm4v', 'ts', 'flv',
                    'f4v', 'mov', 'rmvb', 'vob', 'dvr-ms', 'wtv', 'ogv', '3gp', 'webm']
@@ -303,17 +303,17 @@ class Quality(object):
             return Quality.UNKNOWN
 
         fmt = '((h.?|x)26[45]|vp9|av1|hevc)'
-        webfmt = 'web.?(dl|rip|.%s)' % fmt
+        webfmt = f'web.?(dl|rip|.{fmt})'
         rips = 'b[r|d]rip'
-        hd_rips = 'blu.?ray|hddvd|%s' % rips
+        hd_rips = f'blu.?ray|hddvd|{rips}'
 
         if not name_has(['(720|1080|2160)[pi]|720hd']):
-            if name_has(['(dvd.?rip|%s)(.ws)?(.(xvid|divx|%s))?' % (rips, fmt)]):
+            if name_has([f'(dvd.?rip|{rips})(.ws)?(.(xvid|divx|{fmt}))?']):
                 return Quality.SDDVD
             if (not name_has(['hr.ws.pdtv.(h.?|x)264'])
-                and (name_has([r'(hdtv|pdtv|dsr|tvrip)([-]|.((aac|ac3|dd).?\d\.?\d.)*(xvid|%s))' % fmt])
+                and (name_has([rf'(hdtv|pdtv|dsr|tvrip)([-]|.((aac|ac3|dd).?\d\.?\d.)*(xvid|{fmt}))'])
                      or name_has(['(xvid|divx|480p|hevc|x265)']))) \
-                    or name_has([webfmt, 'xvid|%s' % fmt]):
+                    or name_has([webfmt, f'xvid|{fmt}']):
                 return Quality.SDTV
 
         if not name_has(['(1080|2160)[pi]']):
@@ -326,7 +326,7 @@ class Quality(object):
                     return Quality.HDTV
             # p2p
             if name_has(['720hd']) \
-                    or name_has(['hr.ws.pdtv.%s' % fmt]):
+                    or name_has([f'hr.ws.pdtv.{fmt}']):
                 return Quality.HDTV
         if name_has(['720p|1080i', 'hdtv', 'mpeg-?2']) or name_has(['1080[pi].hdtv', 'h.?264']):
             return Quality.RAWHDTV
@@ -620,7 +620,7 @@ class StatusStrings(object):
             status, quality = Quality.split_composite_status(name)
             if quality == Quality.NONE:
                 return self.statusStrings[status]
-            return '%s (%s)' % (self.statusStrings[status], Quality.qualityStrings[quality])
+            return f'{self.statusStrings[status]} ({Quality.qualityStrings[quality]})'
         return self.statusStrings[name] if name in self.statusStrings else ''
 
     def __contains__(self, item):

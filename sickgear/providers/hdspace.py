@@ -35,7 +35,7 @@ class HDSpaceProvider(generic.TorrentProvider):
 
         self.url_base = 'https://hd-space.org/'
         self.urls = {'config_provider_home_uri': self.url_base,
-                     'login_action': self.url_base + 'index.php?page=login',
+                     'login_action': f'{self.url_base}index.php?page=login',
                      'browse': self.url_base + 'index.php?page=torrents&' + '&'.join(
                          ['options=0', 'active=1', 'category=']),
                      'search': '&search=%s'}
@@ -62,7 +62,7 @@ class HDSpaceProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile('(?i)' + v)) for (k, v) in iteritems({
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
             'info': 'torrent-details', 'get': 'download', 'peers': 'page=peers', 'nodots': r'[\.\s]+'})])
         log = ''
         if self.filter:
@@ -72,7 +72,7 @@ class HDSpaceProvider(generic.TorrentProvider):
                        [f for f in self.may_filter if f not in self.filter])[non_marked]
             rc['filter'] = re.compile('(?i)(%s).png' % '|'.join(
                 [self.may_filter[f][2] for f in filters if self.may_filter[f][1]]))
-            log = '%sing (%s) ' % (('keep', 'skipp')[non_marked], ', '.join([self.may_filter[f][0] for f in filters]))
+            log = f'{("keep", "skipp")[non_marked]}ing ({", ".join([self.may_filter[f][0] for f in filters])}) '
         for mode in search_params:
             for search_string in search_params[mode]:
 

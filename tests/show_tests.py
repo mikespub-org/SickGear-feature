@@ -426,7 +426,7 @@ class ShowAddTests(test.SickbeardTestDBCase):
             tr = qi._get_wanted(cur_db, w['start_wanted'], False)
             self.assertEqual(
                 tr, w['result']['start'].get('count'),
-                msg='%s: start: got: %s, expected: %s' % (w['name'], tr, w['result']['start'].get('count')))
+                msg=f'{w["name"]}: start: got: {tr}, expected: {w["result"]["start"].get("count")}')
             results = cur_db.select('SELECT status, season, episode FROM tv_episodes WHERE indexer = ? AND showid = ?'
                                     ' ORDER BY season, episode',
                                     [show_obj.tvid, show_obj.prodid])
@@ -440,7 +440,7 @@ class ShowAddTests(test.SickbeardTestDBCase):
             # end tests
             tr = qi._get_wanted(cur_db, w['end_wanted'], True)
             self.assertEqual(tr, w['result']['end'].get('count'),
-                             msg='%s: end: got: %s, expected: %s' % (w['name'], tr, w['result']['end'].get('count')))
+                             msg=f'{w["name"]}: end: got: {tr}, expected: {w["result"]["end"].get("count")}')
             results = cur_db.select('SELECT status, season, episode FROM tv_episodes WHERE indexer = ? AND showid = ?'
                                     ' ORDER BY season, episode',
                                     [show_obj.tvid, show_obj.prodid])
