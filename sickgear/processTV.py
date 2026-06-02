@@ -194,22 +194,22 @@ class ProcessTVShow(object):
             return None
 
         show_obj = None
-        my_db = db.DBConnection()
-        # noinspection SqlResolve
-        sql_result = my_db.select(
-            'SELECT indexer, showid'
-            ' FROM history' +
-            ' WHERE resource = ?' +
-            ' AND (%s)' % ' OR '.join(["action LIKE '%%%02d'" % x for x in SNATCHED_ANY]) +
-            ' ORDER BY rowid', [name])
-        if sql_result:
-            try:
-                show_obj = helpers.find_show_by_id({int(sql_result[-1]['indexer']): int(sql_result[-1]['showid'])},
-                                                   check_multishow=True)
-                if hasattr(show_obj, 'name'):
-                    logger.debug(f'Found Show: {show_obj.name} in snatch history for: {name}')
-            except MultipleShowObjectsException:
-                show_obj = None
+        with db.DBConnection() as sg_db:
+            # noinspection SqlResolve
+            sql_result = sg_db.select(
+                'SELECT indexer, showid'
+                ' FROM history' +
+                ' WHERE resource = ?' +
+                ' AND (%s)' % ' OR '.join(["action LIKE '%%%02d'" % x for x in SNATCHED_ANY]) +
+                ' ORDER BY rowid', [name])
+            if sql_result:
+                try:
+                    show_obj = helpers.find_show_by_id({int(sql_result[-1]['indexer']): int(sql_result[-1]['showid'])},
+                                                       check_multishow=True)
+                    if hasattr(show_obj, 'name'):
+                        logger.debug(f'Found Show: {show_obj.name} in snatch history for: {name}')
+                except MultipleShowObjectsException:
+                    show_obj = None
         return show_obj
 
     def show_obj_helper(self, show_obj, base_dir, dir_name, nzb_name, pp_type, alt_show_obj=None):
@@ -618,14 +618,14 @@ class ProcessTVShow(object):
             return False
 
         # make sure the directory isn't inside a show directory
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT * FROM tv_shows')
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT * FROM tv_shows')
 
-        for cur_result in sql_result:
-            if dir_name.lower().startswith(os.path.realpath(cur_result['location']).lower() + os.sep) \
-                    or dir_name.lower() == os.path.realpath(cur_result['location']).lower():
-                self._log_helper('Found an episode that has already been moved to its show dir, skipping', logger.ERROR)
-                return False
+            for cur_result in sql_result:
+                if dir_name.lower().startswith(os.path.realpath(cur_result['location']).lower() + os.sep) \
+                        or dir_name.lower() == os.path.realpath(cur_result['location']).lower():
+                    self._log_helper('Found an episode that has already been moved to its show dir, skipping', logger.ERROR)
+                    return False
 
         # Get the videofile list for the next checks
         all_files = []
@@ -951,26 +951,11 @@ class ProcessTVShow(object):
                              f" AND tv_episodes.episode='{parse_result.episode_numbers[0]}'")
 
         # Avoid processing the same directory again if we use a process method <> move
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT * FROM tv_episodes WHERE release_name = ?', [dir_name])
-        if sql_result:
-            self._log_helper(f'Found a release directory {showlink} that has already been processed,<br>'
-                             f'.. skipping: {dir_name}')
-            if ep_detail_sql:
-                reset_status(parse_result.show_obj.tvid,
-                             parse_result.show_obj.prodid,
-                             parse_result.season_number,
-                             parse_result.episode_numbers[0])
-            return True
-
-        else:
-            # This is needed for video whose name differ from dir_name
-
-            sql_result = my_db.select(
-                'SELECT * FROM tv_episodes WHERE release_name = ?', [videofile.rpartition('.')[0]])
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT * FROM tv_episodes WHERE release_name = ?', [dir_name])
             if sql_result:
-                self._log_helper(f'Found a video, but that release {showlink} was already processed,<br>'
-                                 f'.. skipping: {videofile}')
+                self._log_helper(f'Found a release directory {showlink} that has already been processed,<br>'
+                                 f'.. skipping: {dir_name}')
                 if ep_detail_sql:
                     reset_status(parse_result.show_obj.tvid,
                                  parse_result.show_obj.prodid,
@@ -978,26 +963,41 @@ class ProcessTVShow(object):
                                  parse_result.episode_numbers[0])
                 return True
 
-            # Needed if we have downloaded the same episode @ different quality
-            # noinspection SqlResolve
-            search_sql = 'SELECT tv_episodes.indexerid, history.resource' \
-                         ' FROM tv_episodes INNER JOIN history'\
-                         + ' ON history.showid=tv_episodes.showid AND history.indexer=tv_episodes.indexer'\
-                         + ' WHERE history.season=tv_episodes.season and history.episode=tv_episodes.episode'\
-                         + ep_detail_sql\
-                         + f' and tv_episodes.status IN ({",".join([str(x) for x in common.Quality.DOWNLOADED])})'\
-                         + ' and history.resource LIKE ?'
+            else:
+                # This is needed for video whose name differ from dir_name
 
-            sql_result = my_db.select(search_sql, [f'%{videofile}'])
-            if sql_result:
-                self._log_helper(f'Found a video, but the episode {showlink} is already processed,<br>'
-                                 f'.. skipping: {videofile}')
-                if ep_detail_sql:
-                    reset_status(parse_result.show_obj.tvid,
-                                 parse_result.show_obj.prodid,
-                                 parse_result.season_number,
-                                 parse_result.episode_numbers[0])
-                return True
+                sql_result = sg_db.select(
+                    'SELECT * FROM tv_episodes WHERE release_name = ?', [videofile.rpartition('.')[0]])
+                if sql_result:
+                    self._log_helper(f'Found a video, but that release {showlink} was already processed,<br>'
+                                     f'.. skipping: {videofile}')
+                    if ep_detail_sql:
+                        reset_status(parse_result.show_obj.tvid,
+                                     parse_result.show_obj.prodid,
+                                     parse_result.season_number,
+                                     parse_result.episode_numbers[0])
+                    return True
+
+                # Needed if we have downloaded the same episode @ different quality
+                # noinspection SqlResolve
+                search_sql = 'SELECT tv_episodes.indexerid, history.resource' \
+                             ' FROM tv_episodes INNER JOIN history'\
+                             + ' ON history.showid=tv_episodes.showid AND history.indexer=tv_episodes.indexer'\
+                             + ' WHERE history.season=tv_episodes.season and history.episode=tv_episodes.episode'\
+                             + ep_detail_sql\
+                             + f' and tv_episodes.status IN ({",".join([str(x) for x in common.Quality.DOWNLOADED])})'\
+                             + ' and history.resource LIKE ?'
+
+                sql_result = sg_db.select(search_sql, [f'%{videofile}'])
+                if sql_result:
+                    self._log_helper(f'Found a video, but the episode {showlink} is already processed,<br>'
+                                     f'.. skipping: {videofile}')
+                    if ep_detail_sql:
+                        reset_status(parse_result.show_obj.tvid,
+                                     parse_result.show_obj.prodid,
+                                     parse_result.season_number,
+                                     parse_result.episode_numbers[0])
+                    return True
 
         return False
 

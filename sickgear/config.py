@@ -659,34 +659,34 @@ class ConfigMigrator(object):
         sickgear.NAMING_MULTI_EP = int(check_setting_int(self.config_obj, 'General', 'naming_multi_ep_type', 1))
 
         # see if any of their shows used season folders
-        my_db = db.DBConnection()
-        season_folder_shows = my_db.select('SELECT * FROM tv_shows WHERE flatten_folders = 0')
+        with db.DBConnection() as sg_db:
+            season_folder_shows = sg_db.select('SELECT * FROM tv_shows WHERE flatten_folders = 0')
 
-        # if any shows had season folders on then prepend season folder to the pattern
-        if season_folder_shows:
+            # if any shows had season folders on then prepend season folder to the pattern
+            if season_folder_shows:
 
-            old_season_format = check_setting_str(self.config_obj, 'General', 'season_folders_format', 'Season %02d')
+                old_season_format = check_setting_str(self.config_obj, 'General', 'season_folders_format', 'Season %02d')
 
-            if old_season_format:
-                try:
-                    new_season_format = old_season_format % 9
-                    new_season_format = str(new_season_format).replace('09', '%0S')
-                    new_season_format = new_season_format.replace('9', '%S')
+                if old_season_format:
+                    try:
+                        new_season_format = old_season_format % 9
+                        new_season_format = str(new_season_format).replace('09', '%0S')
+                        new_season_format = new_season_format.replace('9', '%S')
 
-                    logger.log(f'Changed season folder format from {old_season_format} to {new_season_format},'
-                               f' prepending it to your naming config')
-                    sickgear.NAMING_PATTERN = new_season_format + os.sep + sickgear.NAMING_PATTERN
+                        logger.log(f'Changed season folder format from {old_season_format} to {new_season_format},'
+                                   f' prepending it to your naming config')
+                        sickgear.NAMING_PATTERN = new_season_format + os.sep + sickgear.NAMING_PATTERN
 
-                except (TypeError, ValueError):
-                    logger.error(f'Can not change {old_season_format} to new season format')
+                    except (TypeError, ValueError):
+                        logger.error(f'Can not change {old_season_format} to new season format')
 
-        # if no shows had it on then don't flatten any shows and don't put season folders in the config
-        else:
+            # if no shows had it on then don't flatten any shows and don't put season folders in the config
+            else:
 
-            logger.log('No shows were using season folders before so I am disabling flattening on all shows')
+                logger.log('No shows were using season folders before so I am disabling flattening on all shows')
 
-            # don't flatten any shows at all
-            my_db.action('UPDATE tv_shows SET flatten_folders = 0 WHERE 1=1')
+                # don't flatten any shows at all
+                sg_db.action('UPDATE tv_shows SET flatten_folders = 0 WHERE 1=1')
 
         sickgear.NAMING_FORCE_FOLDERS = naming.check_force_season_folders()
 

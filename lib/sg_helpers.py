@@ -172,11 +172,11 @@ class ConnectionFailDict(object):
     def load_from_db(self):
         if None is not db:
             with self.lock:
-                my_db = db.DBConnection('cache.db')
-                if my_db.has_table('connection_fails'):
-                    domains = my_db.select('SELECT DISTINCT domain_url from connection_fails')
-                    for domain in domains:
-                        self.domain_list[domain['domain_url']] = ConnectionFailList(domain['domain_url'])
+                with db.DBConnection('cache.db') as sg_db:
+                    if sg_db.has_table('connection_fails'):
+                        domains = sg_db.select('SELECT DISTINCT domain_url from connection_fails')
+                        for domain in domains:
+                            self.domain_list[domain['domain_url']] = ConnectionFailList(domain['domain_url'])
 
     @staticmethod
     def get_domain(url):
@@ -528,34 +528,34 @@ class ConnectionFailList(object):
 
     def _load_fail_values(self):
         if None is not DATA_DIR:
-            my_db = db.DBConnection('cache.db')
-            if my_db.has_table('connection_fails_count'):
-                r = my_db.select('SELECT * FROM connection_fails_count WHERE domain_url = ?', [self.url])
-                if r:
-                    self._failure_count = try_int(r[0]['failure_count'], 0)
-                    if r[0]['failure_time']:
-                        self._failure_time = datetime.datetime.fromtimestamp(r[0]['failure_time'])
-                    else:
-                        self._failure_time = None
-                    self._tmr_limit_count = try_int(r[0]['tmr_limit_count'], 0)
-                    if r[0]['tmr_limit_time']:
-                        self._tmr_limit_time = datetime.datetime.fromtimestamp(r[0]['tmr_limit_time'])
-                    else:
-                        self._tmr_limit_time = None
-                    if r[0]['tmr_limit_wait']:
-                        self._tmr_limit_wait = datetime.timedelta(seconds=try_int(r[0]['tmr_limit_wait'], 0))
-                    else:
-                        self._tmr_limit_wait = None
-                self._last_fail_type = self.last_fail
+            with db.DBConnection('cache.db') as sg_db:
+                if sg_db.has_table('connection_fails_count'):
+                    r = sg_db.select('SELECT * FROM connection_fails_count WHERE domain_url = ?', [self.url])
+                    if r:
+                        self._failure_count = try_int(r[0]['failure_count'], 0)
+                        if r[0]['failure_time']:
+                            self._failure_time = datetime.datetime.fromtimestamp(r[0]['failure_time'])
+                        else:
+                            self._failure_time = None
+                        self._tmr_limit_count = try_int(r[0]['tmr_limit_count'], 0)
+                        if r[0]['tmr_limit_time']:
+                            self._tmr_limit_time = datetime.datetime.fromtimestamp(r[0]['tmr_limit_time'])
+                        else:
+                            self._tmr_limit_time = None
+                        if r[0]['tmr_limit_wait']:
+                            self._tmr_limit_wait = datetime.timedelta(seconds=try_int(r[0]['tmr_limit_wait'], 0))
+                        else:
+                            self._tmr_limit_wait = None
+                    self._last_fail_type = self.last_fail
 
     def _save_fail_value(self, field, value):
-        my_db = db.DBConnection('cache.db')
-        if my_db.has_table('connection_fails_count'):
-            r = my_db.action('UPDATE connection_fails_count SET %s = ? WHERE domain_url = ?' % field,
-                             [value, self.url])
-            if 0 == r.rowcount:
-                my_db.action('REPLACE INTO connection_fails_count (domain_url, %s) VALUES (?,?)' % field,
-                             [self.url, value])
+        with db.DBConnection('cache.db') as sg_db:
+            if sg_db.has_table('connection_fails_count'):
+                r = sg_db.action('UPDATE connection_fails_count SET %s = ? WHERE domain_url = ?' % field,
+                                 [value, self.url])
+                if 0 == r.rowcount:
+                    sg_db.action('REPLACE INTO connection_fails_count (domain_url, %s) VALUES (?,?)' % field,
+                                 [self.url, value])
 
     def save_list(self):
         if self.dirty:
@@ -563,16 +563,16 @@ class ConnectionFailList(object):
             if None is not db:
                 with self.lock:
                     try:
-                        my_db = db.DBConnection('cache.db')
-                        cl = []
+                        sql_l = []
                         for f in self._fails:
-                            cl.append(['INSERT OR IGNORE INTO connection_fails (domain_url, fail_type, fail_code, '
-                                       'fail_time) '
-                                       'VALUES (?,?,?,?)', [self.url, f.fail_type, f.code,
-                                                            _totimestamp(f.fail_time)]])
+                            sql_l.append(['INSERT OR IGNORE INTO connection_fails'
+                                          ' (domain_url, fail_type, fail_code, fail_time) '
+                                          'VALUES (?,?,?,?)',
+                                          [self.url, f.fail_type, f.code, _totimestamp(f.fail_time)]])
                         self.dirty = False
-                        if cl:
-                            my_db.mass_action(cl)
+                        if sql_l:
+                            with db.DBConnection('cache.db') as sg_db:
+                                sg_db.mass_action(sql_l)
                     except (BaseException, Exception):
                         pass
             self.last_save = datetime.datetime.now()
@@ -581,17 +581,17 @@ class ConnectionFailList(object):
         if None is not db:
             with self.lock:
                 try:
-                    my_db = db.DBConnection('cache.db')
-                    if my_db.has_table('connection_fails'):
-                        results = my_db.select('SELECT * FROM connection_fails WHERE domain_url = ?', [self.url])
-                        self._fails = []
-                        for r in results:
-                            try:
-                                self._fails.append(ConnectionFail(
-                                    fail_type=try_int(r['fail_type']), code=try_int(r['fail_code']),
-                                    fail_time=datetime.datetime.fromtimestamp(try_int(r['fail_time']))))
-                            except (BaseException, Exception):
-                                continue
+                    with db.DBConnection('cache.db') as sg_db:
+                        if sg_db.has_table('connection_fails'):
+                            results = sg_db.select('SELECT * FROM connection_fails WHERE domain_url = ?', [self.url])
+                    self._fails = []
+                    for r in results:
+                        try:
+                            self._fails.append(ConnectionFail(
+                                fail_type=try_int(r['fail_type']), code=try_int(r['fail_code']),
+                                fail_time=datetime.datetime.fromtimestamp(try_int(r['fail_time']))))
+                        except (BaseException, Exception):
+                            continue
                 except (BaseException, Exception):
                     pass
 
@@ -599,11 +599,11 @@ class ConnectionFailList(object):
         if None is not db:
             with self.lock:
                 try:
-                    my_db = db.DBConnection('cache.db')
-                    if my_db.has_table('connection_fails'):
-                        # noinspection PyCallByClass,PyTypeChecker
-                        time_limit = _totimestamp(datetime.datetime.now() - datetime.timedelta(days=28))
-                        my_db.action('DELETE FROM connection_fails WHERE fail_time < ?', [time_limit])
+                    with db.DBConnection('cache.db') as sg_db:
+                        if sg_db.has_table('connection_fails'):
+                            # noinspection PyCallByClass,PyTypeChecker
+                            time_limit = _totimestamp(datetime.datetime.now() - datetime.timedelta(days=28))
+                            sg_db.action('DELETE FROM connection_fails WHERE fail_time < ?', [time_limit])
                 except (BaseException, Exception):
                     pass
 

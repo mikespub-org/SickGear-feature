@@ -571,48 +571,48 @@ class CalendarHandler(BaseHandler):
         utc = tz.gettz('GMT', zoneinfo_priority=True)
 
         # Get all the shows that are not paused and are currently on air
-        my_db = db.DBConnection()
-        show_list = my_db.select(
-            'SELECT show_name, indexer AS tv_id, indexer_id AS prod_id, network, airs, runtime'
-            ' FROM tv_shows'
-            ' WHERE (status = \'Continuing\' OR status = \'Returning Series\' ) AND paused != \'1\'')
+        with db.DBConnection() as sg_db:
+            show_list = sg_db.select(
+                'SELECT show_name, indexer AS tv_id, indexer_id AS prod_id, network, airs, runtime'
+                ' FROM tv_shows'
+                ' WHERE (status = \'Continuing\' OR status = \'Returning Series\' ) AND paused != \'1\'')
 
-        nl = '\\n\\n'
-        crlf = '\r\n'
+            nl = '\\n\\n'
+            crlf = '\r\n'
 
-        # Create iCal header
-        appname = 'SickGear'
-        ical = 'BEGIN:VCALENDAR%sVERSION:2.0%sX-WR-CALNAME:%s%sX-WR-CALDESC:%s%sPRODID://%s Upcoming Episodes//%s' \
-               % (crlf, crlf, appname, crlf, appname, crlf, appname, crlf)
+            # Create iCal header
+            appname = 'SickGear'
+            ical = 'BEGIN:VCALENDAR%sVERSION:2.0%sX-WR-CALNAME:%s%sX-WR-CALDESC:%s%sPRODID://%s Upcoming Episodes//%s' \
+                   % (crlf, crlf, appname, crlf, appname, crlf, appname, crlf)
 
-        for show in show_list:
-            # Get all episodes of this show airing between today and next month
+            for show in show_list:
+                # Get all episodes of this show airing between today and next month
 
-            episode_list = my_db.select(
-                'SELECT name, season, episode, description, airdate'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?'
-                ' AND airdate >= ? AND airdate < ? ',
-                [show['tv_id'], show['prod_id']]
-                + [past_date, future_date])
+                episode_list = sg_db.select(
+                    'SELECT name, season, episode, description, airdate'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?'
+                    ' AND airdate >= ? AND airdate < ? ',
+                    [show['tv_id'], show['prod_id']]
+                    + [past_date, future_date])
 
-            for episode in episode_list:
-                air_date_time = network_timezones.parse_date_time(episode['airdate'], show['airs'],
-                                                                  show['network']).astimezone(utc)
-                air_date_time_end = air_date_time + timedelta(minutes=helpers.try_int(show['runtime'], 60))
+                for episode in episode_list:
+                    air_date_time = network_timezones.parse_date_time(episode['airdate'], show['airs'],
+                                                                      show['network']).astimezone(utc)
+                    air_date_time_end = air_date_time + timedelta(minutes=helpers.try_int(show['runtime'], 60))
 
-                # Create event for episode
-                desc = '' if not episode['description'] else f'{nl}{episode["description"].splitlines()[0]}'
-                ical += (f'BEGIN:VEVENT{crlf}'
-                         f'DTSTART:{air_date_time.strftime("%Y%m%d")}T{air_date_time.strftime("%H%M%S")}Z{crlf}'
-                         f'DTEND:{air_date_time_end.strftime("%Y%m%d")}T{air_date_time_end.strftime("%H%M%S")}Z{crlf}'
-                         f'SUMMARY:{show["show_name"]} - {episode["season"]}x{episode["episode"]}'
-                            f' - {episode["name"]}{crlf}'
-                         f'UID:{appname}-{dt_date.today().isoformat()}-{show["show_name"].replace(" ", "-")}'
-                            f'-E{episode["episode"]}S{episode["season"]}{crlf}'
-                         f'DESCRIPTION:{(show["airs"] or "(Unknown airs)")} on {(show["network"] or "Unknown network")}'
-                         f'{desc}{crlf}'
-                         f'END:VEVENT{crlf}')
+                    # Create event for episode
+                    desc = '' if not episode['description'] else f'{nl}{episode["description"].splitlines()[0]}'
+                    ical += (f'BEGIN:VEVENT{crlf}'
+                             f'DTSTART:{air_date_time.strftime("%Y%m%d")}T{air_date_time.strftime("%H%M%S")}Z{crlf}'
+                             f'DTEND:{air_date_time_end.strftime("%Y%m%d")}T{air_date_time_end.strftime("%H%M%S")}Z{crlf}'
+                             f'SUMMARY:{show["show_name"]} - {episode["season"]}x{episode["episode"]}'
+                                f' - {episode["name"]}{crlf}'
+                             f'UID:{appname}-{dt_date.today().isoformat()}-{show["show_name"].replace(" ", "-")}'
+                                f'-E{episode["episode"]}S{episode["season"]}{crlf}'
+                             f'DESCRIPTION:{(show["airs"] or "(Unknown airs)")} on {(show["network"] or "Unknown network")}'
+                             f'{desc}{crlf}'
+                             f'END:VEVENT{crlf}')
 
         # Ending the iCal
         return ical + 'END:VCALENDAR'
@@ -1266,48 +1266,48 @@ class MainHandler(WebHandler):
         done_show_list = []
         qualities = Quality.SNATCHED + Quality.DOWNLOADED + Quality.ARCHIVED + [IGNORED, SKIPPED]
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            'SELECT *, tv_episodes.network as episode_network, tv_shows.status AS show_status,'
-            ' tv_shows.network as show_network, tv_shows.timezone as show_timezone, tv_shows.airtime as show_airtime,'
-            ' tv_episodes.timezone as ep_timezone, tv_episodes.airtime as ep_airtime'
-            ' FROM tv_episodes, tv_shows'
-            ' WHERE tv_shows.indexer = tv_episodes.indexer AND tv_shows.indexer_id = tv_episodes.showid'
-            ' AND season != 0 AND airdate >= ? AND airdate <= ?'
-            ' AND tv_episodes.status NOT IN (%s)' % ','.join(['?'] * len(qualities)),
-            [yesterday, next_week] + qualities)
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                'SELECT *, tv_episodes.network as episode_network, tv_shows.status AS show_status,'
+                ' tv_shows.network as show_network, tv_shows.timezone as show_timezone, tv_shows.airtime as show_airtime,'
+                ' tv_episodes.timezone as ep_timezone, tv_episodes.airtime as ep_airtime'
+                ' FROM tv_episodes, tv_shows'
+                ' WHERE tv_shows.indexer = tv_episodes.indexer AND tv_shows.indexer_id = tv_episodes.showid'
+                ' AND season != 0 AND airdate >= ? AND airdate <= ?'
+                ' AND tv_episodes.status NOT IN (%s)' % ','.join(['?'] * len(qualities)),
+                [yesterday, next_week] + qualities)
 
-        for cur_result in sql_result:
-            done_show_list.append('%s-%s' % (cur_result['indexer'], cur_result['showid']))
+            for cur_result in sql_result:
+                done_show_list.append('%s-%s' % (cur_result['indexer'], cur_result['showid']))
 
-        # noinspection SqlRedundantOrderingDirection
-        sql_result += my_db.select(
-            'SELECT *, outer_eps.network as episode_network, tv_shows.status AS show_status,'
-            ' tv_shows.network as show_network, tv_shows.timezone as show_timezone, tv_shows.airtime as show_airtime,'
-            ' outer_eps.timezone as ep_timezone, outer_eps.airtime as ep_airtime'
-            ' FROM tv_episodes outer_eps, tv_shows'
-            ' WHERE season != 0'
-            ' AND tv_shows.indexer || \'-\' || showid NOT IN (%s)' % ','.join(done_show_list)
-            + ' AND tv_shows.indexer = outer_eps.indexer AND tv_shows.indexer_id = outer_eps.showid'
-              ' AND airdate = (SELECT airdate FROM tv_episodes inner_eps'
-              ' WHERE inner_eps.season != 0'
-              ' AND inner_eps.indexer = outer_eps.indexer AND inner_eps.showid = outer_eps.showid'
-              ' AND inner_eps.airdate >= ?'
-              ' ORDER BY inner_eps.airdate ASC LIMIT 1) AND outer_eps.status NOT IN (%s)'
-            % ','.join(['?'] * len(Quality.SNATCHED + Quality.DOWNLOADED)),
-            [next_week] + Quality.SNATCHED + Quality.DOWNLOADED)
+            # noinspection SqlRedundantOrderingDirection
+            sql_result += sg_db.select(
+                'SELECT *, outer_eps.network as episode_network, tv_shows.status AS show_status,'
+                ' tv_shows.network as show_network, tv_shows.timezone as show_timezone, tv_shows.airtime as show_airtime,'
+                ' outer_eps.timezone as ep_timezone, outer_eps.airtime as ep_airtime'
+                ' FROM tv_episodes outer_eps, tv_shows'
+                ' WHERE season != 0'
+                ' AND tv_shows.indexer || \'-\' || showid NOT IN (%s)' % ','.join(done_show_list)
+                + ' AND tv_shows.indexer = outer_eps.indexer AND tv_shows.indexer_id = outer_eps.showid'
+                  ' AND airdate = (SELECT airdate FROM tv_episodes inner_eps'
+                  ' WHERE inner_eps.season != 0'
+                  ' AND inner_eps.indexer = outer_eps.indexer AND inner_eps.showid = outer_eps.showid'
+                  ' AND inner_eps.airdate >= ?'
+                  ' ORDER BY inner_eps.airdate ASC LIMIT 1) AND outer_eps.status NOT IN (%s)'
+                % ','.join(['?'] * len(Quality.SNATCHED + Quality.DOWNLOADED)),
+                [next_week] + Quality.SNATCHED + Quality.DOWNLOADED)
 
-        sql_result += my_db.select(
-            'SELECT *, tv_episodes.network as episode_network, tv_shows.status AS show_status,'
-            ' tv_shows.network as show_network, tv_shows.timezone as show_timezone, tv_shows.airtime as show_airtime,'
-            ' tv_episodes.timezone as ep_timezone, tv_episodes.airtime as ep_airtime'
-            ' FROM tv_episodes, tv_shows'
-            ' WHERE season != 0'
-            ' AND tv_shows.indexer = tv_episodes.indexer AND tv_shows.indexer_id = tv_episodes.showid'
-            ' AND airdate <= ? AND airdate >= ? AND tv_episodes.status = ? AND tv_episodes.status NOT IN (%s)'
-            % ','.join(['?'] * len(qualities)),
-            [tomorrow, recently, WANTED] + qualities)
-        sql_result = list(set(sql_result))
+            sql_result += sg_db.select(
+                'SELECT *, tv_episodes.network as episode_network, tv_shows.status AS show_status,'
+                ' tv_shows.network as show_network, tv_shows.timezone as show_timezone, tv_shows.airtime as show_airtime,'
+                ' tv_episodes.timezone as ep_timezone, tv_episodes.airtime as ep_airtime'
+                ' FROM tv_episodes, tv_shows'
+                ' WHERE season != 0'
+                ' AND tv_shows.indexer = tv_episodes.indexer AND tv_shows.indexer_id = tv_episodes.showid'
+                ' AND airdate <= ? AND airdate >= ? AND tv_episodes.status = ? AND tv_episodes.status NOT IN (%s)'
+                % ','.join(['?'] * len(qualities)),
+                [tomorrow, recently, WANTED] + qualities)
+            sql_result = list(set(sql_result))
 
         # make a dict out of the sql results
         sql_result = [dict(row) for row in sql_result
@@ -1602,23 +1602,22 @@ r.close()
 
         sql_result = []
         if data:
-            my_db = db.DBConnection(row_type='dict')
-
             media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), iteritems(data)))
 
             def chunks(lines, n):
                 for c in range(0, len(lines), n):
                     yield lines[c:c + n]
 
-            # noinspection PyTypeChecker
-            for x in chunks(media_paths, 100):
+            with db.DBConnection(row_type='dict') as sg_db:
                 # noinspection PyTypeChecker
-                sql_result += my_db.select(
-                    'SELECT episode_id, status, location, file_size FROM tv_episodes WHERE file_size > 0 AND (%s)' %
-                    ' OR '.join(['location LIKE "%%%s"' % i for i in x]))
+                for x in chunks(media_paths, 100):
+                    # noinspection PyTypeChecker
+                    sql_result += sg_db.select(
+                        'SELECT episode_id, status, location, file_size FROM tv_episodes WHERE file_size > 0 AND (%s)' %
+                        " OR ".join(["location LIKE '%%%s'" % i for i in x]))
 
         if sql_result:
-            cl = []
+            sql_l = []
 
             ep_results = {}
             map_consume(lambda r: ep_results.update({'%s' % os.path.basename(r['location']).lower(): dict(
@@ -1642,7 +1641,7 @@ r.close()
                     ep_data = ep_results[bname]
                     # using label and location with upsert to list multi-client items at same location
                     # can omit label to have the latest scanned client upsert an existing client row based on location
-                    cl.extend(db.mass_upsert_sql(
+                    sql_l.extend(db.mass_upsert_sql(
                         'tv_episodes_watched',
                         dict(tvep_id=ep_data['episode_id'], clientep_id=v.get('media_id', '') or '',
                              played=v.get('played', 1),
@@ -1652,9 +1651,10 @@ r.close()
 
                     data[k] = ''
 
-            if cl:
-                # noinspection PyUnboundLocalVariable
-                my_db.mass_action(cl)
+            if sql_l:
+                with db.DBConnection(row_type='dict') as sg_db:
+                    # noinspection PyUnboundLocalVariable
+                    sg_db.mass_action(sql_l)
 
         if as_json:
             if not data:
@@ -1828,38 +1828,38 @@ class Home(MainHandler):
         t.layout = sickgear.HOME_LAYOUT
 
         # Get all show snatched / downloaded / next air date stats
-        my_db = db.DBConnection()
         today = dt_date.today().toordinal()
         status_quality = ','.join([str(x) for x in Quality.SNATCHED_ANY])
         status_download = ','.join([str(x) for x in Quality.DOWNLOADED + Quality.ARCHIVED])
         status_total = '%s, %s, %s' % (SKIPPED, WANTED, FAILED)
 
-        sql_result = my_db.select(
-            'SELECT indexer AS tvid, showid as prodid, '
-            + '(SELECT COUNT(*) FROM tv_episodes'
-              ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
-              ' AND season > 0 AND episode > 0 AND airdate > 1 AND status IN (%s)) AS ep_snatched,'
-              ' (SELECT COUNT(*) FROM tv_episodes'
-              ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
-              ' AND season > 0 AND episode > 0 AND airdate > 1 AND status IN (%s)) AS ep_downloaded,'
-              ' (SELECT COUNT(*) FROM tv_episodes'
-              ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
-              ' AND season > 0 AND episode > 0 AND airdate > 1'
-              ' AND ('
-              '(airdate <= %s AND (status IN (%s)))'
-              ' OR (status IN (%s)) OR (status IN (%s)))) AS ep_total,'
-              ' (SELECT airdate FROM tv_episodes'
-              ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
-              ' AND airdate >= %s AND (status = %s  OR status = %s)'
-              ' ORDER BY airdate ASC LIMIT 1) AS ep_airs_next,'
-              ' (SELECT airdate FROM tv_episodes'  # get last airdate of regular episode for today
-              ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
-              ' AND airdate <= %s AND season > 0'
-              ' ORDER BY airdate DESC LIMIT 1) AS ep_airs_last'
-              ' FROM tv_episodes tv_eps GROUP BY indexer, showid'
-            % (status_quality, status_download, today, status_total,
-               status_quality, status_download, today, UNAIRED, WANTED,
-               today))
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                'SELECT indexer AS tvid, showid as prodid, '
+                + '(SELECT COUNT(*) FROM tv_episodes'
+                  ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
+                  ' AND season > 0 AND episode > 0 AND airdate > 1 AND status IN (%s)) AS ep_snatched,'
+                  ' (SELECT COUNT(*) FROM tv_episodes'
+                  ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
+                  ' AND season > 0 AND episode > 0 AND airdate > 1 AND status IN (%s)) AS ep_downloaded,'
+                  ' (SELECT COUNT(*) FROM tv_episodes'
+                  ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
+                  ' AND season > 0 AND episode > 0 AND airdate > 1'
+                  ' AND ('
+                  '(airdate <= %s AND (status IN (%s)))'
+                  ' OR (status IN (%s)) OR (status IN (%s)))) AS ep_total,'
+                  ' (SELECT airdate FROM tv_episodes'
+                  ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
+                  ' AND airdate >= %s AND (status = %s  OR status = %s)'
+                  ' ORDER BY airdate ASC LIMIT 1) AS ep_airs_next,'
+                  ' (SELECT airdate FROM tv_episodes'  # get last airdate of regular episode for today
+                  ' WHERE indexer = tv_eps.indexer AND showid = tv_eps.showid'
+                  ' AND airdate <= %s AND season > 0'
+                  ' ORDER BY airdate DESC LIMIT 1) AS ep_airs_last'
+                  ' FROM tv_episodes tv_eps GROUP BY indexer, showid'
+                % (status_quality, status_download, today, status_total,
+                   status_quality, status_download, today, UNAIRED, WANTED,
+                   today))
 
         t.show_stat = {}
 
@@ -2127,14 +2127,14 @@ class Home(MainHandler):
     def load_show_notify_lists(self):
         self.set_header('Cache-Control', 'max-age=0,no-cache,no-store')
 
-        my_db = db.DBConnection()
-        # noinspection SqlResolve
-        rows = my_db.select(
-            'SELECT indexer || ? ||  indexer_id AS tvid_prodid, notify_list'
-            ' FROM tv_shows'
-            ' WHERE notify_list NOTNULL'
-            ' AND notify_list != ""',
-            [TVidProdid.glue])
+        with db.DBConnection() as sg_db:
+            # noinspection SqlResolve
+            rows = sg_db.select(
+                'SELECT indexer || ? ||  indexer_id AS tvid_prodid, notify_list'
+                ' FROM tv_shows'
+                ' WHERE notify_list NOTNULL'
+                ' AND notify_list != ""',
+                [TVidProdid.glue])
         notify_lists = {}
         for r in filter(lambda x: x['notify_list'].strip(), rows):
             # noinspection PyTypeChecker
@@ -2195,14 +2195,14 @@ class Home(MainHandler):
     def save_show_email(show=None, emails=None):
         # self.set_header('Cache-Control', 'max-age=0,no-cache,no-store')
 
-        my_db = db.DBConnection()
-        success = False
-        parse = show.split(TVidProdid.glue)
-        if 1 < len(parse) and \
-                my_db.action('UPDATE tv_shows SET notify_list = ?'
-                             ' WHERE indexer = ? AND indexer_id = ?',
-                             [emails, parse[0], parse[1]]):
-            success = True
+        with db.DBConnection() as sg_db:
+            success = False
+            parse = show.split(TVidProdid.glue)
+            if 1 < len(parse) and \
+                    sg_db.action('UPDATE tv_shows SET notify_list = ?'
+                                 ' WHERE indexer = ? AND indexer_id = ?',
+                                 [emails, parse[0], parse[1]]):
+                success = True
         return json_dumps({'id': show, 'success': success})
 
     def check_update(self):
@@ -2345,14 +2345,14 @@ class Home(MainHandler):
         t = PageTemplate(web_handler=self, file='inc_displayShow.tmpl')
         t.show_obj = show_obj
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT *'
-                                  ' FROM tv_episodes'
-                                  ' WHERE indexer = ? AND showid = ?'
-                                  ' AND season = ?'
-                                  ' ORDER BY episode DESC',
-                                  [show_obj.tvid, show_obj.prodid,
-                                   season])
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT *'
+                                      ' FROM tv_episodes'
+                                      ' WHERE indexer = ? AND showid = ?'
+                                      ' AND season = ?'
+                                      ' ORDER BY episode DESC',
+                                      [show_obj.tvid, show_obj.prodid,
+                                       season])
         t.episodes = sql_result
 
         ep_cats = {}
@@ -2507,152 +2507,152 @@ class Home(MainHandler):
         t.latest_season = 0
         t.has_special = False
 
-        my_db = db.DBConnection()
+        with db.DBConnection() as sg_db:
 
-        failed_check = my_db.select('SELECT status FROM tv_src_switch WHERE old_indexer = ? AND old_indexer_id = ?'
-                                    ' AND status != ?', [show_obj.tvid, show_obj.prodid, TVSWITCH_NORMAL])
-        if failed_check:
-            t.show_message = '%s%s%s' % \
-                             (t.show_message, ('<br>', '')[0 == len(t.show_message)],
-                              'Failed to switch tv info source: %s' %
-                              tvswitch_names.get(failed_check[0]['status'], 'Unknown reason'))
+            failed_check = sg_db.select('SELECT status FROM tv_src_switch WHERE old_indexer = ? AND old_indexer_id = ?'
+                                        ' AND status != ?', [show_obj.tvid, show_obj.prodid, TVSWITCH_NORMAL])
+            if failed_check:
+                t.show_message = '%s%s%s' % \
+                                 (t.show_message, ('<br>', '')[0 == len(t.show_message)],
+                                  'Failed to switch tv info source: %s' %
+                                  tvswitch_names.get(failed_check[0]['status'], 'Unknown reason'))
 
-        for row in my_db.select('SELECT season, count(*) AS cnt'
-                                ' FROM tv_episodes'
-                                ' WHERE indexer = ? AND showid = ?'
-                                ' GROUP BY season',
-                                [show_obj.tvid, show_obj.prodid]):
-            ep_counts['totals'][row['season']] = row['cnt']
+            for row in sg_db.select('SELECT season, count(*) AS cnt'
+                                    ' FROM tv_episodes'
+                                    ' WHERE indexer = ? AND showid = ?'
+                                    ' GROUP BY season',
+                                    [show_obj.tvid, show_obj.prodid]):
+                ep_counts['totals'][row['season']] = row['cnt']
 
-        if None is not ep_counts['totals'].get(0):
-            t.has_special = True
-            if not sickgear.DISPLAY_SHOW_SPECIALS:
-                del (ep_counts['totals'][0])
+            if None is not ep_counts['totals'].get(0):
+                t.has_special = True
+                if not sickgear.DISPLAY_SHOW_SPECIALS:
+                    del (ep_counts['totals'][0])
 
-        ep_counts['eps_all'] = sum(itervalues(ep_counts['totals']))
-        ep_counts['eps_most'] = max(list(ep_counts['totals'].values()) + [0])
-        all_seasons = sorted(iterkeys(ep_counts['totals']), reverse=True)
-        t.lowest_season, t.highest_season = all_seasons and (all_seasons[-1], all_seasons[0]) or (0, 0)
+            ep_counts['eps_all'] = sum(itervalues(ep_counts['totals']))
+            ep_counts['eps_most'] = max(list(ep_counts['totals'].values()) + [0])
+            all_seasons = sorted(iterkeys(ep_counts['totals']), reverse=True)
+            t.lowest_season, t.highest_season = all_seasons and (all_seasons[-1], all_seasons[0]) or (0, 0)
 
-        # 55 == seasons 1-10 and excludes the random season 0
-        force_display_show_minimum = 30 < ep_counts['eps_most'] or 55 < sum(ep_counts['totals'])
-        display_show_minimum = sickgear.DISPLAY_SHOW_MINIMUM or force_display_show_minimum
+            # 55 == seasons 1-10 and excludes the random season 0
+            force_display_show_minimum = 30 < ep_counts['eps_most'] or 55 < sum(ep_counts['totals'])
+            display_show_minimum = sickgear.DISPLAY_SHOW_MINIMUM or force_display_show_minimum
 
-        for row in my_db.select('SELECT max(season) AS latest'
-                                ' FROM tv_episodes'
-                                ' WHERE indexer = ? AND showid = ?'
-                                ' AND 1000 < airdate AND ? < status',
-                                [show_obj.tvid, show_obj.prodid,
-                                 UNAIRED]):
-            t.latest_season = row['latest'] or {0: 1, 1: 1, 2: -1}.get(sickgear.DISPLAY_SHOW_VIEWMODE)
+            for row in sg_db.select('SELECT max(season) AS latest'
+                                    ' FROM tv_episodes'
+                                    ' WHERE indexer = ? AND showid = ?'
+                                    ' AND 1000 < airdate AND ? < status',
+                                    [show_obj.tvid, show_obj.prodid,
+                                     UNAIRED]):
+                t.latest_season = row['latest'] or {0: 1, 1: 1, 2: -1}.get(sickgear.DISPLAY_SHOW_VIEWMODE)
 
-        t.season_min = ([], [1])[2 < t.latest_season] + [t.latest_season]
-        t.other_seasons = (list(set(all_seasons) - set(t.season_min)), [])[display_show_minimum]
-        t.seasons = []
-        for cur_season in all_seasons:
-            t.seasons += [(cur_season, [None] if cur_season not in (t.season_min + t.other_seasons) else my_db.select(
-                'SELECT *'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?'
-                ' AND season = ?'
-                ' ORDER BY episode DESC',
-                [show_obj.tvid, show_obj.prodid, cur_season]
-            ), scene_exceptions.ReleaseMap().has_season_exceptions(show_obj.tvid, show_obj.prodid, cur_season))]
+            t.season_min = ([], [1])[2 < t.latest_season] + [t.latest_season]
+            t.other_seasons = (list(set(all_seasons) - set(t.season_min)), [])[display_show_minimum]
+            t.seasons = []
+            for cur_season in all_seasons:
+                t.seasons += [(cur_season, [None] if cur_season not in (t.season_min + t.other_seasons) else sg_db.select(
+                    'SELECT *'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?'
+                    ' AND season = ?'
+                    ' ORDER BY episode DESC',
+                    [show_obj.tvid, show_obj.prodid, cur_season]
+                ), scene_exceptions.ReleaseMap().has_season_exceptions(show_obj.tvid, show_obj.prodid, cur_season))]
 
-        for row in my_db.select('SELECT season, episode, status'
-                                ' FROM tv_episodes'
-                                ' WHERE indexer = ? AND showid = ?'
-                                ' AND season IN (%s)' % ','.join(['?'] * len(t.season_min + t.other_seasons)),
-                                [show_obj.tvid, show_obj.prodid]
-                                + t.season_min + t.other_seasons):
-            status_overview = show_obj.get_overview(row['status'])
-            if status_overview:
-                ep_cats['%sx%s' % (row['season'], row['episode'])] = status_overview
-        t.ep_cats = ep_cats
+            for row in sg_db.select('SELECT season, episode, status'
+                                    ' FROM tv_episodes'
+                                    ' WHERE indexer = ? AND showid = ?'
+                                    ' AND season IN (%s)' % ','.join(['?'] * len(t.season_min + t.other_seasons)),
+                                    [show_obj.tvid, show_obj.prodid]
+                                    + t.season_min + t.other_seasons):
+                status_overview = show_obj.get_overview(row['status'])
+                if status_overview:
+                    ep_cats['%sx%s' % (row['season'], row['episode'])] = status_overview
+            t.ep_cats = ep_cats
 
-        for row in my_db.select('SELECT season, count(*) AS cnt, status'
-                                ' FROM tv_episodes'
-                                ' WHERE indexer = ? AND showid = ?'
-                                ' GROUP BY season, status',
-                                [show_obj.tvid, show_obj.prodid]):
-            status_overview = show_obj.get_overview(row['status'])
-            if status_overview:
-                ep_counts[status_overview] += row['cnt']
-                if ARCHIVED == Quality.split_composite_status(row['status'])[0]:
-                    ep_counts['archived'].setdefault(row['season'], 0)
-                    ep_counts['archived'][row['season']] = row['cnt'] + ep_counts['archived'].get(row['season'], 0)
-                else:
-                    ep_counts['status'].setdefault(row['season'], {})
-                    ep_counts['status'][row['season']][status_overview] = row['cnt'] + \
-                        ep_counts['status'][row['season']].get(status_overview, 0)
+            for row in sg_db.select('SELECT season, count(*) AS cnt, status'
+                                    ' FROM tv_episodes'
+                                    ' WHERE indexer = ? AND showid = ?'
+                                    ' GROUP BY season, status',
+                                    [show_obj.tvid, show_obj.prodid]):
+                status_overview = show_obj.get_overview(row['status'])
+                if status_overview:
+                    ep_counts[status_overview] += row['cnt']
+                    if ARCHIVED == Quality.split_composite_status(row['status'])[0]:
+                        ep_counts['archived'].setdefault(row['season'], 0)
+                        ep_counts['archived'][row['season']] = row['cnt'] + ep_counts['archived'].get(row['season'], 0)
+                    else:
+                        ep_counts['status'].setdefault(row['season'], {})
+                        ep_counts['status'][row['season']][status_overview] = row['cnt'] + \
+                            ep_counts['status'][row['season']].get(status_overview, 0)
 
-        for row in my_db.select('SELECT season, count(*) AS cnt FROM tv_episodes'
-                                ' WHERE indexer = ? AND showid = ?'
-                                ' AND \'\' != location'
-                                ' GROUP BY season',
-                                [show_obj.tvid, show_obj.prodid]):
-            ep_counts['videos'][row['season']] = row['cnt']
-        t.ep_counts = ep_counts
+            for row in sg_db.select('SELECT season, count(*) AS cnt FROM tv_episodes'
+                                    ' WHERE indexer = ? AND showid = ?'
+                                    ' AND \'\' != location'
+                                    ' GROUP BY season',
+                                    [show_obj.tvid, show_obj.prodid]):
+                ep_counts['videos'][row['season']] = row['cnt']
+            t.ep_counts = ep_counts
 
-        t.sortedShowLists = self.sorted_show_lists()
-        t.tvshow_id_csv = []
-        tvshow_names = []
-        cur_sel = None
-        for cur_tvshow_types in t.sortedShowLists:
-            for cur_show_obj in cur_tvshow_types[1]:
-                t.tvshow_id_csv.append(cur_show_obj.tvid_prodid)
-                tvshow_names.append(cur_show_obj.name)
-                if show_obj.tvid_prodid == cur_show_obj.tvid_prodid:
-                    cur_sel = len(tvshow_names)
+            t.sortedShowLists = self.sorted_show_lists()
+            t.tvshow_id_csv = []
+            tvshow_names = []
+            cur_sel = None
+            for cur_tvshow_types in t.sortedShowLists:
+                for cur_show_obj in cur_tvshow_types[1]:
+                    t.tvshow_id_csv.append(cur_show_obj.tvid_prodid)
+                    tvshow_names.append(cur_show_obj.name)
+                    if show_obj.tvid_prodid == cur_show_obj.tvid_prodid:
+                        cur_sel = len(tvshow_names)
 
-        last_item = len(tvshow_names)
-        t.prev_title = ''
-        t.next_title = ''
-        if cur_sel:
-            t.prev_title = 'Prev show, %s' % tvshow_names[(cur_sel - 2, last_item - 1)[1 == cur_sel]]
-            t.next_title = 'Next show, %s' % tvshow_names[(cur_sel, 0)[last_item == cur_sel]]
+            last_item = len(tvshow_names)
+            t.prev_title = ''
+            t.next_title = ''
+            if cur_sel:
+                t.prev_title = 'Prev show, %s' % tvshow_names[(cur_sel - 2, last_item - 1)[1 == cur_sel]]
+                t.next_title = 'Next show, %s' % tvshow_names[(cur_sel, 0)[last_item == cur_sel]]
 
-        t.anigroups = None
-        if show_obj.is_anime:
-            t.anigroups = show_obj.release_groups
+            t.anigroups = None
+            if show_obj.is_anime:
+                t.anigroups = show_obj.release_groups
 
-        t.fanart = []
-        cache_obj = image_cache.ImageCache()
-        for img in glob.glob(cache_obj.fanart_path(show_obj.tvid, show_obj.prodid).replace('fanart.jpg', '*')) or []:
-            match = re.search(r'(\d+(?:\.(\w*?(\d*)))?\.\w{5,8})\.fanart\.', img, re.I)
-            if match and match.group(1):
-                t.fanart += [(match.group(1),
-                              sickgear.FANART_RATINGS.get(tvid_prodid, {}).get(match.group(1), ''))]
+            t.fanart = []
+            cache_obj = image_cache.ImageCache()
+            for img in glob.glob(cache_obj.fanart_path(show_obj.tvid, show_obj.prodid).replace('fanart.jpg', '*')) or []:
+                match = re.search(r'(\d+(?:\.(\w*?(\d*)))?\.\w{5,8})\.fanart\.', img, re.I)
+                if match and match.group(1):
+                    t.fanart += [(match.group(1),
+                                  sickgear.FANART_RATINGS.get(tvid_prodid, {}).get(match.group(1), ''))]
 
-        t.start_image = None
-        ratings = [v for n, v in t.fanart]
-        if 20 in ratings:
-            t.start_image = ratings.index(20)
-        else:
-            rnd = [(x, v) for x, (n, v) in enumerate(t.fanart) if 30 != v]
-            grouped = [n for (n, v) in rnd if 10 == v]
-            if grouped:
-                t.start_image = grouped[random.randint(0, len(grouped) - 1)]
-            elif rnd:
-                t.start_image = rnd[random.randint(0, len(rnd) - 1)][0]
-        t.has_art = bool(len(t.fanart))
-        t.css = ' '.join(([], ['back-art'])[sickgear.DISPLAY_SHOW_BACKGROUND and t.has_art] +
-                         ([], ['translucent'])[sickgear.DISPLAY_SHOW_BACKGROUND_TRANSLUCENT] +
-                         {0: [], 1: ['poster-right'], 2: ['poster-off']}.get(sickgear.DISPLAY_SHOW_VIEWART) +
-                         ([], ['min'])[display_show_minimum] +
-                         ([], ['min-force'])[force_display_show_minimum] +
-                         [{0: 'reg', 1: 'pro', 2: 'pro ii'}.get(sickgear.DISPLAY_SHOW_VIEWMODE)])
+            t.start_image = None
+            ratings = [v for n, v in t.fanart]
+            if 20 in ratings:
+                t.start_image = ratings.index(20)
+            else:
+                rnd = [(x, v) for x, (n, v) in enumerate(t.fanart) if 30 != v]
+                grouped = [n for (n, v) in rnd if 10 == v]
+                if grouped:
+                    t.start_image = grouped[random.randint(0, len(grouped) - 1)]
+                elif rnd:
+                    t.start_image = rnd[random.randint(0, len(rnd) - 1)][0]
+            t.has_art = bool(len(t.fanart))
+            t.css = ' '.join(([], ['back-art'])[sickgear.DISPLAY_SHOW_BACKGROUND and t.has_art] +
+                             ([], ['translucent'])[sickgear.DISPLAY_SHOW_BACKGROUND_TRANSLUCENT] +
+                             {0: [], 1: ['poster-right'], 2: ['poster-off']}.get(sickgear.DISPLAY_SHOW_VIEWART) +
+                             ([], ['min'])[display_show_minimum] +
+                             ([], ['min-force'])[force_display_show_minimum] +
+                             [{0: 'reg', 1: 'pro', 2: 'pro ii'}.get(sickgear.DISPLAY_SHOW_VIEWMODE)])
 
-        t.clean_show_name = quote_plus(sickgear.indexermapper.clean_show_name(show_obj.name))
+            t.clean_show_name = quote_plus(sickgear.indexermapper.clean_show_name(show_obj.name))
 
-        t.min_initial = Quality.get_quality_ui(min(Quality.split_quality(show_obj.quality)[0]))
-        t.show_obj.exceptions = scene_exceptions.ReleaseMap().get_alt_names(show_obj.tvid, show_obj.prodid)
-        # noinspection PyUnresolvedReferences
-        t.all_scene_exceptions = show_obj.exceptions  # normally Unresolved as not a class attribute, force set above
-        t.scene_numbering = get_scene_numbering_for_show(show_obj.tvid, show_obj.prodid)
-        t.scene_absolute_numbering = get_scene_absolute_numbering_for_show(show_obj.tvid, show_obj.prodid)
-        t.xem_numbering = get_xem_numbering_for_show(show_obj.tvid, show_obj.prodid)
-        t.xem_absolute_numbering = get_xem_absolute_numbering_for_show(show_obj.tvid, show_obj.prodid)
+            t.min_initial = Quality.get_quality_ui(min(Quality.split_quality(show_obj.quality)[0]))
+            t.show_obj.exceptions = scene_exceptions.ReleaseMap().get_alt_names(show_obj.tvid, show_obj.prodid)
+            # noinspection PyUnresolvedReferences
+            t.all_scene_exceptions = show_obj.exceptions  # normally Unresolved as not a class attribute, force set above
+            t.scene_numbering = get_scene_numbering_for_show(show_obj.tvid, show_obj.prodid)
+            t.scene_absolute_numbering = get_scene_absolute_numbering_for_show(show_obj.tvid, show_obj.prodid)
+            t.xem_numbering = get_xem_numbering_for_show(show_obj.tvid, show_obj.prodid)
+            t.xem_absolute_numbering = get_xem_absolute_numbering_for_show(show_obj.tvid, show_obj.prodid)
 
         t.submenu = [
             dict(title=f'{("Pause", "Unpause")[bool(show_obj.paused)]} show', icon='pause',
@@ -2789,13 +2789,13 @@ class Home(MainHandler):
     @staticmethod
     def plot_details(tvid_prodid, season, episode):
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            'SELECT description'
-            ' FROM tv_episodes'
-            ' WHERE indexer = ? AND showid = ?'
-            ' AND season = ? AND episode = ?',
-            TVidProdid(tvid_prodid).list + [int(season), int(episode)])
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                'SELECT description'
+                ' FROM tv_episodes'
+                ' WHERE indexer = ? AND showid = ?'
+                ' AND season = ? AND episode = ?',
+                TVidProdid(tvid_prodid).list + [int(season), int(episode)])
         return 'Episode not found.' if not sql_result else (sql_result[0]['description'] or '')[:250:]
 
     @staticmethod
@@ -3036,14 +3036,14 @@ class Home(MainHandler):
             t.tvsrc = int(kwargs.get('tvsrc', 0))
             t.srcid = helpers.try_int(kwargs.get('srcid'))
 
-            my_db = db.DBConnection()
-            # noinspection SqlRedundantOrderingDirection
-            t.seasonResults = my_db.select(
-                'SELECT DISTINCT season'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?'
-                ' ORDER BY season DESC',
-                [show_obj.tvid, show_obj.prodid])
+            with db.DBConnection() as sg_db:
+                # noinspection SqlRedundantOrderingDirection
+                t.seasonResults = sg_db.select(
+                    'SELECT DISTINCT season'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?'
+                    ' ORDER BY season DESC',
+                    [show_obj.tvid, show_obj.prodid])
 
             if show_obj.is_anime:
                 if not show_obj.release_groups:
@@ -3490,9 +3490,9 @@ class Home(MainHandler):
                     if None is not result:
                         sql_l.append(result)
 
-            if 0 < len(sql_l):
-                my_db = db.DBConnection()
-                my_db.mass_action(sql_l)
+            if sql_l:
+                with db.DBConnection() as sg_db:
+                    sg_db.mass_action(sql_l)
 
         if WANTED == status:
             season_list = ''
@@ -3612,34 +3612,34 @@ class Home(MainHandler):
         if None is eps:
             return self.redirect('/home/view-show?tvid_prodid=%s' % tvid_prodid)
 
-        my_db = db.DBConnection()
-        tvid_prodid_obj = TVidProdid(tvid_prodid)
-        for cur_ep in eps.split('|'):
+        with db.DBConnection() as sg_db:
+            tvid_prodid_obj = TVidProdid(tvid_prodid)
+            for cur_ep in eps.split('|'):
 
-            ep_info = cur_ep.split('x')
+                ep_info = cur_ep.split('x')
 
-            # noinspection SqlConstantCondition
-            sql_result = my_db.select(
-                'SELECT * FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?'
-                ' AND season = ? AND episode = ? AND 5=5',
-                tvid_prodid_obj.list
-                + [ep_info[0], ep_info[1]])
-            if not sql_result:
-                logger.warning(f'Unable to find an episode for {cur_ep}, skipping')
-                continue
-            related_ep_result = my_db.select('SELECT * FROM tv_episodes WHERE location = ? AND episode != ?',
-                                             [sql_result[0]['location'], ep_info[1]])
+                # noinspection SqlConstantCondition
+                sql_result = sg_db.select(
+                    'SELECT * FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?'
+                    ' AND season = ? AND episode = ? AND 5=5',
+                    tvid_prodid_obj.list
+                    + [ep_info[0], ep_info[1]])
+                if not sql_result:
+                    logger.warning(f'Unable to find an episode for {cur_ep}, skipping')
+                    continue
+                related_ep_result = sg_db.select('SELECT * FROM tv_episodes WHERE location = ? AND episode != ?',
+                                                 [sql_result[0]['location'], ep_info[1]])
 
-            root_ep_obj = show_obj.get_episode(int(ep_info[0]), int(ep_info[1]))
-            root_ep_obj.related_ep_obj = []
+                root_ep_obj = show_obj.get_episode(int(ep_info[0]), int(ep_info[1]))
+                root_ep_obj.related_ep_obj = []
 
-            for cur_ep_result in related_ep_result:
-                ep_obj = show_obj.get_episode(int(cur_ep_result['season']), int(cur_ep_result['episode']))
-                if ep_obj not in root_ep_obj.related_ep_obj:
-                    root_ep_obj.related_ep_obj.append(ep_obj)
+                for cur_ep_result in related_ep_result:
+                    ep_obj = show_obj.get_episode(int(cur_ep_result['season']), int(cur_ep_result['episode']))
+                    if ep_obj not in root_ep_obj.related_ep_obj:
+                        root_ep_obj.related_ep_obj.append(ep_obj)
 
-            root_ep_obj.rename()
+                root_ep_obj.rename()
 
         self.redirect('/home/view-show?tvid_prodid=%s' % tvid_prodid)
 
@@ -3931,21 +3931,21 @@ class Home(MainHandler):
         if person_id:
             person = TVPerson(sid=person_id)
             if person:
-                my_db = db.DBConnection()
-                sql_result = my_db.select(
-                    """
-                    SELECT DISTINCT characters.id AS id, name, indexer, indexer_id, 
-                    cpy.start_year AS start_year, cpy.end_year AS end_year, 
-                    c.indexer AS c_tvid, c.indexer_id AS c_prodid,
-                    (SELECT group_concat(character_ids.src || ':' || character_ids.src_id, ';;;')
-                    FROM character_ids WHERE character_ids.character_id = characters.id) as c_ids
-                    FROM characters
-                    LEFT JOIN castlist c ON characters.id = c.character_id
-                    LEFT JOIN character_person_map cpm ON characters.id = cpm.character_id
-                    LEFT JOIN character_person_years cpy ON characters.id = cpy.character_id
-                    AND cpy.person_id = ?
-                    WHERE cpm.person_id = ?
-                    """, [person.id, person.id])
+                with db.DBConnection() as sg_db:
+                    sql_result = sg_db.select(
+                        """
+                        SELECT DISTINCT characters.id AS id, name, indexer, indexer_id, 
+                        cpy.start_year AS start_year, cpy.end_year AS end_year, 
+                        c.indexer AS c_tvid, c.indexer_id AS c_prodid,
+                        (SELECT group_concat(character_ids.src || ':' || character_ids.src_id, ';;;')
+                        FROM character_ids WHERE character_ids.character_id = characters.id) as c_ids
+                        FROM characters
+                        LEFT JOIN castlist c ON characters.id = c.character_id
+                        LEFT JOIN character_person_map cpm ON characters.id = cpm.character_id
+                        LEFT JOIN character_person_years cpy ON characters.id = cpy.character_id
+                        AND cpy.person_id = ?
+                        WHERE cpm.person_id = ?
+                        """, [person.id, person.id])
 
                 pref = [TVINFO_IMDB, TVINFO_TVMAZE, TVINFO_TMDB, TVINFO_TRAKT]
                 roles = []
@@ -4026,16 +4026,16 @@ class Home(MainHandler):
             except (BaseException, Exception):
                 pass
 
-        my_db = db.DBConnection(row_type='dict')
-        sql_result = my_db.select(
-            """
-            SELECT * FROM persons
-            WHERE %s IN (%s)
-            """ % (date_kind, ','.join(['?'] * len(possible_dates))), possible_dates)
-        for cur_person in sql_result:
-            self._convert_person_data(cur_person)
+        with db.DBConnection(row_type='dict') as sg_db:
+            sql_result = sg_db.select(
+                """
+                SELECT * FROM persons
+                WHERE %s IN (%s)
+                """ % (date_kind, ','.join(['?'] * len(possible_dates))), possible_dates)
+            for cur_person in sql_result:
+                self._convert_person_data(cur_person)
 
-        return sql_result
+            return sql_result
 
     def get_persons(self, names=None, **kwargs):
         # type: (AnyStr, dict) -> AnyStr
@@ -4055,12 +4055,12 @@ class Home(MainHandler):
 
         names = names and names.split('|')
         if names:
-            my_db = db.DBConnection(row_type='dict')
-            sql_result = my_db.select(
-                """
-                SELECT * FROM persons
-                WHERE name IN (%s)
-                """ % ','.join(['?'] * len(names)), names)
+            with db.DBConnection(row_type='dict') as sg_db:
+                sql_result = sg_db.select(
+                    """
+                    SELECT * FROM persons
+                    WHERE name IN (%s)
+                    """ % ','.join(['?'] * len(names)), names)
             for cur_person in sql_result:
                 self._convert_person_data(cur_person)
             results['names'] = sql_result
@@ -4070,13 +4070,13 @@ class Home(MainHandler):
     def get_switch_changed(self):
         t = PageTemplate(web_handler=self, file='switch_show_result.tmpl')
         t.show_list = {}
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            """
-            SELECT DISTINCT new_indexer, new_indexer_id, COUNT(reason) AS count, reason
-            FROM switch_ep_result
-            GROUP BY new_indexer, new_indexer_id, reason
-            """)
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                """
+                SELECT DISTINCT new_indexer, new_indexer_id, COUNT(reason) AS count, reason
+                FROM switch_ep_result
+                GROUP BY new_indexer, new_indexer_id, reason
+                """)
         for cur_show in sql_result:
             try:
                 show_obj = helpers.find_show_by_id({cur_show['new_indexer']: cur_show['new_indexer_id']})
@@ -4102,13 +4102,13 @@ class Home(MainHandler):
 
         t.show_obj = show_obj
         t.ep_list = []
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            """
-            SELECT * FROM switch_ep_result
-            WHERE new_indexer = ? AND new_indexer_id = ?
-            ORDER BY season, episode
-            """, TVidProdid(tvid_prodid).list)
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                """
+                SELECT * FROM switch_ep_result
+                WHERE new_indexer = ? AND new_indexer_id = ?
+                ORDER BY season, episode
+                """, TVidProdid(tvid_prodid).list)
         for cur_episode in sql_result:
             try:
                 ep_obj = show_obj.get_episode(season=cur_episode['season'], episode=cur_episode['episode'],
@@ -4705,46 +4705,46 @@ class AddShows(Home):
             if display_one_dir:
                 break
 
-        my_db = db.DBConnection()
-        for _, cur_data in iteritems(dir_data):
-            cur_data['exists'] = my_db.mass_action(cur_data['sql'])
+        with db.DBConnection() as sg_db:
+            for _, cur_data in iteritems(dir_data):
+                cur_data['exists'] = sg_db.mass_action(cur_data['sql'])
 
-            for cur_enum, cur_normpath in enumerate(cur_data['normpath']):
-                if display_one_dir and not cur_data['highlight'][cur_enum]:
-                    continue
+                for cur_enum, cur_normpath in enumerate(cur_data['normpath']):
+                    if display_one_dir and not cur_data['highlight'][cur_enum]:
+                        continue
 
-                dir_item = dict(normpath=cur_normpath, rootpath='%s%s' % (os.path.dirname(cur_normpath), os.sep),
-                                name=cur_data['name'][cur_enum], added_already=any(cur_data['exists'][cur_enum]),
-                                highlight=cur_data['highlight'][cur_enum])
+                    dir_item = dict(normpath=cur_normpath, rootpath='%s%s' % (os.path.dirname(cur_normpath), os.sep),
+                                    name=cur_data['name'][cur_enum], added_already=any(cur_data['exists'][cur_enum]),
+                                    highlight=cur_data['highlight'][cur_enum])
 
-                if display_one_dir and cur_data['rename_suggest'][cur_enum]:
-                    dir_item['rename_suggest'] = cur_data['rename_suggest'][cur_enum]
+                    if display_one_dir and cur_data['rename_suggest'][cur_enum]:
+                        dir_item['rename_suggest'] = cur_data['rename_suggest'][cur_enum]
 
-                tvid = prodid = show_name = None
-                for cur_provider in itervalues(sickgear.metadata_provider_dict):
-                    if prodid and show_name:
-                        break
+                    tvid = prodid = show_name = None
+                    for cur_provider in itervalues(sickgear.metadata_provider_dict):
+                        if prodid and show_name:
+                            break
 
-                    (tvid, prodid, show_name) = cur_provider.retrieve_show_metadata(cur_normpath)
+                        (tvid, prodid, show_name) = cur_provider.retrieve_show_metadata(cur_normpath)
 
-                    # default to TVDB if TV info src was not detected
-                    if show_name and (not tvid or not prodid):
-                        (sn, idx, pid) = helpers.search_infosrc_for_show_id(show_name, tvid, prodid)
+                        # default to TVDB if TV info src was not detected
+                        if show_name and (not tvid or not prodid):
+                            (sn, idx, pid) = helpers.search_infosrc_for_show_id(show_name, tvid, prodid)
 
-                        # set TV info vars from found info
-                        if idx and pid:
-                            (tvid, prodid, show_name) = (idx, pid, sn)
+                            # set TV info vars from found info
+                            if idx and pid:
+                                (tvid, prodid, show_name) = (idx, pid, sn)
 
-                # in case we don't have both requirements, set both to None
-                if not tvid or not prodid:
-                    tvid = prodid = None
+                    # in case we don't have both requirements, set both to None
+                    if not tvid or not prodid:
+                        tvid = prodid = None
 
-                dir_item['existing_info'] = (tvid, prodid, show_name)
+                    dir_item['existing_info'] = (tvid, prodid, show_name)
 
-                if helpers.find_show_by_id({tvid: prodid}):
-                    dir_item['added_already'] = True
+                    if helpers.find_show_by_id({tvid: prodid}):
+                        dir_item['added_already'] = True
 
-                t.dir_list.append(dir_item)
+                    t.dir_list.append(dir_item)
 
         return t.respond()
 
@@ -7373,74 +7373,75 @@ class Manage(MainHandler):
                         Quality.DOWNLOADED)[DOWNLOADED == which_status],
                        Quality.ARCHIVED)[ARCHIVED == which_status]
 
-        my_db = db.DBConnection()
-        tvid_prodid_list = TVidProdid(tvid_prodid).list
-        # noinspection SqlResolve
-        sql_result = my_db.select(
-            'SELECT season, episode, name, airdate, status, location'
-            ' FROM tv_episodes'
-            ' WHERE indexer = ? AND showid = ? AND season != 0 AND status IN (' + ','.join(
-                ['?'] * len(status_list)) + ')', tvid_prodid_list + status_list)
+        with db.DBConnection() as sg_db:
+            tvid_prodid_list = TVidProdid(tvid_prodid).list
+            # noinspection SqlResolve
+            sql_result = sg_db.select(
+                'SELECT season, episode, name, airdate, status, location'
+                ' FROM tv_episodes'
+                ' WHERE indexer = ? AND showid = ? AND season != 0 AND status IN (' + ','.join(
+                    ['?'] * len(status_list)) + ')', tvid_prodid_list + status_list)
 
-        result = {}
-        for cur_result in sql_result:
-            if not sickgear.SEARCH_UNAIRED and 1000 > cur_result['airdate']:
-                continue
-            cur_season = int(cur_result['season'])
-            cur_episode = int(cur_result['episode'])
+            result = {}
+            for cur_result in sql_result:
+                if not sickgear.SEARCH_UNAIRED and 1000 > cur_result['airdate']:
+                    continue
+                cur_season = int(cur_result['season'])
+                cur_episode = int(cur_result['episode'])
 
-            if cur_season not in result:
-                result[cur_season] = {}
+                if cur_season not in result:
+                    result[cur_season] = {}
 
-            cur_quality = Quality.split_composite_status(int(cur_result['status']))[1]
-            result[cur_season][cur_episode] = {'name': cur_result['name'],
-                                               'airdateNever': 1000 > int(cur_result['airdate']),
-                                               'qualityCss': Quality.get_quality_css(cur_quality),
-                                               'qualityStr': Quality.qualityStrings[cur_quality],
-                                               'sxe': '%d x %02d' % (cur_season, cur_episode)}
+                cur_quality = Quality.split_composite_status(int(cur_result['status']))[1]
+                result[cur_season][cur_episode] = {'name': cur_result['name'],
+                                                   'airdateNever': 1000 > int(cur_result['airdate']),
+                                                   'qualityCss': Quality.get_quality_css(cur_quality),
+                                                   'qualityStr': Quality.qualityStrings[cur_quality],
+                                                   'sxe': '%d x %02d' % (cur_season, cur_episode)}
 
-            if which_status in [SNATCHED, SKIPPED, IGNORED, WANTED]:
+                if which_status in [SNATCHED, SKIPPED, IGNORED, WANTED]:
 
-                # noinspection SqlResolve
-                sql = 'SELECT action, date' \
-                      ' FROM history' \
-                      ' WHERE indexer = ? AND showid = ?' \
-                      ' AND season = ? AND episode = ? AND action in (%s)' \
-                      ' ORDER BY date DESC' % ','.join([str(q) for q in Quality.DOWNLOADED + Quality.SNATCHED_ANY])
-                event_sql_result = my_db.select(sql, tvid_prodid_list + [cur_season, cur_episode])
-                d_status, d_qual, s_status, s_quality, age = 5 * (None,)
-                if event_sql_result:
-                    for cur_result_event in event_sql_result:
-                        if None is d_status and cur_result_event['action'] in Quality.DOWNLOADED:
-                            d_status, d_qual = Quality.split_composite_status(cur_result_event['action'])
-                        if None is s_status and cur_result_event['action'] in Quality.SNATCHED_ANY:
-                            s_status, s_quality = Quality.split_composite_status(cur_result_event['action'])
-                            aged = ((datetime.now() - datetime.strptime(str(cur_result_event['date']),
-                                                                        sickgear.history.dateFormat)).total_seconds())
-                            h = 60 * 60
-                            d = 24 * h
-                            days = aged // d
-                            age = ([], ['%id' % days])[bool(days)]
-                            hours, mins = 0, 0
-                            if 7 > days:
-                                hours = aged % d // h
-                                mins = aged % d % h // 60
-                            age = ', '.join(age + ([], ['%ih' % hours])[bool(hours)]
-                                            + ([], ['%im' % mins])[not bool(days)])
+                    # noinspection SqlResolve
+                    sql = 'SELECT action, date' \
+                          ' FROM history' \
+                          ' WHERE indexer = ? AND showid = ?' \
+                          ' AND season = ? AND episode = ? AND action in (%s)' \
+                          ' ORDER BY date DESC' % ','.join([str(q) for q in Quality.DOWNLOADED + Quality.SNATCHED_ANY])
+                    event_sql_result = sg_db.select(sql, tvid_prodid_list + [cur_season, cur_episode])
+                    d_status, d_qual, s_status, s_quality, age = 5 * (None,)
+                    if event_sql_result:
+                        for cur_result_event in event_sql_result:
+                            if None is d_status and cur_result_event['action'] in Quality.DOWNLOADED:
+                                d_status, d_qual = Quality.split_composite_status(cur_result_event['action'])
+                            if None is s_status and cur_result_event['action'] in Quality.SNATCHED_ANY:
+                                s_status, s_quality = Quality.split_composite_status(cur_result_event['action'])
+                                aged = ((datetime.now() - datetime.strptime(
+                                    str(cur_result_event['date']),
+                                    sickgear.history.dateFormat)).total_seconds())
+                                h = 60 * 60
+                                d = 24 * h
+                                days = aged // d
+                                age = ([], ['%id' % days])[bool(days)]
+                                hours, mins = 0, 0
+                                if 7 > days:
+                                    hours = aged % d // h
+                                    mins = aged % d % h // 60
+                                age = ', '.join(age + ([], ['%ih' % hours])[bool(hours)]
+                                                + ([], ['%im' % mins])[not bool(days)])
 
-                        if None is not d_status and None is not s_status:
-                            break
+                            if None is not d_status and None is not s_status:
+                                break
 
-                undo_from_history, change_to, status = self.recommend_status(
-                    cur_result['status'], cur_result['location'], d_qual, cur_quality)
-                if status:
-                    result[cur_season][cur_episode]['recommend'] = [('. '.join(
-                        (['snatched %s ago' % age], [])[None is age]
-                        + ([], ['file %sfound' % ('not ', '')[bool(cur_result['location'])]])[
-                            None is d_status or not undo_from_history]
-                        + ['%s to <b>%s</b> ?' % (('undo from history',
-                                                   'change')[None is d_status or not undo_from_history], change_to)])),
-                        status]
+                    undo_from_history, change_to, status = self.recommend_status(
+                        cur_result['status'], cur_result['location'], d_qual, cur_quality)
+                    if status:
+                        result[cur_season][cur_episode]['recommend'] = [('. '.join(
+                            (['snatched %s ago' % age], [])[None is age]
+                            + ([], ['file %sfound' % ('not ', '')[bool(cur_result['location'])]])[
+                                None is d_status or not undo_from_history]
+                            + ['%s to <b>%s</b> ?' % (('undo from history', 'change')[
+                                                          None is d_status or not undo_from_history], change_to)])),
+                            status]
 
         return json_dumps(result)
 
@@ -7493,25 +7494,25 @@ class Manage(MainHandler):
         t.submenu = self.manage_menu('Episode')
         t.which_status = which_status
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            'SELECT COUNT(*) AS snatched FROM [tv_episodes] WHERE season > 0 AND episode > 0 AND airdate > 1 AND ' +
-            'status IN (%s)' % ','.join([str(quality) for quality in Quality.SNATCHED_ANY]))
-        t.default_manage = sql_result and sql_result[0]['snatched'] and SNATCHED or WANTED
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                'SELECT COUNT(*) AS snatched FROM [tv_episodes] WHERE season > 0 AND episode > 0 AND airdate > 1 AND ' +
+                'status IN (%s)' % ','.join([str(quality) for quality in Quality.SNATCHED_ANY]))
+            t.default_manage = sql_result and sql_result[0]['snatched'] and SNATCHED or WANTED
 
-        # if we have no status then this is as far as we need to go
-        if not status_list:
-            return t.respond()
+            # if we have no status then this is as far as we need to go
+            if not status_list:
+                return t.respond()
 
-        # noinspection SqlResolve
-        status_results = my_db.select(
-            'SELECT show_name, tv_shows.indexer AS tvid, tv_shows.indexer_id AS prod_id, airdate'
-            ' FROM tv_episodes, tv_shows'
-            ' WHERE tv_episodes.status IN (' + ','.join(['?'] * len(status_list)) +
-            ') AND season != 0'
-            ' AND tv_episodes.indexer = tv_shows.indexer AND tv_episodes.showid = tv_shows.indexer_id'
-            ' ORDER BY show_name COLLATE NOCASE',
-            status_list)
+            # noinspection SqlResolve
+            status_results = sg_db.select(
+                'SELECT show_name, tv_shows.indexer AS tvid, tv_shows.indexer_id AS prod_id, airdate'
+                ' FROM tv_episodes, tv_shows'
+                ' WHERE tv_episodes.status IN (' + ','.join(['?'] * len(status_list)) +
+                ') AND season != 0'
+                ' AND tv_episodes.indexer = tv_shows.indexer AND tv_episodes.showid = tv_shows.indexer_id'
+                ' ORDER BY show_name COLLATE NOCASE',
+                status_list)
 
         ep_counts = {}
         ep_count = 0
@@ -7552,23 +7553,26 @@ class Manage(MainHandler):
 
         changes, new_status = self.status_changes(new_status, wanted_status, **kwargs)
 
-        my_db = None if not any(changes) else db.DBConnection()
-        for tvid_prodid, c_what_to in iteritems(changes):
-            tvid_prodid_list = TVidProdid(tvid_prodid).list
-            for what, to in iteritems(c_what_to):
-                if 'all' == what:
-                    sql_result = my_db.select(
-                        'SELECT season, episode'
-                        ' FROM tv_episodes'
-                        ' WHERE status IN (%s)' % ','.join(['?'] * len(status_list)) +
-                        ' AND season != 0'
-                        ' AND indexer = ? AND showid = ?',
-                        status_list + tvid_prodid_list)
-                    what = (sql_result and '|'.join(map(lambda r: '%sx%s' % (r['season'], r['episode']), sql_result))
-                            or None)
-                    to = new_status
+        with db.DBConnection() as sg_db:
+            if not any(changes):
+                sg_db = None
+            for tvid_prodid, c_what_to in iteritems(changes):
+                tvid_prodid_list = TVidProdid(tvid_prodid).list
+                for what, to in iteritems(c_what_to):
+                    if 'all' == what:
+                        sql_result = sg_db.select(
+                            'SELECT season, episode'
+                            ' FROM tv_episodes'
+                            ' WHERE status IN (%s)' % ','.join(['?'] * len(status_list)) +
+                            ' AND season != 0'
+                            ' AND indexer = ? AND showid = ?',
+                            status_list + tvid_prodid_list)
+                        what = (sql_result
+                                and '|'.join(map(lambda r: f'{r["season"]}x{r["episode"]}', sql_result))
+                                or None)
+                        to = new_status
 
-                Home(self.application, self.request).set_show_status(tvid_prodid, what, to, direct=True)
+                    Home(self.application, self.request).set_show_status(tvid_prodid, what, to, direct=True)
 
         self.redirect('/manage/episode-overview/')
 
@@ -7614,14 +7618,14 @@ class Manage(MainHandler):
     @staticmethod
     def show_subtitle_missed(tvid_prodid, which_subs):
 
-        my_db = db.DBConnection()
-        # noinspection SqlResolve
-        sql_result = my_db.select(
-            'SELECT season, episode, name, subtitles'
-            ' FROM tv_episodes'
-            ' WHERE indexer = ? AND showid = ?'
-            ' AND season != 0 AND status LIKE "%4"',
-            TVidProdid(tvid_prodid).list)
+        with db.DBConnection() as sg_db:
+            # noinspection SqlResolve
+            sql_result = sg_db.select(
+                'SELECT season, episode, name, subtitles'
+                ' FROM tv_episodes'
+                ' WHERE indexer = ? AND showid = ?'
+                " AND season != 0 AND status LIKE '%4'",
+                TVidProdid(tvid_prodid).list)
 
         result = {}
         for cur_result in sql_result:
@@ -7658,16 +7662,16 @@ class Manage(MainHandler):
         if not which_subs:
             return t.respond()
 
-        my_db = db.DBConnection()
-        # noinspection SqlResolve
-        sql_result = my_db.select(
-            'SELECT tv_episodes.subtitles as subtitles, show_name,'
-            ' tv_shows.indexer AS tv_id, tv_shows.indexer_id AS prod_id'
-            ' FROM tv_episodes, tv_shows'
-            ' WHERE tv_shows.subtitles = 1'
-            ' AND tv_episodes.status LIKE "%4" AND tv_episodes.season != 0'
-            ' AND tv_shows.indexer = tv_episodes.indexer AND tv_episodes.showid = tv_shows.indexer_id'
-            ' ORDER BY show_name')
+        with db.DBConnection() as sg_db:
+            # noinspection SqlResolve
+            sql_result = sg_db.select(
+                'SELECT tv_episodes.subtitles as subtitles, show_name,'
+                ' tv_shows.indexer AS tv_id, tv_shows.indexer_id AS prod_id'
+                ' FROM tv_episodes, tv_shows'
+                ' WHERE tv_shows.subtitles = 1'
+                " AND tv_episodes.status LIKE '%4' AND tv_episodes.season != 0"
+                ' AND tv_shows.indexer = tv_episodes.indexer AND tv_episodes.showid = tv_shows.indexer_id'
+                ' ORDER BY show_name')
 
         ep_counts = {}
         show_names = {}
@@ -7716,15 +7720,15 @@ class Manage(MainHandler):
             for cur_tvid_prodid in to_download:
                 # get a list of all the eps we want to download subtitles if 'all' is selected
                 if 'all' in to_download[cur_tvid_prodid]:
-                    my_db = db.DBConnection()
-                    sql_result = my_db.select(
-                        'SELECT season, episode'
-                        ' FROM tv_episodes'
-                        ' WHERE indexer = ? AND showid = ?'
-                        ' AND season != 0 AND status LIKE \'%4\'',
-                        TVidProdid(cur_tvid_prodid).list)
-                    to_download[cur_tvid_prodid] = list(map(lambda x: '%sx%s' % (x['season'], x['episode']),
-                                                            sql_result))
+                    with db.DBConnection() as sg_db:
+                        sql_result = sg_db.select(
+                            'SELECT season, episode'
+                            ' FROM tv_episodes'
+                            ' WHERE indexer = ? AND showid = ?'
+                            ' AND season != 0 AND status LIKE \'%4\'',
+                            TVidProdid(cur_tvid_prodid).list)
+                        to_download[cur_tvid_prodid] = list(map(lambda x: f'{x["season"]}x{x["episode"]}',
+                                                                sql_result))
 
                 for epResult in to_download[cur_tvid_prodid]:
                     season, episode = epResult.split('x')
@@ -7752,7 +7756,6 @@ class Manage(MainHandler):
         show_cats = {}
         t.ep_sql_results = {}
 
-        my_db = db.DBConnection(row_type='dict')
         sql_cmds = []
         show_objects = []
         for cur_show_obj in sickgear.showList:
@@ -7764,7 +7767,8 @@ class Manage(MainHandler):
                 [cur_show_obj.tvid, cur_show_obj.prodid]])
             show_objects.append(cur_show_obj)
 
-        sql_results = my_db.mass_action(sql_cmds)
+        with db.DBConnection(row_type='dict') as sg_db:
+            sql_results = sg_db.mass_action(sql_cmds)
 
         for i, sql_result in enumerate(sql_results):
             ep_cats = {}
@@ -8139,20 +8143,20 @@ class Manage(MainHandler):
 
     def failed_downloads(self, limit=100, to_remove=None):
 
-        my_db = db.DBConnection('failed.db')
+        with db.DBConnection('failed.db') as sg_db:
 
-        sql = 'SELECT * FROM failed ORDER BY ROWID DESC'
-        limit = helpers.try_int(limit, 100)
-        if not limit:
-            sql_result = my_db.select(sql)
-        else:
-            sql_result = my_db.select(sql + ' LIMIT ?', [limit + 1])
+            sql = 'SELECT * FROM failed ORDER BY ROWID DESC'
+            limit = helpers.try_int(limit, 100)
+            if not limit:
+                sql_result = sg_db.select(sql)
+            else:
+                sql_result = sg_db.select(sql + ' LIMIT ?', [limit + 1])
 
-        to_remove = to_remove.split('|') if None is not to_remove else []
+            to_remove = to_remove.split('|') if None is not to_remove else []
 
-        for release in to_remove:
-            item = re.sub('_{3,}', '%', release)
-            my_db.action('DELETE FROM failed WHERE `release` like ?', [item])
+            for release in to_remove:
+                item = re.sub('_{3,}', '%', release)
+                sg_db.action('DELETE FROM failed WHERE `release` like ?', [item])
 
         if to_remove:
             return self.redirect('/manage/failed-downloads/')
@@ -8335,43 +8339,43 @@ class ShowTasks(Manage):
         t.show_update_running = sickgear.show_queue_scheduler.action.is_show_update_running() \
             or sickgear.update_show_scheduler.is_running_job
 
-        my_db = db.DBConnection(row_type='dict')
-        sql_result = my_db.select('SELECT n.indexer || ? ||  n.indexer_id AS tvid_prodid,'
-                                  ' n.indexer AS tvid, n.indexer_id AS prodid,'
-                                  ' n.last_success, n.fail_count, s.show_name'
-                                  ' FROM tv_shows_not_found AS n'
-                                  ' INNER JOIN tv_shows AS s'
-                                  ' ON (n.indexer == s.indexer AND n.indexer_id == s.indexer_id)',
-                                  [TVidProdid.glue])
-        for cur_result in sql_result:
-            date = helpers.try_int(cur_result['last_success'])
-            cur_result['last_success'] = ('never', SGDatetime.fromordinal(date).sbfdate())[1 < date]
-            cur_result['ignore_warning'] = 0 > cur_result['fail_count']
+        with db.DBConnection(row_type='dict') as sg_db:
+            sql_result = sg_db.select('SELECT n.indexer || ? ||  n.indexer_id AS tvid_prodid,'
+                                      ' n.indexer AS tvid, n.indexer_id AS prodid,'
+                                      ' n.last_success, n.fail_count, s.show_name'
+                                      ' FROM tv_shows_not_found AS n'
+                                      ' INNER JOIN tv_shows AS s'
+                                      ' ON (n.indexer == s.indexer AND n.indexer_id == s.indexer_id)',
+                                      [TVidProdid.glue])
+            for cur_result in sql_result:
+                date = helpers.try_int(cur_result['last_success'])
+                cur_result['last_success'] = ('never', SGDatetime.fromordinal(date).sbfdate())[1 < date]
+                cur_result['ignore_warning'] = 0 > cur_result['fail_count']
 
-        defunct_indexer = [i for i in sickgear.TVInfoAPI().all_sources if sickgear.TVInfoAPI(i).config.get('defunct')]
-        defunct_sql_result = None
-        if defunct_indexer:
-            defunct_sql_result = my_db.select('SELECT indexer || ? || indexer_id AS tvid_prodid, show_name'
-                                              ' FROM tv_shows'
-                                              ' WHERE indexer IN (%s)' % ','.join(['?'] * len(defunct_indexer)),
-                                              [TVidProdid.glue] + defunct_indexer)
-        t.defunct_indexer = defunct_sql_result
-        t.not_found_shows = sql_result
+            defunct_indexer = [i for i in sickgear.TVInfoAPI().all_sources if sickgear.TVInfoAPI(i).config.get('defunct')]
+            defunct_sql_result = None
+            if defunct_indexer:
+                defunct_sql_result = sg_db.select('SELECT indexer || ? || indexer_id AS tvid_prodid, show_name'
+                                                  ' FROM tv_shows'
+                                                  ' WHERE indexer IN (%s)' % ','.join(['?'] * len(defunct_indexer)),
+                                                  [TVidProdid.glue] + defunct_indexer)
+            t.defunct_indexer = defunct_sql_result
+            t.not_found_shows = sql_result
 
-        failed_result = my_db.select('SELECT * FROM tv_src_switch WHERE status != ?', [TVSWITCH_NORMAL])
-        t.failed_switch = []
-        for f in failed_result:
-            try:
-                show_obj = helpers.find_show_by_id({f['old_indexer']: f['old_indexer_id']})
-            except (BaseException, Exception):
-                show_obj = None
-            new_failed = {'tvid': f['old_indexer'], 'prodid': f['old_indexer_id'], 'new_tvid': f['new_indexer'],
-                          'new_prodid': f['new_indexer_id'],
-                          'status': tvswitch_names.get(f['status'], 'unknown %s' % f['status']), 'show_obj': show_obj,
-                          'uid': f['uid']}
-            t.failed_switch.append(new_failed)
+            failed_result = sg_db.select('SELECT * FROM tv_src_switch WHERE status != ?', [TVSWITCH_NORMAL])
+            t.failed_switch = []
+            for f in failed_result:
+                try:
+                    show_obj = helpers.find_show_by_id({f['old_indexer']: f['old_indexer_id']})
+                except (BaseException, Exception):
+                    show_obj = None
+                new_failed = {'tvid': f['old_indexer'], 'prodid': f['old_indexer_id'], 'new_tvid': f['new_indexer'],
+                              'new_prodid': f['new_indexer_id'],
+                              'status': tvswitch_names.get(f['status'], 'unknown %s' % f['status']), 'show_obj': show_obj,
+                              'uid': f['uid']}
+                t.failed_switch.append(new_failed)
 
-        t.submenu = self.manage_menu('Show')
+            t.submenu = self.manage_menu('Show')
 
         return t.respond()
 
@@ -8447,15 +8451,16 @@ class History(MainHandler):
     flagname_wdr = 'ui_history_watched_delete_records'
 
     def toggle_help(self):
-        db.DBConnection().toggle_flag(self.flagname_help_watched)
+        with db.DBConnection(row_type='dict') as sg_db:  # type: db.DBConnection
+            sg_db.toggle_flag(self.flagname_help_watched)
 
     @private_call
     @classmethod
     def menu_tab(cls, limit):
 
         result = []
-        my_db = db.DBConnection(row_type='dict')  # type: db.DBConnection
-        history_detailed, history_compact = cls.query_history(my_db)
+        with db.DBConnection(row_type='dict') as sg_db:  # type: db.DBConnection
+            history_detailed, history_compact = cls.query_history(sg_db)
         dedupe = set()
         for item in history_compact:
             if item.get('tvid_prodid') not in dedupe:
@@ -8468,10 +8473,10 @@ class History(MainHandler):
 
     @private_call
     @classmethod
-    def query_history(cls, my_db, limit=100):
+    def query_history(cls, sg_db, limit=100):
         # type: (db.DBConnection, int) -> Tuple[List[dict], List[dict]]
         """Query db for historical data
-        :param my_db: connection should be instantiated with row_type='dict'
+        :param sg_db: connection should be instantiated with row_type='dict'
         :param limit: number of db rows to fetch
         :return: two data sets, detailed and compact
         """
@@ -8482,7 +8487,7 @@ class History(MainHandler):
               ' AND h.hide = 0' \
               ' ORDER BY date DESC' \
               '%s' % (' LIMIT %s' % limit, '')['0' == limit]
-        sql_result = my_db.select(sql, [TVidProdid.glue])
+        sql_result = sg_db.select(sql, [TVidProdid.glue])
 
         compact = []
 
@@ -8532,161 +8537,161 @@ class History(MainHandler):
         if layout in ('compact', 'detailed', 'compact_watched', 'detailed_watched', 'connect_failures'):
             sickgear.HISTORY_LAYOUT = layout
 
-        my_db = db.DBConnection(row_type='dict')
+        with db.DBConnection(row_type='dict') as sg_db:
 
-        result_sets = []
-        if sickgear.HISTORY_LAYOUT in ('compact', 'detailed'):
+            result_sets = []
+            if sickgear.HISTORY_LAYOUT in ('compact', 'detailed'):
 
-            sql_result, compact = self.query_history(my_db, limit)
+                sql_result, compact = self.query_history(sg_db, limit)
 
-            t.compact_results = compact
-            t.history_results = sql_result
-            t.submenu = [
-                dict(title='Clear History', icon='delete', path='history/clear-history', addclass='clearhistory'),
-                dict(title='Trim History', icon='trim', path='history/trim-history', addclass='trimhistory')]
+                t.compact_results = compact
+                t.history_results = sql_result
+                t.submenu = [
+                    dict(title='Clear History', icon='delete', path='history/clear-history', addclass='clearhistory'),
+                    dict(title='Trim History', icon='trim', path='history/trim-history', addclass='trimhistory')]
 
-            result_sets = ['compact_results', 'history_results']
+                result_sets = ['compact_results', 'history_results']
 
-        elif 'watched' in sickgear.HISTORY_LAYOUT:
+            elif 'watched' in sickgear.HISTORY_LAYOUT:
 
-            t.hide_watched_help = my_db.has_flag(self.flagname_help_watched)
+                t.hide_watched_help = sg_db.has_flag(self.flagname_help_watched)
 
-            t.results = my_db.select(
-                'SELECT tvs.show_name, '
-                ' tve.indexer AS tvid, tve.showid AS prodid,'
-                ' tve.indexer || ? || tve.showid AS tvid_prodid,'
-                ' tve.season, tve.episode, tve.status, tve.file_size,'
-                ' tvew.rowid, tvew.tvep_id, tvew.label, tvew.played, tvew.date_watched,'
-                ' tvew.status AS status_w, tvew.location, tvew.file_size AS file_size_w, tvew.hide'
-                ' FROM [tv_shows] AS tvs'
-                ' INNER JOIN [tv_episodes] AS tve ON (tvs.indexer = tve.indexer AND tvs.indexer_id = tve.showid)'
-                ' INNER JOIN [tv_episodes_watched] AS tvew ON (tve.episode_id = tvew.tvep_id)'
-                ' WHERE 0 = hide'
-                ' ORDER BY tvew.date_watched DESC'
-                '%s' % (' LIMIT %s' % limit, '')['0' == limit],
-                [TVidProdid.glue])
+                t.results = sg_db.select(
+                    'SELECT tvs.show_name, '
+                    ' tve.indexer AS tvid, tve.showid AS prodid,'
+                    ' tve.indexer || ? || tve.showid AS tvid_prodid,'
+                    ' tve.season, tve.episode, tve.status, tve.file_size,'
+                    ' tvew.rowid, tvew.tvep_id, tvew.label, tvew.played, tvew.date_watched,'
+                    ' tvew.status AS status_w, tvew.location, tvew.file_size AS file_size_w, tvew.hide'
+                    ' FROM [tv_shows] AS tvs'
+                    ' INNER JOIN [tv_episodes] AS tve ON (tvs.indexer = tve.indexer AND tvs.indexer_id = tve.showid)'
+                    ' INNER JOIN [tv_episodes_watched] AS tvew ON (tve.episode_id = tvew.tvep_id)'
+                    ' WHERE 0 = hide'
+                    ' ORDER BY tvew.date_watched DESC'
+                    '%s' % (' LIMIT %s' % limit, '')['0' == limit],
+                    [TVidProdid.glue])
 
-            mru_count = {}
-            t.mru_row_ids = []
-            for r in t.results:
-                r['deleted'] = False
-                no_file = not helpers.get_size(r['location'])
-                if no_file or not r['file_size']:  # if not filesize, possible file recovered so restore known size
-                    if no_file:
-                        # file no longer available, can be due to upgrade, so use known details
-                        r['deleted'] = True
-                    r['status'] = r['status_w']
-                    r['file_size'] = r['file_size_w']
+                mru_count = {}
+                t.mru_row_ids = []
+                for r in t.results:
+                    r['deleted'] = False
+                    no_file = not helpers.get_size(r['location'])
+                    if no_file or not r['file_size']:  # if not filesize, possible file recovered so restore known size
+                        if no_file:
+                            # file no longer available, can be due to upgrade, so use known details
+                            r['deleted'] = True
+                        r['status'] = r['status_w']
+                        r['file_size'] = r['file_size_w']
 
-                r['status'], r['quality'] = Quality.split_composite_status(helpers.try_int(r['status']))
-                r['season'], r['episode'] = '%02i' % r['season'], '%02i' % r['episode']
-                if r['tvep_id'] not in mru_count:
-                    # depends on SELECT ORDER BY date_watched DESC to determine mru_count
-                    mru_count.update({r['tvep_id']: r['played']})
-                    t.mru_row_ids += [r['rowid']]
-                r['mru_count'] = mru_count[r['tvep_id']]
+                    r['status'], r['quality'] = Quality.split_composite_status(helpers.try_int(r['status']))
+                    r['season'], r['episode'] = '%02i' % r['season'], '%02i' % r['episode']
+                    if r['tvep_id'] not in mru_count:
+                        # depends on SELECT ORDER BY date_watched DESC to determine mru_count
+                        mru_count.update({r['tvep_id']: r['played']})
+                        t.mru_row_ids += [r['rowid']]
+                    r['mru_count'] = mru_count[r['tvep_id']]
 
-            result_sets = ['results']
+                result_sets = ['results']
 
-            # restore state of delete dialog
-            t.last_delete_files = my_db.has_flag(self.flagname_wdf)
-            t.last_delete_records = my_db.has_flag(self.flagname_wdr)
+                # restore state of delete dialog
+                t.last_delete_files = sg_db.has_flag(self.flagname_wdf)
+                t.last_delete_records = sg_db.has_flag(self.flagname_wdr)
 
-        elif 'stats' in sickgear.HISTORY_LAYOUT:
+            elif 'stats' in sickgear.HISTORY_LAYOUT:
 
-            prov_list = [p.name for p in (sickgear.provider_list
-                                          + sickgear.newznab_providers
-                                          + sickgear.torrent_rss_providers)]
-            # noinspection SqlResolve
-            sql = 'SELECT COUNT(1) AS count,' \
-                  ' MIN(DISTINCT date) AS earliest,' \
-                  ' MAX(DISTINCT date) AS latest,' \
-                  ' provider ' \
-                  'FROM ' \
-                  '(SELECT * FROM history h, tv_shows s' \
-                  ' WHERE h.showid=s.indexer_id' \
-                  ' AND h.provider in ("%s")' % '","'.join(prov_list) + \
-                  ' AND h.action in ("%s")' % '","'.join([str(x) for x in Quality.SNATCHED_ANY]) + \
-                  ' AND h.hide = 0' \
-                  ' ORDER BY date DESC%s)' % (' LIMIT %s' % limit, '')['0' == limit] + \
-                  ' GROUP BY provider' \
-                  ' ORDER BY count DESC'
-            t.stat_results = my_db.select(sql)
+                prov_list = [p.name for p in (sickgear.provider_list
+                                              + sickgear.newznab_providers
+                                              + sickgear.torrent_rss_providers)]
+                # noinspection SqlResolve
+                sql = 'SELECT COUNT(1) AS count,' \
+                      ' MIN(DISTINCT date) AS earliest,' \
+                      ' MAX(DISTINCT date) AS latest,' \
+                      ' provider ' \
+                      'FROM ' \
+                      '(SELECT * FROM history h, tv_shows s' \
+                      ' WHERE h.showid=s.indexer_id' \
+                      ' AND h.provider in ("%s")' % '","'.join(prov_list) + \
+                      ' AND h.action in ("%s")' % '","'.join([str(x) for x in Quality.SNATCHED_ANY]) + \
+                      ' AND h.hide = 0' \
+                      ' ORDER BY date DESC%s)' % (' LIMIT %s' % limit, '')['0' == limit] + \
+                      ' GROUP BY provider' \
+                      ' ORDER BY count DESC'
+                t.stat_results = sg_db.select(sql)
 
-            t.earliest = 0
-            t.latest = 0
-            for r in t.stat_results:
-                if r['latest'] > t.latest or not t.latest:
-                    t.latest = r['latest']
-                if r['earliest'] < t.earliest or not t.earliest:
-                    t.earliest = r['earliest']
+                t.earliest = 0
+                t.latest = 0
+                for r in t.stat_results:
+                    if r['latest'] > t.latest or not t.latest:
+                        t.latest = r['latest']
+                    if r['earliest'] < t.earliest or not t.earliest:
+                        t.earliest = r['earliest']
 
-        elif 'failures' in sickgear.HISTORY_LAYOUT:
+            elif 'failures' in sickgear.HISTORY_LAYOUT:
 
-            t.provider_fail_stats = list(filter(lambda stat: len(stat['fails']), [
-                dict(name=p.name, id=p.get_id(), active=p.is_active(), prov_img=p.image_name(),
-                     prov_id=p.get_id(),  # 2020.03.17 legacy var, remove at future date
-                     fails=p.fails.fails_sorted, next_try=p.get_next_try_time,
-                     has_limit=getattr(p, 'has_limit', False), tmr_limit_time=p.tmr_limit_time)
-                for p in sickgear.provider_list + sickgear.newznab_providers]))
+                t.provider_fail_stats = list(filter(lambda stat: len(stat['fails']), [
+                    dict(name=p.name, id=p.get_id(), active=p.is_active(), prov_img=p.image_name(),
+                         prov_id=p.get_id(),  # 2020.03.17 legacy var, remove at future date
+                         fails=p.fails.fails_sorted, next_try=p.get_next_try_time,
+                         has_limit=getattr(p, 'has_limit', False), tmr_limit_time=p.tmr_limit_time)
+                    for p in sickgear.provider_list + sickgear.newznab_providers]))
 
-            t.provider_fail_cnt = len([p for p in t.provider_fail_stats if len(p['fails'])])
-            t.provider_fails = t.provider_fail_cnt  # 2020.03.17 legacy var, remove at future date
+                t.provider_fail_cnt = len([p for p in t.provider_fail_stats if len(p['fails'])])
+                t.provider_fails = t.provider_fail_cnt  # 2020.03.17 legacy var, remove at future date
 
-            t.provider_fail_stats = sorted([item for item in t.provider_fail_stats],
-                                           key=lambda y: y.get('fails')[0].get('timestamp'),
-                                           reverse=True)
-            t.provider_fail_stats = sorted([item for item in t.provider_fail_stats],
-                                           key=lambda y: y.get('next_try') or timedelta(weeks=65535),
-                                           reverse=False)
+                t.provider_fail_stats = sorted([item for item in t.provider_fail_stats],
+                                               key=lambda y: y.get('fails')[0].get('timestamp'),
+                                               reverse=True)
+                t.provider_fail_stats = sorted([item for item in t.provider_fail_stats],
+                                               key=lambda y: y.get('next_try') or timedelta(weeks=65535),
+                                               reverse=False)
 
-            def img(_item, as_class=False):
-                # type: (AnyStr, bool) -> Optional[AnyStr]
-                """
-                Return an image src, image class, or None based on a recognised identifier
-                :param _item: to search for a known domain identifier
-                :param as_class: whether a search should return an image (by default) or class
-                :return: image src, image class, or None if unknown identifier
-                """
-                for identifier, result in (
-                    (('fanart', 'fanart.png'), ('imdb', 'imdb16.png'), ('metac', 'metac16.png'),
-                     ('next-episode', 'nextepisode16.png'),
-                     ('predb', 'predb16.png'), ('srrdb', 'srrdb16.png'),
-                     ('thexem', 'xem.png'), ('tmdb', 'tmdb16.png'), ('trakt', 'trakt16.png'),
-                     ('tvdb', 'thetvdb16.png'), ('tvmaze', 'tvmaze16.png')),
-                    (('anidb', 'img-anime-16 square-16'), ('github', 'icon16-github'),
-                     ('emby', 'sgicon-emby'), ('plex', 'sgicon-plex'))
-                )[as_class]:
-                    if identifier in _item:
-                        return result
+                def img(_item, as_class=False):
+                    # type: (AnyStr, bool) -> Optional[AnyStr]
+                    """
+                    Return an image src, image class, or None based on a recognised identifier
+                    :param _item: to search for a known domain identifier
+                    :param as_class: whether a search should return an image (by default) or class
+                    :return: image src, image class, or None if unknown identifier
+                    """
+                    for identifier, result in (
+                        (('fanart', 'fanart.png'), ('imdb', 'imdb16.png'), ('metac', 'metac16.png'),
+                         ('next-episode', 'nextepisode16.png'),
+                         ('predb', 'predb16.png'), ('srrdb', 'srrdb16.png'),
+                         ('thexem', 'xem.png'), ('tmdb', 'tmdb16.png'), ('trakt', 'trakt16.png'),
+                         ('tvdb', 'thetvdb16.png'), ('tvmaze', 'tvmaze16.png')),
+                        (('anidb', 'img-anime-16 square-16'), ('github', 'icon16-github'),
+                         ('emby', 'sgicon-emby'), ('plex', 'sgicon-plex'))
+                    )[as_class]:
+                        if identifier in _item:
+                            return result
 
-            with sg_helpers.DOMAIN_FAILURES.lock:
-                t.domain_fail_stats = list(filter(lambda stat: len(stat['fails']), [
-                    dict(name=k, id=sickgear.GenericProvider.make_id(k), img=img(k), cls=img(k, True),
-                         fails=v.fails_sorted, next_try=v.get_next_try_time,
-                         has_limit=getattr(v, 'has_limit', False), tmr_limit_time=v.tmr_limit_time)
-                    for k, v in iteritems(sg_helpers.DOMAIN_FAILURES.domain_list)]))
+                with sg_helpers.DOMAIN_FAILURES.lock:
+                    t.domain_fail_stats = list(filter(lambda stat: len(stat['fails']), [
+                        dict(name=k, id=sickgear.GenericProvider.make_id(k), img=img(k), cls=img(k, True),
+                             fails=v.fails_sorted, next_try=v.get_next_try_time,
+                             has_limit=getattr(v, 'has_limit', False), tmr_limit_time=v.tmr_limit_time)
+                        for k, v in iteritems(sg_helpers.DOMAIN_FAILURES.domain_list)]))
 
-                t.domain_fail_cnt = len([d for d in t.domain_fail_stats if len(d['fails'])])
+                    t.domain_fail_cnt = len([d for d in t.domain_fail_stats if len(d['fails'])])
 
-                t.domain_fail_stats = sorted([item for item in t.domain_fail_stats],
-                                             key=lambda y: y.get('fails')[0].get('timestamp'),
-                                             reverse=True)
-                t.domain_fail_stats = sorted([item for item in t.domain_fail_stats],
-                                             key=lambda y: y.get('next_try') or timedelta(weeks=65535),
-                                             reverse=False)
+                    t.domain_fail_stats = sorted([item for item in t.domain_fail_stats],
+                                                 key=lambda y: y.get('fails')[0].get('timestamp'),
+                                                 reverse=True)
+                    t.domain_fail_stats = sorted([item for item in t.domain_fail_stats],
+                                                 key=lambda y: y.get('next_try') or timedelta(weeks=65535),
+                                                 reverse=False)
 
-        article_match = r'^((?:A(?!\s+to)n?)|The)\s+(.*)$'
-        for rs in [getattr(t, name, []) for name in result_sets]:
-            for r in rs:
-                r['name1'] = ''
-                r['name2'] = r['data_name'] = r['show_name']
-                if not sickgear.SORT_ARTICLE:
-                    try:
-                        r['name1'], r['name2'] = re.findall(article_match, r['show_name'])[0]
-                        r['data_name'] = r['name2']
-                    except (BaseException, Exception):
-                        pass
+            article_match = r'^((?:A(?!\s+to)n?)|The)\s+(.*)$'
+            for rs in [getattr(t, name, []) for name in result_sets]:
+                for r in rs:
+                    r['name1'] = ''
+                    r['name2'] = r['data_name'] = r['show_name']
+                    if not sickgear.SORT_ARTICLE:
+                        try:
+                            r['name1'], r['name2'] = re.findall(article_match, r['show_name'])[0]
+                            r['data_name'] = r['name2']
+                        except (BaseException, Exception):
+                            pass
 
         return t.respond()
 
@@ -8738,18 +8743,18 @@ class History(MainHandler):
 
     def clear_history(self):
 
-        my_db = db.DBConnection()
-        # noinspection SqlConstantCondition
-        my_db.action('UPDATE history SET hide = ? WHERE hide = 0', [1])
+        with db.DBConnection() as sg_db:
+            # noinspection SqlConstantCondition
+            sg_db.action('UPDATE history SET hide = ? WHERE hide = 0', [1])
 
         ui.notifications.message('History cleared')
         self.redirect('/history/')
 
     def trim_history(self):
 
-        my_db = db.DBConnection()
-        my_db.action('UPDATE history SET hide = ? WHERE date < ' + str(
-            (datetime.now() - timedelta(days=30)).strftime(history.dateFormat)), [1])
+        with db.DBConnection() as sg_db:
+            sg_db.action('UPDATE history SET hide = ? WHERE date < ' + str(
+                (datetime.now() - timedelta(days=30)).strftime(history.dateFormat)), [1])
 
         ui.notifications.message('Removed history entries greater than 30 days old')
         self.redirect('/history/')
@@ -8862,13 +8867,13 @@ class History(MainHandler):
             if states:
                 # Prune user removed items that are no longer being returned by API
                 media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), iteritems(states)))
-                sql = 'FROM tv_episodes_watched WHERE hide=1 AND label LIKE "%%{Emby}"'
-                my_db = db.DBConnection(row_type='dict')
-                files = my_db.select('SELECT location %s' % sql)
-                for i in filter(lambda f: os.path.basename(f['location']) not in media_paths, files):
-                    loc = i.get('location')
-                    if loc:
-                        my_db.select('DELETE %s AND location="%s"' % (sql, loc))
+                sql = "FROM tv_episodes_watched WHERE hide=1 AND label LIKE '%%{Emby}'"
+                with db.DBConnection(row_type='dict') as sg_db:
+                    files = sg_db.select('SELECT location %s' % sql)
+                    for i in filter(lambda f: os.path.basename(f['location']) not in media_paths, files):
+                        loc = i.get('location')
+                        if loc:
+                            sg_db.select('DELETE %s AND location="%s"' % (sql, loc))
 
                 MainHandler.update_watched_state(states, False)
 
@@ -8930,13 +8935,13 @@ class History(MainHandler):
             if states:
                 # Prune user removed items that are no longer being returned by API
                 media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), iteritems(states)))
-                sql = 'FROM tv_episodes_watched WHERE hide=1 AND label LIKE "%%{Plex}"'
-                my_db = db.DBConnection(row_type='dict')
-                files = my_db.select('SELECT location %s' % sql)
-                for i in filter(lambda f: os.path.basename(f['location']) not in media_paths, files):
-                    loc = i.get('location')
-                    if loc:
-                        my_db.select('DELETE %s AND location="%s"' % (sql, loc))
+                sql = "FROM tv_episodes_watched WHERE hide=1 AND label LIKE '%%{Plex}'"
+                with db.DBConnection(row_type='dict') as sg_db:
+                    files = sg_db.select('SELECT location %s' % sql)
+                    for i in filter(lambda f: os.path.basename(f['location']) not in media_paths, files):
+                        loc = i.get('location')
+                        if loc:
+                            sg_db.select('DELETE %s AND location="%s"' % (sql, loc))
 
                 MainHandler.update_watched_state(states, False)
 
@@ -8944,11 +8949,11 @@ class History(MainHandler):
 
     def watched(self, tvew_id=None, files=None, records=None):
 
-        my_db = db.DBConnection(row_type='dict')
+        with db.DBConnection(row_type='dict') as sg_db:
 
-        # remember state of dialog
-        my_db.set_flag(self.flagname_wdf, files)
-        my_db.set_flag(self.flagname_wdr, records)
+            # remember state of dialog
+            sg_db.set_flag(self.flagname_wdf, files)
+            sg_db.set_flag(self.flagname_wdr, records)
 
         ids = tvew_id.split('|')
         if not (ids and any([files, records])):
@@ -8959,10 +8964,11 @@ class History(MainHandler):
             rowid, tvid, prodid = show_detail.split('-')
             row_show_ids.update({int(rowid): {int(tvid): int(prodid)}})
 
-        sql_result = my_db.select(
-            'SELECT rowid, tvep_id, label, location'
-            ' FROM [tv_episodes_watched] WHERE `rowid` in (%s)' % ','.join([str(k) for k in row_show_ids])
-        )
+        with db.DBConnection(row_type='dict') as sg_db:  # type: db.DBConnection
+            sql_result = sg_db.select(
+                'SELECT rowid, tvep_id, label, location'
+                ' FROM [tv_episodes_watched] WHERE `rowid` in (%s)' % ','.join([str(k) for k in row_show_ids])
+            )
 
         h_records = []
         removed = []
@@ -8985,32 +8991,34 @@ class History(MainHandler):
                         refresh += [row_show_ids[cur_result['rowid']]]
 
             if records:
-                if not cur_result['label'].endswith('{Emby}') and not cur_result['label'].endswith('{Plex}'):
-                    r_del = my_db.action('DELETE FROM [tv_episodes_watched] WHERE `rowid` == ?',
-                                         [cur_result['rowid']])
-                    if 1 == r_del.rowcount:
-                        h_records += ['%s-%s-%s' % (cur_result['rowid'], k, v)
-                                      for k, v in iteritems(row_show_ids[cur_result['rowid']])]
-                else:
-                    r_del = my_db.action('UPDATE [tv_episodes_watched] SET hide=1 WHERE `rowid` == ?',
-                                         [cur_result['rowid']])
-                    if 1 == r_del.rowcount:
-                        removed += ['%s-%s-%s' % (cur_result['rowid'], k, v)
-                                    for k, v in iteritems(row_show_ids[cur_result['rowid']])]
+                with db.DBConnection(row_type='dict') as sg_db:  # type: db.DBConnection
+                    if not cur_result['label'].endswith('{Emby}') and not cur_result['label'].endswith('{Plex}'):
+                        r_del = sg_db.action('DELETE FROM [tv_episodes_watched] WHERE `rowid` == ?',
+                                             [cur_result['rowid']])
+                        if 1 == r_del.rowcount:
+                            h_records += ['%s-%s-%s' % (cur_result['rowid'], k, v)
+                                          for k, v in iteritems(row_show_ids[cur_result['rowid']])]
+                    else:
+                        r_del = sg_db.action('UPDATE [tv_episodes_watched] SET hide=1 WHERE `rowid` == ?',
+                                             [cur_result['rowid']])
+                        if 1 == r_del.rowcount:
+                            removed += ['%s-%s-%s' % (cur_result['rowid'], k, v)
+                                        for k, v in iteritems(row_show_ids[cur_result['rowid']])]
 
         updating = False
-        for epid, tvid_prodid_dict in iteritems(deleted):
-            sql_result = my_db.select('SELECT season, episode FROM [tv_episodes] WHERE `episode_id` = %s' % epid)
-            for cur_result in sql_result:
-                show_obj = helpers.find_show_by_id(tvid_prodid_dict)
-                ep_obj = show_obj.get_episode(cur_result['season'], cur_result['episode'])
-                for n in filter(lambda x: x.name.lower() in ('emby', 'kodi', 'plex'),
-                                notifiers.NotifierFactory().get_enabled()):
-                    if 'PLEX' == n.name:
-                        if updating:
-                            continue
-                        updating = True
-                    n.update_library(show_obj=show_obj, show_name=show_obj.name, ep_obj=ep_obj)
+        with db.DBConnection(row_type='dict') as sg_db:  # type: db.DBConnection
+            for epid, tvid_prodid_dict in iteritems(deleted):
+                sql_result = sg_db.select('SELECT season, episode FROM [tv_episodes] WHERE `episode_id` = %s' % epid)
+                for cur_result in sql_result:
+                    show_obj = helpers.find_show_by_id(tvid_prodid_dict)
+                    ep_obj = show_obj.get_episode(cur_result['season'], cur_result['episode'])
+                    for n in filter(lambda x: x.name.lower() in ('emby', 'kodi', 'plex'),
+                                    notifiers.NotifierFactory().get_enabled()):
+                        if 'PLEX' == n.name:
+                            if updating:
+                                continue
+                            updating = True
+                        n.update_library(show_obj=show_obj, show_name=show_obj.name, ep_obj=ep_obj)
 
         for tvid_prodid_dict in refresh:
             try:
@@ -9314,8 +9322,8 @@ class ConfigGeneral(Config):
 
         # 'Show List' is the must-have default fallback. Tags in use that are removed from config ui are restored,
         # not deleted. De-duped list order preservation is key to feature function.
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT DISTINCT tag FROM tv_shows')
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT DISTINCT tag FROM tv_shows')
         new_names = [v.strip() for v in (show_tags.split(','), [])[None is show_tags] if v.strip()]
         orphans = [item for item in [v['tag'] for v in sql_result or []] if item not in new_names]
         cleanser = []
@@ -9496,9 +9504,9 @@ class ConfigSearch(Config):
 
         sickgear.BACKLOG_NOFULL = bool(config.checkbox_to_value(backlog_nofull))
         if sickgear.BACKLOG_NOFULL:
-            my_db = db.DBConnection('cache.db')
-            # noinspection SqlConstantCondition
-            my_db.action('DELETE FROM backlogparts WHERE 1=1')
+            with db.DBConnection('cache.db') as sg_db:
+                # noinspection SqlConstantCondition
+                sg_db.action('DELETE FROM backlogparts WHERE 1=1')
 
         sickgear.USE_NZBS = config.checkbox_to_value(use_nzbs)
         sickgear.USE_TORRENTS = config.checkbox_to_value(use_torrents)
@@ -10614,22 +10622,22 @@ class ApiBuilder(MainHandler):
         season_sql_result = {}
         episode_sql_result = {}
 
-        my_db = db.DBConnection(row_type='dict')
-        for cur_show_obj in t.sortedShowList:
-            season_sql_result[cur_show_obj.tvid_prodid] = my_db.select(
-                'SELECT DISTINCT season'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?'
-                ' ORDER BY season DESC',
-                [cur_show_obj.tvid, cur_show_obj.prodid])
+        with db.DBConnection(row_type='dict') as sg_db:
+            for cur_show_obj in t.sortedShowList:
+                season_sql_result[cur_show_obj.tvid_prodid] = sg_db.select(
+                    'SELECT DISTINCT season'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?'
+                    ' ORDER BY season DESC',
+                    [cur_show_obj.tvid, cur_show_obj.prodid])
 
-        for cur_show_obj in t.sortedShowList:
-            episode_sql_result[cur_show_obj.tvid_prodid] = my_db.select(
-                'SELECT DISTINCT season,episode'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?'
-                ' ORDER BY season DESC, episode DESC',
-                [cur_show_obj.tvid, cur_show_obj.prodid])
+            for cur_show_obj in t.sortedShowList:
+                episode_sql_result[cur_show_obj.tvid_prodid] = sg_db.select(
+                    'SELECT DISTINCT season,episode'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?'
+                    ' ORDER BY season DESC, episode DESC',
+                    [cur_show_obj.tvid, cur_show_obj.prodid])
 
         t.seasonSQLResults = season_sql_result
         t.episodeSQLResults = episode_sql_result
@@ -10648,10 +10656,10 @@ class ApiBuilder(MainHandler):
 class Cache(MainHandler):
 
     def index(self):
-        my_db = db.DBConnection('cache.db')
-        sql_result = my_db.select('SELECT * FROM provider_cache')
-        if not sql_result:
-            sql_result = []
+        with db.DBConnection('cache.db') as sg_db:
+            sql_result = sg_db.select('SELECT * FROM provider_cache')
+            if not sql_result:
+                sql_result = []
 
         t = PageTemplate(web_handler=self, file='cache.tmpl')
         t.cacheResults = sql_result

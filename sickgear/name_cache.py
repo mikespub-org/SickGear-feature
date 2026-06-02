@@ -117,12 +117,12 @@ def build_name_cache(show_obj=None, update_only_scene=False):
             tmp_scene_name_cache = {}
 
         cache_results = []
-        cache_db = db.DBConnection()
-        for cur_tvid, cur_prodid_list in iteritems(show_ids):
-            cache_results += cache_db.select(
-                f'SELECT show_name, indexer AS tv_id, indexer_id AS prod_id, season'
-                f' FROM scene_exceptions'
-                f' WHERE indexer = {cur_tvid} AND indexer_id IN ({",".join(map(str, cur_prodid_list))})')
+        with db.DBConnection() as cache_db:
+            for cur_tvid, cur_prodid_list in iteritems(show_ids):
+                cache_results += cache_db.select(
+                    f'SELECT show_name, indexer AS tv_id, indexer_id AS prod_id, season'
+                    f' FROM scene_exceptions'
+                    f' WHERE indexer = {cur_tvid} AND indexer_id IN ({",".join(map(str, cur_prodid_list))})')
 
         if cache_results:
             for cur_result in cache_results:

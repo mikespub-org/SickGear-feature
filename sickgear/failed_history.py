@@ -41,12 +41,12 @@ def db_cmd(sql, params, select=True):
     :param select: use selcet
     :return: sql result
     """
-    my_db = db.DBConnection('failed.db')
-    if select:
-        sql_result = my_db.select(sql, params)
-    else:
-        sql_result = my_db.action(sql, params)
-    return sql_result
+    with db.DBConnection('failed.db') as sg_db:
+        if select:
+            sql_result = sg_db.select(sql, params)
+        else:
+            sql_result = sg_db.action(sql, params)
+        return sql_result
 
 
 def db_select(sql, params):

@@ -87,12 +87,12 @@ class EmailNotifier(Notifier):
 
         # Grab the recipients for the show
         if None is not show_name:
-            my_db = db.DBConnection()
-            for result in my_db.select('SELECT notify_list FROM tv_shows WHERE show_name = ?', (show_name,)):
-                if result['notify_list']:
-                    for email_address in result['notify_list'].split(','):
-                        if any(email_address.strip()):
-                            email_list.append(email_address)
+            with db.DBConnection() as sg_db:
+                for result in sg_db.select('SELECT notify_list FROM tv_shows WHERE show_name = ?', (show_name,)):
+                    if result['notify_list']:
+                        for email_address in result['notify_list'].split(','):
+                            if any(email_address.strip()):
+                                email_list.append(email_address)
 
         return list(set(email_list))
 

@@ -450,8 +450,9 @@ class KODIMetadata(generic.GenericMetadata):
 
 def set_nfo_uid_updated(*args, **kwargs):
     from .. import db
-    if not db.DBConnection().has_flag('kodi_nfo_uid'):
-        db.DBConnection().set_flag('kodi_nfo_uid')
+    with db.DBConnection() as sg_db:
+        if not sg_db.has_flag('kodi_nfo_uid'):
+            sg_db.set_flag('kodi_nfo_uid')
     sickgear.show_queue_scheduler.action.remove_event(sickgear.show_queue.DAILY_SHOW_UPDATE_FINISHED_EVENT,
                                                        set_nfo_uid_updated)
 
@@ -551,7 +552,8 @@ def remove_default_attr(*args, **kwargs):
             except(BaseException, Exception):
                 pass
 
-        db.DBConnection().set_flag('kodi_nfo_default_removed')
+        with db.DBConnection() as sg_db:
+            sg_db.set_flag('kodi_nfo_default_removed')
         sickgear.classes.loading_msg.set_msg_progress(msg, '100%')
 
     except(BaseException, Exception):
@@ -595,7 +597,8 @@ def rebuild_nfo(*args, **kwargs):
             except(BaseException, Exception):
                 pass
 
-        db.DBConnection().set_flag('kodi_nfo_rebuild_uniqueid')
+        with db.DBConnection() as sg_db:
+            sg_db.set_flag('kodi_nfo_rebuild_uniqueid')
         sickgear.classes.loading_msg.set_msg_progress(msg, '100%')
 
     except(BaseException, Exception):

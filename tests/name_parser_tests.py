@@ -482,7 +482,7 @@ class MultiSceneNumbering(test.SickbeardTestDBCase):
             sickgear.showList = []
             sickgear.showDict = {}
             name_cache.nameCache = {}
-            c_l = []
+            sql_l = []
             for s in [TVShowTest(name=e_t['show_obj']['name'], prodid=e_t['show_obj']['prodid'],
                                  tvid=e_t['show_obj']['tvid'], scene=1)]:
                 sickgear.showList.append(s)
@@ -495,13 +495,13 @@ class MultiSceneNumbering(test.SickbeardTestDBCase):
                     e_obj.scene_season = e_o.get('scene_episode') or e_o.get('xem_episode')
                     s.sxe_ep_obj.setdefault(e_obj.season, {})[e_obj.episode] = e_obj
                     if 'xem_episode' not in e_o:
-                        c_l.append(['REPLACE INTO scene_numbering'
+                        sql_l.append(['REPLACE INTO scene_numbering'
                                     ' (indexer, indexer_id, season, episode, scene_season, scene_episode)'
                                     ' VALUES (?,?,?,?,?,?)',
                                     [e_t['show_obj']['tvid'], e_t['show_obj']['prodid'], e_o['season'], e_o['number'],
                                      e_o['scene_season'], e_o['scene_episode']]])
                     else:
-                        c_l.append(
+                        sql_l.append(
                             ['REPLACE INTO tv_episodes'
                              ' (episode_id, showid, indexerid, indexer, name, season, episode, scene_season,'
                              ' scene_episode)'
@@ -509,8 +509,8 @@ class MultiSceneNumbering(test.SickbeardTestDBCase):
                              [_i, e_t['show_obj']['prodid'], _i, e_t['show_obj']['tvid'], 'Ep Name',
                               e_o['season'], e_o['number'], e_o['xem_season'], e_o['xem_episode']]]
                         )
-            my_db = db.DBConnection()
-            my_db.mass_action(c_l)
+            with db.DBConnection() as sg_db:
+                sg_db.mass_action(sql_l)
             name_cache.add_name_to_cache(e_t['show_obj']['name'], tvid=e_t['show_obj']['tvid'],
                                          prodid=e_t['show_obj']['prodid'])
             for _t in e_t['tests']:

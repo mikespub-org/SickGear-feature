@@ -39,15 +39,14 @@ class MigrationBasicTests(test.SickbeardTestDBCase):
 
         count = 1
         while count < len(schema):
-            my_db = db.DBConnection()
+            with db.DBConnection() as sg_db:
 
-            for version in sorted(schema.keys())[:count]:
-                update = schema[version](my_db)
-                update.execute()
-                sleep(0.1)
+                for version in sorted(schema.keys())[:count]:
+                    update = schema[version](sg_db)
+                    update.execute()
+                    sleep(0.1)
 
-            db.migration_code(my_db)
-            my_db.close()
+                db.migration_code(sg_db)
 
             # force python to garbage collect all db connections, so that the file can be deleted
             try:

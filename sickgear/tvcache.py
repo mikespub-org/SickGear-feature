@@ -57,12 +57,13 @@ class TVCache(object):
 
     @staticmethod
     def get_db():
+        # type: (...) -> CacheDBConnection
         return CacheDBConnection()
 
     def clear_cache(self):
         if self.should_clear_cache():
-            my_db = self.get_db()
-            my_db.action('DELETE FROM provider_cache WHERE provider = ?', [self.providerID])
+            with self.get_db() as sg_db:
+                sg_db.action('DELETE FROM provider_cache WHERE provider = ?', [self.providerID])
 
     def _title_and_url(self, item):
         """
@@ -99,19 +100,19 @@ class TVCache(object):
                 self.clear_cache()
 
             # parse data
-            cl = []
+            sql_l = []
             for item in data or []:
                 title, url = self._title_and_url(item)
                 ci = self.parse_item(title, url)
                 if None is not ci:
-                    cl.append(ci)
+                    sql_l.append(ci)
 
-            if 0 < len(cl):
-                my_db = self.get_db()
-                try:
-                    my_db.mass_action(cl)
-                except (BaseException, Exception) as e:
-                    logger.log(f'Warning could not save cache value [{cl}], caught err: {ex(e)}')
+            if sql_l:
+                with self.get_db() as sg_db:
+                    try:
+                        sg_db.mass_action(sql_l)
+                    except (BaseException, Exception) as e:
+                        logger.log(f'Warning could not save cache value [{sql_l}], caught err: {ex(e)}')
 
             # set updated as time the attempt to fetch data is
             self.set_last_update()
@@ -165,8 +166,8 @@ class TVCache(object):
         :return:
         :rtype: datetime.datetime
         """
-        my_db = self.get_db()
-        sql_result = my_db.select('SELECT time FROM lastUpdate WHERE provider = ?', [self.providerID])
+        with self.get_db() as sg_db:
+            sql_result = sg_db.select('SELECT time FROM lastUpdate WHERE provider = ?', [self.providerID])
 
         if sql_result:
             last_time = int(sql_result[0]['time'])
@@ -183,8 +184,8 @@ class TVCache(object):
         :return:
         :rtype: datetime.datetime
         """
-        my_db = self.get_db()
-        sql_result = my_db.select('SELECT time FROM lastSearch WHERE provider = ?', [self.providerID])
+        with self.get_db() as sg_db:
+            sql_result = sg_db.select('SELECT time FROM lastSearch WHERE provider = ?', [self.providerID])
 
         if sql_result:
             last_time = int(sql_result[0]['time'])
@@ -204,10 +205,10 @@ class TVCache(object):
         if not to_date:
             to_date = datetime.datetime.now()
 
-        my_db = self.get_db()
-        my_db.upsert('lastUpdate',
-                     {'time': int(time.mktime(to_date.timetuple()))},
-                     {'provider': self.providerID})
+        with self.get_db() as sg_db:
+            sg_db.upsert('lastUpdate',
+                         {'time': int(time.mktime(to_date.timetuple()))},
+                         {'provider': self.providerID})
 
     def _set_last_search(self, to_date=None):
         """
@@ -218,10 +219,10 @@ class TVCache(object):
         if not to_date:
             to_date = datetime.datetime.now()
 
-        my_db = self.get_db()
-        my_db.upsert('lastSearch',
-                     {'time': int(time.mktime(to_date.timetuple()))},
-                     {'provider': self.providerID})
+        with self.get_db() as sg_db:
+            sg_db.upsert('lastSearch',
+                         {'time': int(time.mktime(to_date.timetuple()))},
+                         {'provider': self.providerID})
 
     last_update = property(_get_last_update)
     last_search = property(_get_last_search)
@@ -346,14 +347,14 @@ class TVCache(object):
         :return:
         :rtype:
         """
-        my_db = self.get_db()
         sql = "SELECT * FROM provider_cache WHERE name LIKE '%.PROPER.%' OR name LIKE '%.REPACK.%' " \
               "OR name LIKE '%.REAL.%' AND provider = ?"
 
         if date:
             sql += f' AND time >= {int(time.mktime(date.timetuple()))!s}'
 
-        return list(filter(lambda x: x['indexerid'] != 0, my_db.select(sql, [self.providerID])))
+        with self.get_db() as sg_db:
+            return list(filter(lambda x: x['indexerid'] != 0, sg_db.select(sql, [self.providerID])))
 
     def find_needed_episodes(self, ep_obj_list, manual_search=False):
         # type: (Union[TVEpisode, List[TVEpisode]], bool) -> Dict[TVEpisode, SearchResult]
@@ -363,14 +364,13 @@ class TVCache(object):
         :param manual_search: manual search
         """
         needed_eps = {}
-        cl = []
+        sql_l = []
 
-        my_db = self.get_db()
         if type(ep_obj_list) != list:
             ep_obj_list = [ep_obj_list]
 
         for ep_obj in ep_obj_list:
-            cl.append([
+            sql_l.append([
                 'SELECT *'
                 + ' FROM provider_cache'
                 + ' WHERE provider = ?'
@@ -380,7 +380,8 @@ class TVCache(object):
                 [self.providerID,
                  ep_obj.show_obj.tvid, ep_obj.show_obj.prodid,
                  ep_obj.season, f'%|{ep_obj.episode!s}|%']])
-        sql_result = my_db.mass_action(cl)
+        with self.get_db() as sg_db:
+            sql_result = sg_db.mass_action(sql_l)
         if sql_result:
             sql_result = list(itertools.chain(*sql_result))
 

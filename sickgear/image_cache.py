@@ -457,18 +457,18 @@ class ImageCache(object):
         :return:
         :rtype: bool
         """
-        my_db = db.DBConnection('cache.db', row_type='dict')
+        with db.DBConnection('cache.db', row_type='dict') as sg_db:
 
-        sql_result = my_db.select('SELECT time FROM lastUpdate WHERE provider = ?',
-                                  [f'imsg_{(image_type, self.FANART)[None is image_type]}_{provider}'])
+            sql_result = sg_db.select('SELECT time FROM lastUpdate WHERE provider = ?',
+                                      [f'imsg_{(image_type, self.FANART)[None is image_type]}_{provider}'])
 
-        if sql_result:
-            minutes_iv = 60 * 3
-            # daily_interval = 60 * 60 * 23
-            iv = minutes_iv
-            now_stamp = SGDatetime.timestamp_near()
-            the_time = int(sql_result[0]['time'])
-            return now_stamp - the_time > iv
+            if sql_result:
+                minutes_iv = 60 * 3
+                # daily_interval = 60 * 60 * 23
+                iv = minutes_iv
+                now_stamp = SGDatetime.timestamp_near()
+                the_time = int(sql_result[0]['time'])
+                return now_stamp - the_time > iv
 
         return True
 
@@ -481,10 +481,10 @@ class ImageCache(object):
         :param provider: provider name
         :type provider: AnyStr
         """
-        my_db = db.DBConnection('cache.db')
-        my_db.upsert('lastUpdate',
-                     {'time': SGDatetime.timestamp_near()},
-                     {'provider': f'imsg_{(image_type, self.FANART)[None is image_type]}_{provider}'})
+        with db.DBConnection('cache.db') as sg_db:
+            sg_db.upsert('lastUpdate',
+                         {'time': SGDatetime.timestamp_near()},
+                         {'provider': f'imsg_{(image_type, self.FANART)[None is image_type]}_{provider}'})
 
     def _cache_image_from_file(self, image_path, img_type, tvid, prodid, prefix='', move_file=False):
         # type: (AnyStr, int, int, int, Optional[AnyStr], Optional[bool]) -> Union[AnyStr, bool]

@@ -63,8 +63,9 @@ class ShowQueue(generic_queue.GenericQueue):
         generic_queue.GenericQueue.__init__(self, cache_db_tables=['show_queue'], main_db_tables=['tv_src_switch'])
         self.queue_name = 'SHOWQUEUE'
         self.daily_update_running = False
-        if not db.DBConnection().has_flag('kodi_nfo_uid'):
-            self.add_event(DAILY_SHOW_UPDATE_FINISHED_EVENT, sickgear.metadata.kodi.set_nfo_uid_updated)
+        with db.DBConnection() as sg_db:
+            if not sg_db.has_flag('kodi_nfo_uid'):
+                self.add_event(DAILY_SHOW_UPDATE_FINISHED_EVENT, sickgear.metadata.kodi.set_nfo_uid_updated)
 
     def check_events(self):
         if self.daily_update_running and \
@@ -74,8 +75,8 @@ class ShowQueue(generic_queue.GenericQueue):
 
     def load_queue(self):
         try:
-            my_db = db.DBConnection('cache.db')
-            sql_result = my_db.select('SELECT * FROM show_queue')
+            with db.DBConnection('cache.db') as sg_db:
+                sql_result = sg_db.select('SELECT * FROM show_queue')
             for cur_row in sql_result:
                 show_obj = None
                 if ShowQueueActions.ADD != cur_row['action_id']:
@@ -129,15 +130,15 @@ class ShowQueue(generic_queue.GenericQueue):
     def save_item(self, item):
         # type: (ShowQueueItem) -> None
         if ShowQueueActions.SWITCH == item.action_id:
-            my_db = db.DBConnection()
-            my_db.action(
-                """
-                REPLACE INTO tv_src_switch (old_indexer, old_indexer_id, new_indexer, new_indexer_id,
-                 action_id, status, uid, mark_wanted, set_pause, force_id)
-                VALUES (?,?,?,?,?,?,?,?,?,?)
-                """, [item.show_obj.tvid, item.show_obj.prodid, item.new_tvid, item.new_prodid,
-                      ShowQueueActions.SWITCH, TVSWITCH_NORMAL, item.uid, int(item.mark_wanted), int(item.set_pause),
-                      int(item.force_id)])
+            with db.DBConnection() as sg_db:
+                sg_db.action(
+                    """
+                    REPLACE INTO tv_src_switch (old_indexer, old_indexer_id, new_indexer, new_indexer_id,
+                     action_id, status, uid, mark_wanted, set_pause, force_id)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)
+                    """, [item.show_obj.tvid, item.show_obj.prodid, item.new_tvid, item.new_prodid,
+                          ShowQueueActions.SWITCH, TVSWITCH_NORMAL, item.uid, int(item.mark_wanted), int(item.set_pause),
+                          int(item.force_id)])
         else:
             generic_queue.GenericQueue.save_item(self, item)
 
@@ -215,11 +216,11 @@ class ShowQueue(generic_queue.GenericQueue):
         # type: (ShowQueueItem, bool) -> None
         if isinstance(item, QueueItemSwitchSource):
             try:
-                my_db = db.DBConnection()
-                if finished_run:
-                    my_db.action('DELETE FROM tv_src_switch WHERE uid = ? AND status = ?', [item.uid, TVSWITCH_NORMAL])
-                else:
-                    my_db.action('DELETE FROM tv_src_switch WHERE uid = ?', [item.uid])
+                with db.DBConnection() as sg_db:
+                    if finished_run:
+                        sg_db.action('DELETE FROM tv_src_switch WHERE uid = ? AND status = ?', [item.uid, TVSWITCH_NORMAL])
+                    else:
+                        sg_db.action('DELETE FROM tv_src_switch WHERE uid = ?', [item.uid])
             except (BaseException, Exception) as e:
                 logger.error(f'Exception deleting item {item} from db: {ex(e)}')
         else:
@@ -1100,19 +1101,19 @@ class QueueItemAdd(ShowQueueItem):
             logger.error(traceback.format_exc())
 
         # if they gave a custom status then change all the eps to it
-        my_db = db.DBConnection()
-        if self.default_status != SKIPPED:
-            logger.log('Setting all episodes to the specified default status: %s'
-                       % sickgear.common.statusStrings[self.default_status])
-            my_db.action(
-                """
-                UPDATE tv_episodes
-                SET status = ?
-                WHERE status = ? AND indexer = ? AND showid = ? AND season != 0
-                """, [self.default_status, SKIPPED, self.show_obj.tvid, self.show_obj.prodid])
+        with db.DBConnection() as sg_db:
+            if SKIPPED != self.default_status:
+                logger.log('Setting all episodes to the specified default status: %s'
+                           % sickgear.common.statusStrings[self.default_status])
+                sg_db.action(
+                    """
+                    UPDATE tv_episodes
+                    SET status = ?
+                    WHERE status = ? AND indexer = ? AND showid = ? AND season != 0
+                    """, [self.default_status, SKIPPED, self.show_obj.tvid, self.show_obj.prodid])
 
-        items_wanted = self._get_wanted(my_db, self.default_wanted_begin, latest=False)
-        items_wanted += self._get_wanted(my_db, self.default_wanted_latest, latest=True)
+            items_wanted = self._get_wanted(sg_db, self.default_wanted_begin, latest=False)
+            items_wanted += self._get_wanted(sg_db, self.default_wanted_latest, latest=True)
 
         self.show_obj.write_metadata()
         self.show_obj.update_metadata()
@@ -1158,22 +1159,24 @@ class QueueItemAdd(ShowQueueItem):
         map_indexers_to_show(self.show_obj, recheck=True)
 
         if self.show_obj.tvid in (TVINFO_TVRAGE, TVINFO_TVDB):
-            # noinspection SqlResolve
-            oh = my_db.select('SELECT resource FROM history WHERE indexer = 0 AND showid = ?', [self.show_obj.prodid])
-            if oh:
-                found = False
-                for o in oh:
-                    np = NameParser(file_name=True, indexer_lookup=False)
-                    try:
-                        pr = np.parse(o['resource'])
-                    except (BaseException, Exception):
-                        continue
-                    if pr.show_obj.tvid == self.show_obj.tvid and pr.show_obj.prodid == self.show_obj.prodid:
-                        found = True
-                        break
-                if found:
-                    my_db.action('UPDATE history SET indexer = ? WHERE indexer = 0 AND showid = ?',
-                                 [self.show_obj.tvid, self.show_obj.prodid])
+            with db.DBConnection() as sg_db:
+                # noinspection SqlResolve
+                oh = sg_db.select('SELECT resource FROM history'
+                                  ' WHERE indexer = 0 AND showid = ?', [self.show_obj.prodid])
+                if oh:
+                    found = False
+                    for o in oh:
+                        np = NameParser(file_name=True, indexer_lookup=False)
+                        try:
+                            pr = np.parse(o['resource'])
+                        except (BaseException, Exception):
+                            continue
+                        if pr.show_obj.tvid == self.show_obj.tvid and pr.show_obj.prodid == self.show_obj.prodid:
+                            found = True
+                            break
+                    if found:
+                        sg_db.action('UPDATE history SET indexer = ? WHERE indexer = 0 AND showid = ?',
+                                     [self.show_obj.tvid, self.show_obj.prodid])
 
         msg = ' the specified show into ' + self.showDir
         # if started with WANTED eps then run the backlog
@@ -1435,7 +1438,7 @@ class QueueItemUpdate(ShowQueueItem):
                     if cur_season in db_ep_obj_list and cur_episode in db_ep_obj_list[cur_season]:
                         del db_ep_obj_list[cur_season][cur_episode]
 
-            cl = []
+            sql_l = []
             # for the remaining episodes in the DB list just delete them from the DB
             for cur_season in db_ep_obj_list:
                 for cur_episode in db_ep_obj_list[cur_season]:
@@ -1443,20 +1446,20 @@ class QueueItemUpdate(ShowQueueItem):
                     status = sickgear.common.Quality.split_composite_status(ep_obj.status)[0]
                     if self.switch or should_delete_episode(status):
                         if self.switch:
-                            cl.append(self.show_obj.switch_ep_change_sql(
+                            sql_l.append(self.show_obj.switch_ep_change_sql(
                                 self.old_tvid, self.old_prodid, cur_season, cur_episode, TVSWITCH_EP_DELETED))
                         logger.log(f'Permanently deleting episode {cur_season}x{cur_episode} from the database')
                         try:
-                            cl.extend(ep_obj.delete_episode(return_sql=True))
+                            sql_l.extend(ep_obj.delete_episode(return_sql=True))
                         except exceptions_helper.EpisodeDeletedException:
                             pass
                     else:
                         logger.log(f'Not deleting episode {cur_season}x{cur_episode} from the database'
                                    f' because status is: {statusStrings[status]}')
 
-            if cl:
-                my_db = db.DBConnection()
-                my_db.mass_action(cl)
+            if sql_l:
+                with db.DBConnection() as sg_db:
+                    sg_db.mass_action(sql_l)
 
             # update indexer mapper once a month (using the day of the first ep as random date)
             update_over_month = (datetime.date.today() - last_update).days > 31
@@ -1573,13 +1576,13 @@ class QueueItemSwitchSource(ShowQueueItem):
         sets status in table or deletes the entry if status: TVSWITCH_NORMAL
         :param status:
         """
-        my_db = db.DBConnection()
-        if 0 == status:
-            my_db.action('DELETE FROM tv_src_switch WHERE uid = ?',
-                         [self.uid])
-        else:
-            my_db.action('UPDATE tv_src_switch SET status = ? WHERE uid = ?',
-                         [status, self.uid])
+        with db.DBConnection() as sg_db:
+            if 0 == status:
+                sg_db.action('DELETE FROM tv_src_switch WHERE uid = ?',
+                             [self.uid])
+            else:
+                sg_db.action('UPDATE tv_src_switch SET status = ? WHERE uid = ?',
+                             [status, self.uid])
 
     def _set_switch_id(self, new_id):
         # type: (integer_types) -> None
@@ -1587,9 +1590,9 @@ class QueueItemSwitchSource(ShowQueueItem):
         set the new prodid of the show in db
         :param new_id:
         """
-        my_db = db.DBConnection()
-        my_db.action('UPDATE tv_src_switch SET new_indexer_id = ? WHERE uid = ?',
-                     [new_id, self.uid])
+        with db.DBConnection() as sg_db:
+            sg_db.action('UPDATE tv_src_switch SET new_indexer_id = ? WHERE uid = ?',
+                         [new_id, self.uid])
 
     def _check_same_id(self, new_prodid):
         # type: (integer_types) -> bool

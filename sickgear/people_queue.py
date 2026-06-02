@@ -36,8 +36,9 @@ class PeopleQueue(generic_queue.GenericQueue):
 
     def load_queue(self):
         try:
-            my_db = db.DBConnection('cache.db')
-            queue_sql = my_db.select('SELECT * FROM people_queue')
+            with db.DBConnection('cache.db') as sg_db:
+                queue_sql = sg_db.select('SELECT * FROM people_queue')
+
             for q in queue_sql:
                 if PeopleQueueActions.SHOWCAST == q['action_id']:
                     try:
@@ -51,12 +52,12 @@ class PeopleQueue(generic_queue.GenericQueue):
         except (BaseException, Exception) as e:
             logger.error(f'Exception loading queue {self.__class__.__name__}: {ex(e)}')
         try:
-            my_db = db.DBConnection()
-            if not my_db.has_flag('cast_loaded'):
-                import sickgear
-                [self.add_cast_update(s, show_info_cast=None, scheduled_update=True)
-                 for s in sickgear.showList if not s.cast_list]
-                my_db.set_flag('cast_loaded')
+            with db.DBConnection() as sg_db:
+                if not sg_db.has_flag('cast_loaded'):
+                    import sickgear
+                    [self.add_cast_update(s, show_info_cast=None, scheduled_update=True)
+                     for s in sickgear.showList if not s.cast_list]
+                    sg_db.set_flag('cast_loaded')
         except (BaseException, Exception):
             pass
 

@@ -286,13 +286,13 @@ def make_scene_season_search_string(show_obj,  # type: sickgear.tv.TVShow
                     season_strings.append("%02d" % ab_number)
 
     else:
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            'SELECT COUNT(DISTINCT season) AS numseasons'
-            ' FROM tv_episodes'
-            ' WHERE indexer = ? AND showid = ?'
-            ' AND season != 0',
-            [show_obj.tvid, show_obj.prodid])
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                'SELECT COUNT(DISTINCT season) AS numseasons'
+                ' FROM tv_episodes'
+                ' WHERE indexer = ? AND showid = ?'
+                ' AND season != 0',
+                [show_obj.tvid, show_obj.prodid])
 
         numseasons = int(sql_result[0][0])
         season_strings = [f'S{int(ep_obj.scene_season):02}']
@@ -333,13 +333,13 @@ def make_scene_search_string(show_obj,  # type: sickgear.tv.TVShow
     :param ignore_allowlist:
     :return: list or search strings
     """
-    my_db = db.DBConnection()
-    sql_result = my_db.select(
-        'SELECT COUNT(DISTINCT season) AS numseasons'
-        ' FROM tv_episodes'
-        ' WHERE indexer = ? AND showid = ? AND season != 0',
-        [show_obj.tvid, show_obj.prodid])
-    num_seasons = int(sql_result[0][0])
+    with db.DBConnection() as sg_db:
+        sql_result = sg_db.select(
+            'SELECT COUNT(DISTINCT season) AS numseasons'
+            ' FROM tv_episodes'
+            ' WHERE indexer = ? AND showid = ? AND season != 0',
+            [show_obj.tvid, show_obj.prodid])
+        num_seasons = int(sql_result[0][0])
 
     # see if we should use dates instead of episodes
     if (show_obj.air_by_date or show_obj.sports) and ep_obj.airdate != datetime.date.fromordinal(1):

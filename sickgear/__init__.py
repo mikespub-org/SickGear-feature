@@ -1557,20 +1557,20 @@ def init_stage_2():
     global EMBY_WATCHEDSTATE_INTERVAL, PLEX_WATCHEDSTATE_INTERVAL
 
     # initialize main database
-    my_db = db.DBConnection()
-    db.migration_code(my_db)
+    with db.DBConnection() as sg_db:
+        db.migration_code(sg_db)
 
     # initialize the cache database
-    my_db = db.DBConnection('cache.db')
-    db.upgrade_database(my_db, cache_db.InitialSchema)
+    with db.DBConnection('cache.db') as sg_db:
+        db.upgrade_database(sg_db, cache_db.InitialSchema)
 
     # initialize the failed downloads database
-    my_db = db.DBConnection('failed.db')
-    db.upgrade_database(my_db, failed_db.InitialSchema)
+    with db.DBConnection('failed.db') as sg_db:
+        db.upgrade_database(sg_db, failed_db.InitialSchema)
 
     # fix up any db problems
-    my_db = db.DBConnection()
-    db.sanity_check_db(my_db, mainDB.MainSanityCheck)
+    with db.DBConnection() as sg_db:
+        db.sanity_check_db(sg_db, mainDB.MainSanityCheck)
 
     # initialize metadata_providers
     metadata_provider_dict = metadata.get_metadata_generator_dict()

@@ -94,10 +94,10 @@ class GenericQueue(Job):
         fetch highest uid for queue type to initialize the class
 
         """
-        my_db = db.DBConnection('cache.db')
-        cr = my_db.mass_action([[f'SELECT max(uid) as max_id FROM {t}'] for t in self.cache_db_tables])
-        my_db = db.DBConnection()
-        mr = my_db.mass_action([[f'SELECT max(uid) as max_id FROM {t}'] for t in self.main_db_tables])
+        with db.DBConnection('cache.db') as sg_db:
+            cr = sg_db.mass_action([[f'SELECT max(uid) as max_id FROM {t}'] for t in self.cache_db_tables])
+        with db.DBConnection() as sg_db:
+            mr = sg_db.mass_action([[f'SELECT max(uid) as max_id FROM {t}'] for t in self.main_db_tables])
         return max([c[0]['max_id'] or 0 for c in cr] + [s[0]['max_id'] or 0 for s in mr] + [0])
 
     def _get_new_id(self):
@@ -109,15 +109,15 @@ class GenericQueue(Job):
         pass
 
     def save_queue(self):
-        cl = self._clear_sql()
+        sql_l = self._clear_sql()
         try:
             with self.lock:
                 for item in ((self.currentItem and [self.currentItem]) or []) + self.queue:
-                    cl.extend(self._get_item_sql(item))
+                    sql_l.extend(self._get_item_sql(item))
 
-            if cl:
-                my_db = db.DBConnection('cache.db')
-                my_db.mass_action(cl)
+            if sql_l:
+                with db.DBConnection('cache.db') as sg_db:
+                    sg_db.mass_action(sql_l)
         except (BaseException, Exception) as e:
             logger.error(f'Exception saving queue {self.__class__.__name__} to db: {ex(e)}')
 
@@ -128,10 +128,9 @@ class GenericQueue(Job):
     def save_item(self, item):
         try:
             if item:
-                item_sql = self._get_item_sql(item)
-                if item_sql:
-                    my_db = db.DBConnection('cache.db')
-                    my_db.mass_action(item_sql)
+                if sql_l := self._get_item_sql(item):
+                    with db.DBConnection('cache.db') as sg_db:
+                        sg_db.mass_action(sql_l)
         except (BaseException, Exception) as e:
             logger.error(f'Exception saving item {item} to db: {ex(e)}')
 
@@ -144,10 +143,9 @@ class GenericQueue(Job):
         """
         if item:
             try:
-                item_sql = self._delete_item_from_db_sql(item)
-                if item_sql:
-                    my_db = db.DBConnection('cache.db')
-                    my_db.mass_action(item_sql)
+                if sql_l := self._delete_item_from_db_sql(item):
+                    with db.DBConnection('cache.db') as sg_db:
+                        sg_db.mass_action(sql_l)
             except (BaseException, Exception) as e:
                 logger.error(f'Exception deleting item {item} from db: {ex(e)}')
 
@@ -183,22 +181,22 @@ class GenericQueue(Job):
                 if not force:
                     to_remove = [r for r in to_remove for q in self.queue
                                  if r == q.uid and (q.action_id not in excluded_types)]
-                del_sql = [
+                sql_l = [
                     [f'DELETE FROM {t} WHERE uid IN ({",".join(["?"] * len(to_remove))})', to_remove]
                     for t in self.cache_db_tables
                 ]
-                del_main_sql = [
+                sql_l_m = [
                     [f'DELETE FROM {t} WHERE uid IN ({",".join(["?"] * len(to_remove))})', to_remove]
                     for t in self.main_db_tables
                 ]
 
                 self.queue = [q for q in self.queue if q.uid not in to_remove]
-                if del_sql:
-                    my_db = db.DBConnection('cache.db')
-                    my_db.mass_action(del_sql)
-                if del_main_sql:
-                    my_db = db.DBConnection()
-                    my_db.mass_action(del_main_sql)
+                if sql_l:
+                    with db.DBConnection('cache.db') as sg_db:
+                        sg_db.mass_action(sql_l)
+                if sql_l_m:
+                    with db.DBConnection() as sg_db:
+                        sg_db.mass_action(sql_l_m)
 
     def clear_queue(self, action_types=None):
         # type: (integer_types) -> None
@@ -217,28 +215,28 @@ class GenericQueue(Job):
         with self.lock:
             if action_types:
                 self.queue = [q for q in self.queue if q.action_id in excluded_types or q.action_id not in action_types]
-                del_sql = [
+                sql_l = [
                     [f'DELETE FROM {t} WHERE action_id IN ({",".join(["?"] * len(action_types))})', action_types]
                     for t in self.cache_db_tables
                 ]
-                del_main_sql = [
+                sql_l_m = [
                     [f'DELETE FROM {t} WHERE action_id IN ({",".join(["?"] * len(action_types))})', action_types]
                     for t in self.main_db_tables
                 ]
             else:
                 self.queue = [q for q in self.queue if q.action_id in excluded_types]
-                del_sql = [
+                sql_l = [
                     [f'DELETE FROM {t}'] for t in self.cache_db_tables
                 ]
-                del_main_sql = [
+                sql_l_m = [
                     [f'DELETE FROM {t}'] for t in self.main_db_tables
                 ]
-            if del_sql:
-                my_db = db.DBConnection('cache.db')
-                my_db.mass_action(del_sql)
-            if del_main_sql:
-                my_db = db.DBConnection()
-                my_db.mass_action(del_main_sql)
+            if sql_l:
+                with db.DBConnection('cache.db') as sg_db:
+                    sg_db.mass_action(sql_l)
+            if sql_l_m:
+                with db.DBConnection() as sg_db:
+                    sg_db.mass_action(sql_l_m)
 
     def pause(self):
         logger.log('Pausing queue')

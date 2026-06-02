@@ -209,10 +209,12 @@ class NewznabProvider(generic.NZBProvider):
     def last_recent_search(self):
         if not self._last_recent_search:
             try:
-                my_db = db.DBConnection('cache.db')
-                res = my_db.select('SELECT' + ' "datetime" FROM "lastrecentsearch" WHERE "name"=?', [self.get_id()])
-                if res:
-                    self._last_recent_search = SGDatetime.from_timestamp(int(res[0]['datetime']))
+                with db.DBConnection('cache.db') as sg_db:
+                    res = sg_db.select("SELECT 'datetime'"
+                                       " FROM 'lastrecentsearch'"
+                                       " WHERE 'name'=?", [self.get_id()])
+                    if res:
+                        self._last_recent_search = SGDatetime.from_timestamp(int(res[0]['datetime']))
             except (BaseException, Exception):
                 pass
         return self._last_recent_search
@@ -220,13 +222,13 @@ class NewznabProvider(generic.NZBProvider):
     @last_recent_search.setter
     def last_recent_search(self, value):
         try:
-            my_db = db.DBConnection('cache.db')
-            if isinstance(value, datetime.datetime):
-                save_value = SGDatetime.timestamp_near(value)
-            else:
-                save_value = SGDatetime.timestamp_far(value, default=0)
-            my_db.action('INSERT OR REPLACE INTO "lastrecentsearch" (name, datetime) VALUES (?,?)',
-                         [self.get_id(), save_value])
+            with db.DBConnection('cache.db') as sg_db:
+                if isinstance(value, datetime.datetime):
+                    save_value = SGDatetime.timestamp_near(value)
+                else:
+                    save_value = SGDatetime.timestamp_far(value, default=0)
+                sg_db.action("INSERT OR REPLACE INTO 'lastrecentsearch'"
+                             " (name, datetime) VALUES (?,?)", [self.get_id(), save_value])
         except (BaseException, Exception):
             pass
         self._last_recent_search = value
@@ -1235,15 +1237,15 @@ class NewznabCache(tvcache.TVCache):
                 self.clear_cache()
 
                 # parse data
-                cl = []
+                sql_l = []
                 for item in items:
                     ci = self.parse_item(n_spaces, item)
                     if None is not ci:
-                        cl.append(ci)
+                        sql_l.append(ci)
 
-                if 0 < len(cl):
-                    my_db = self.get_db()
-                    my_db.mass_action(cl)
+                if sql_l:
+                    with self.get_db() as sg_db:
+                        sg_db.mass_action(sql_l)
 
             # set updated as time the attempt to fetch data is
             self.set_last_update()
