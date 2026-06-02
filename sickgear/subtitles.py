@@ -139,24 +139,24 @@ class SubtitlesFinder(Job):
         today = datetime.date.today().toordinal()
 
         # you have 5 minutes to understand that one. Good luck
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            'SELECT s.show_name, e.indexer AS tv_id, e.showid AS prod_id,'
-            ' e.season, e.episode, e.status, e.subtitles,'
-            ' e.subtitles_searchcount AS searchcount, e.subtitles_lastsearch AS lastsearch,'
-            ' e.location, (? - e.airdate) AS airdate_daydiff'
-            ' FROM tv_episodes AS e'
-            ' INNER JOIN tv_shows AS s'
-            ' ON (e.indexer = s.indexer AND e.showid = s.indexer_id)'
-            ' WHERE s.subtitles = 1 AND e.subtitles NOT LIKE (?)'
-            ' AND ((e.subtitles_searchcount <= 2 AND (? - e.airdate) > 7)'
-            ' OR (e.subtitles_searchcount <= 7 AND (? - e.airdate) <= 7))'
-            ' AND (e.status IN (%s)' % ','.join([str(x) for x in Quality.DOWNLOADED])
-            + f' OR (e.status IN ({",".join([str(x) for x in Quality.SNATCHED + Quality.SNATCHED_PROPER])})'
-            + ' AND e.location != \'\'))', [today, wanted_languages(True), today, today])
-        if 0 == len(sql_result):
-            logger.log('No subtitles to download', logger.MESSAGE)
-            return
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                'SELECT s.show_name, e.indexer AS tv_id, e.showid AS prod_id,'
+                ' e.season, e.episode, e.status, e.subtitles,'
+                ' e.subtitles_searchcount AS searchcount, e.subtitles_lastsearch AS lastsearch,'
+                ' e.location, (? - e.airdate) AS airdate_daydiff'
+                ' FROM tv_episodes AS e'
+                ' INNER JOIN tv_shows AS s'
+                ' ON (e.indexer = s.indexer AND e.showid = s.indexer_id)'
+                ' WHERE s.subtitles = 1 AND e.subtitles NOT LIKE (?)'
+                ' AND ((e.subtitles_searchcount <= 2 AND (? - e.airdate) > 7)'
+                ' OR (e.subtitles_searchcount <= 7 AND (? - e.airdate) <= 7))'
+                ' AND (e.status IN (%s)' % ','.join([str(x) for x in Quality.DOWNLOADED])
+                + f' OR (e.status IN ({",".join([str(x) for x in Quality.SNATCHED + Quality.SNATCHED_PROPER])})'
+                + ' AND e.location != \'\'))', [today, wanted_languages(True), today, today])
+            if 0 == len(sql_result):
+                logger.log('No subtitles to download', logger.MESSAGE)
+                return
 
         rules = self._get_rules()
         now = datetime.datetime.now()

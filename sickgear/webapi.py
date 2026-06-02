@@ -1129,14 +1129,14 @@ class CMD_SickGearEpisode(ApiCall):
         if not show_obj:
             return _responds(RESULT_FAILURE, msg='Show not found')
 
-        my_db = db.DBConnection(row_type='dict')
-        sql_result = my_db.select(
-            'SELECT name, description, airdate, status, location, file_size, release_name, '
-            ' subtitles, absolute_number,scene_season, scene_episode, scene_absolute_number'
-            ' FROM tv_episodes'
-            ' WHERE indexer = ? AND showid = ?'
-            ' AND episode = ? AND season = ?',
-            [self.tvid, self.prodid, self.e, self.s])
+        with db.DBConnection(row_type='dict') as sg_db:
+            sql_result = sg_db.select(
+                'SELECT name, description, airdate, status, location, file_size, release_name, '
+                ' subtitles, absolute_number,scene_season, scene_episode, scene_absolute_number'
+                ' FROM tv_episodes'
+                ' WHERE indexer = ? AND showid = ?'
+                ' AND episode = ? AND season = ?',
+                [self.tvid, self.prodid, self.e, self.s])
         if 1 != len(sql_result):
             raise ApiError('Episode not found')
         episode = sql_result[0]
@@ -1364,9 +1364,9 @@ class CMD_SickGearEpisodeSetStatus(ApiCall):
                     start_backlog = True
                 ep_results.append(_epResult(RESULT_SUCCESS, ep_obj))
 
-        if 0 < len(sql_l):
-            my_db = db.DBConnection()
-            my_db.mass_action(sql_l)
+        if sql_l:
+            with db.DBConnection() as sg_db:
+                sg_db.mass_action(sql_l)
 
         extra_msg = ''
         if start_backlog:
@@ -1500,36 +1500,36 @@ class CMD_SickGearExceptions(ApiCall):
 
     def run(self):
         """ get scene exceptions for all or a given show """
-        my_db = db.DBConnection(row_type='dict')
+        with db.DBConnection(row_type='dict') as sg_db:
 
-        if None is self.prodid:
-            sql_result = my_db.select('SELECT s.indexer, se.show_name, se.indexer_id AS "indexerid" '
-                                      'FROM scene_exceptions AS se INNER JOIN tv_shows as s '
-                                      'ON se.indexer_id == s.indexer_id')
-            scene_exceptions = {}
-            for cur_result in sql_result:
-                indexerid = cur_result['indexerid']
-                indexer = cur_result['indexer']
-                if self.sickbeard_call:
-                    if indexerid not in scene_exceptions:
-                        scene_exceptions[indexerid] = []
-                    scene_exceptions[indexerid].append(cur_result['show_name'])
-                else:
-                    if indexerid not in scene_exceptions.get(indexer, {}):
-                        scene_exceptions.setdefault(indexer, {})[indexerid] = []
-                    scene_exceptions.setdefault(indexer, {})[indexerid].append(cur_result['show_name'])
+            if None is self.prodid:
+                sql_result = sg_db.select('SELECT s.indexer, se.show_name, se.indexer_id AS "indexerid" '
+                                          'FROM scene_exceptions AS se INNER JOIN tv_shows as s '
+                                          'ON se.indexer_id == s.indexer_id')
+                scene_exceptions = {}
+                for cur_result in sql_result:
+                    indexerid = cur_result['indexerid']
+                    indexer = cur_result['indexer']
+                    if self.sickbeard_call:
+                        if indexerid not in scene_exceptions:
+                            scene_exceptions[indexerid] = []
+                        scene_exceptions[indexerid].append(cur_result['show_name'])
+                    else:
+                        if indexerid not in scene_exceptions.get(indexer, {}):
+                            scene_exceptions.setdefault(indexer, {})[indexerid] = []
+                        scene_exceptions.setdefault(indexer, {})[indexerid].append(cur_result['show_name'])
 
-        else:
-            show_obj = helpers.find_show_by_id({self.tvid: self.prodid})
-            if not show_obj:
-                return _responds(RESULT_FAILURE, msg='Show not found')
+            else:
+                show_obj = helpers.find_show_by_id({self.tvid: self.prodid})
+                if not show_obj:
+                    return _responds(RESULT_FAILURE, msg='Show not found')
 
-            sql_result = my_db.select(
-                'SELECT indexer, show_name, indexer_id AS "indexerid" FROM scene_exceptions '
-                'WHERE indexer = ? AND indexer_id = ?', [self.tvid, self.prodid])
-            scene_exceptions = []
-            for cur_result in sql_result:
-                scene_exceptions.append(cur_result['show_name'])
+                sql_result = sg_db.select(
+                    'SELECT indexer, show_name, indexer_id AS "indexerid" FROM scene_exceptions '
+                    'WHERE indexer = ? AND indexer_id = ?', [self.tvid, self.prodid])
+                scene_exceptions = []
+                for cur_result in sql_result:
+                    scene_exceptions.append(cur_result['show_name'])
 
         return _responds(RESULT_SUCCESS, scene_exceptions)
 
@@ -1581,38 +1581,39 @@ class CMD_SetExceptions(ApiCall):
             return _responds(RESULT_FAILURE, 'Could not find any show in db from indexer: %s with id: %s' %
                              (self.tvid, self.prodid))
 
-        my_db = db.DBConnection(row_type='dict')
-        sql_result = my_db.select('SELECT show_name, season, indexer, indexer_id AS "indexerid"'
-                                  ' FROM scene_exceptions'
-                                  ' WHERE indexer = ? AND indexer_id = ?'
-                                  ' AND season = ?',
-                                  [self.tvid, self.prodid, self.forseason])
+        with db.DBConnection(row_type='dict') as sg_db:
+            sql_result = sg_db.select('SELECT show_name, season, indexer, indexer_id AS "indexerid"'
+                                      ' FROM scene_exceptions'
+                                      ' WHERE indexer = ? AND indexer_id = ?'
+                                      ' AND season = ?',
+                                      [self.tvid, self.prodid, self.forseason])
 
-        cl = []
-        curexep = [(s['show_name'], s['season']) for s in sql_result]
-        add_list = []
-        remove_list = []
-        if self.remove:
-            for r in self.remove:
-                if (r, self.forseason) in curexep:
-                    cl.append(['DELETE FROM scene_exceptions WHERE indexer = ? AND indexer_id = ? AND season = ? '
-                               'AND show_name = ?', [self.tvid, self.prodid, self.forseason, r]])
-                    try:
-                        curexep.remove((r, self.forseason))
-                    except ValueError:
-                        pass
-                    remove_list.append(r)
+            sql_l = []
+            curexep = [(s['show_name'], s['season']) for s in sql_result]
+            add_list = []
+            remove_list = []
+            if self.remove:
+                for r in self.remove:
+                    if (r, self.forseason) in curexep:
+                        sql_l.append(['DELETE FROM scene_exceptions WHERE indexer = ? AND indexer_id = ? AND season = ?'
+                                      ' AND show_name = ?', [self.tvid, self.prodid, self.forseason, r]])
+                        try:
+                            curexep.remove((r, self.forseason))
+                        except ValueError:
+                            pass
+                        remove_list.append(r)
 
-        if self.add:
-            for a in self.add:
-                if (a, self.forseason) not in curexep:
-                    cl.append(['INSERT INTO scene_exceptions (show_name, indexer, indexer_id, season) VALUES (?,?,?,?)',
-                               [a, self.tvid, self.prodid, self.forseason]])
-                    curexep.append((a, self.forseason))
-                    add_list.append(a)
+            if self.add:
+                for a in self.add:
+                    if (a, self.forseason) not in curexep:
+                        sql_l.append(['INSERT INTO scene_exceptions'
+                                      ' (show_name, indexer, indexer_id, season)'
+                                      ' VALUES (?,?,?,?)', [a, self.tvid, self.prodid, self.forseason]])
+                        curexep.append((a, self.forseason))
+                        add_list.append(a)
 
-        if cl:
-            my_db.mass_action(cl)
+            if sql_l:
+                sg_db.mass_action(sql_l)
         return _responds(RESULT_SUCCESS, data={'added': add_list, 'removed': remove_list, 'for season': self.forseason,
                                                'current': [c[0] for c in curexep], 'indexer': self.tvid,
                                                'indexerid': self.prodid},
@@ -1650,24 +1651,24 @@ class CMD_SickGearHistory(ApiCall):
         else:
             typeCodes = Quality.SNATCHED_ANY + Quality.DOWNLOADED + Quality.ARCHIVED + Quality.FAILED
 
-        my_db = db.DBConnection(row_type='dict')
+        with db.DBConnection(row_type='dict') as sg_db:
 
-        ulimit = min(int(self.limit), 100)
-        if 0 == ulimit:
-            # noinspection SqlResolve
-            sql_result = my_db.select(
-                'SELECT h.*, show_name, s.indexer FROM history h, tv_shows s WHERE h.hide = 0' +
-                ' AND h.showid=s.indexer_id' +
-                ('', f' AND s.indexer={TVINFO_TVDB}')[self.sickbeard_call] +
-                ' AND action in (' + ','.join(['?'] * len(typeCodes)) + ') ORDER BY date DESC', typeCodes)
-        else:
-            # noinspection SqlResolve
-            sql_result = my_db.select(
-                'SELECT h.*, show_name, s.indexer FROM history h, tv_shows s WHERE h.hide = 0' +
-                ' AND h.showid=s.indexer_id' +
-                ('', f' AND s.indexer={TVINFO_TVDB}')[self.sickbeard_call] +
-                ' AND action in (' + ','.join(['?'] * len(typeCodes)) + ') ORDER BY date DESC LIMIT ?',
-                typeCodes + [ulimit])
+            ulimit = min(int(self.limit), 100)
+            if 0 == ulimit:
+                # noinspection SqlResolve
+                sql_result = sg_db.select(
+                    'SELECT h.*, show_name, s.indexer FROM history h, tv_shows s WHERE h.hide = 0' +
+                    ' AND h.showid=s.indexer_id' +
+                    ('', f' AND s.indexer={TVINFO_TVDB}')[self.sickbeard_call] +
+                    ' AND action in (' + ','.join(['?'] * len(typeCodes)) + ') ORDER BY date DESC', typeCodes)
+            else:
+                # noinspection SqlResolve
+                sql_result = sg_db.select(
+                    'SELECT h.*, show_name, s.indexer FROM history h, tv_shows s WHERE h.hide = 0' +
+                    ' AND h.showid=s.indexer_id' +
+                    ('', f' AND s.indexer={TVINFO_TVDB}')[self.sickbeard_call] +
+                    ' AND action in (' + ','.join(['?'] * len(typeCodes)) + ') ORDER BY date DESC LIMIT ?',
+                    typeCodes + [ulimit])
 
         results = []
         np = NameParser(True, testing=True, indexer_lookup=False, try_scene_exceptions=False)
@@ -1723,8 +1724,8 @@ class CMD_SickGearHistoryClear(ApiCall):
 
     def run(self):
         """ clear the sickgear history """
-        my_db = db.DBConnection()
-        my_db.action('UPDATE history SET hide = ? WHERE hide = 0', [1])
+        with db.DBConnection() as sg_db:
+            sg_db.action('UPDATE history SET hide = ? WHERE hide = 0', [1])
 
         return _responds(RESULT_SUCCESS, msg='History cleared')
 
@@ -1752,9 +1753,9 @@ class CMD_SickGearHistoryTrim(ApiCall):
 
     def run(self):
         """ trim the sickgear history """
-        my_db = db.DBConnection()
-        my_db.action('UPDATE history SET hide = ? WHERE date < ' + str(
-            (datetime.datetime.now() - datetime.timedelta(days=30)).strftime(history.dateFormat)), [1])
+        with db.DBConnection() as sg_db:
+            sg_db.action('UPDATE history SET hide = ? WHERE date < ' + str(
+                (datetime.datetime.now() - datetime.timedelta(days=30)).strftime(history.dateFormat)), [1])
 
         return _responds(RESULT_SUCCESS, msg='Removed history entries greater than 30 days old')
 
@@ -2070,8 +2071,8 @@ class CMD_SickGearCheckScheduler(ApiCall):
 
     def run(self):
         """ query the scheduler for event statuses, upcoming, running, and past """
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT last_backlog FROM info')
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT last_backlog FROM info')
 
         backlogPaused = sickgear.search_queue_scheduler.action.is_backlog_paused()
         backlogRunning = sickgear.search_queue_scheduler.action.is_backlog_in_progress()
@@ -2872,12 +2873,12 @@ class CMD_SickGearListIgnoreWords(ApiCall):
     def run(self):
         """ get ignore word list """
         if self.tvid and self.prodid:
-            my_db = db.DBConnection()
-            sql_result = my_db.select(
-                'SELECT show_name, rls_ignore_words, rls_global_exclude_ignore'
-                ' FROM tv_shows'
-                ' WHERE indexer = ? AND indexer_id = ?',
-                [self.tvid, self.prodid])
+            with db.DBConnection() as sg_db:
+                sql_result = sg_db.select(
+                    'SELECT show_name, rls_ignore_words, rls_global_exclude_ignore'
+                    ' FROM tv_shows'
+                    ' WHERE indexer = ? AND indexer_id = ?',
+                    [self.tvid, self.prodid])
             if sql_result:
                 ignore_words = sql_result[0]['rls_ignore_words']
                 return_data = {'type': 'show', 'indexer': self.tvid, 'indexerid': self.prodid,
@@ -2971,42 +2972,42 @@ class CMD_SickGearSetIgnoreWords(ApiSetWords):
                            'show name': show_obj.name}
 
             if any([self.add, self.remove, self.add_exclude, self.remove_exclude]):
-                my_db = db.DBConnection()
-                sql_results = my_db.select(
-                    'SELECT show_name, rls_ignore_words, rls_global_exclude_ignore'
-                    ' FROM tv_shows'
-                    ' WHERE indexer = ? AND indexer_id = ?', [self.tvid, self.prodid])
-                if sql_results:
-                    ignore_words = sql_results[0]['rls_ignore_words']
-                    ignore_list, use_regex = helpers.split_word_str(ignore_words)
-                    exclude_ignore = helpers.split_word_str(sql_results[0]['rls_global_exclude_ignore'])[0]
-                    exclude_ignore = {i for i in exclude_ignore if i in sickgear.IGNORE_WORDS}
-                    return_type = f'{sql_results[0]["show_name"]}:'
+                with db.DBConnection() as sg_db:
+                    sql_results = sg_db.select(
+                        'SELECT show_name, rls_ignore_words, rls_global_exclude_ignore'
+                        ' FROM tv_shows'
+                        ' WHERE indexer = ? AND indexer_id = ?', [self.tvid, self.prodid])
+                    if sql_results:
+                        ignore_words = sql_results[0]['rls_ignore_words']
+                        ignore_list, use_regex = helpers.split_word_str(ignore_words)
+                        exclude_ignore = helpers.split_word_str(sql_results[0]['rls_global_exclude_ignore'])[0]
+                        exclude_ignore = {i for i in exclude_ignore if i in sickgear.IGNORE_WORDS}
+                        return_type = f'{sql_results[0]["show_name"]}:'
 
-                    if self.add or self.remove:
-                        use_regex, ignore_list, new_ignore_words = \
-                            self._create_words(ignore_words, sickgear.IGNORE_WORDS)
-                        my_db.action('UPDATE tv_shows'
-                                     ' SET rls_ignore_words = ?'
-                                     ' WHERE indexer = ? AND indexer_id = ?',
-                                     [new_ignore_words, self.tvid, self.prodid])
-                        show_obj.rls_ignore_words, show_obj.rls_ignore_words_regex = \
-                            helpers.split_word_str(new_ignore_words)
+                        if self.add or self.remove:
+                            use_regex, ignore_list, new_ignore_words = \
+                                self._create_words(ignore_words, sickgear.IGNORE_WORDS)
+                            sg_db.action('UPDATE tv_shows'
+                                         ' SET rls_ignore_words = ?'
+                                         ' WHERE indexer = ? AND indexer_id = ?',
+                                         [new_ignore_words, self.tvid, self.prodid])
+                            show_obj.rls_ignore_words, show_obj.rls_ignore_words_regex = \
+                                helpers.split_word_str(new_ignore_words)
 
-                    if self.add_exclude or self.remove_exclude:
-                        for a in self.add_exclude or []:
-                            if a in sickgear.IGNORE_WORDS:
-                                exclude_ignore.add(a)
-                        for r in self.remove_exclude or []:
-                            try:
-                                exclude_ignore.remove(r)
-                            except KeyError:
-                                pass
+                        if self.add_exclude or self.remove_exclude:
+                            for a in self.add_exclude or []:
+                                if a in sickgear.IGNORE_WORDS:
+                                    exclude_ignore.add(a)
+                            for r in self.remove_exclude or []:
+                                try:
+                                    exclude_ignore.remove(r)
+                                except KeyError:
+                                    pass
 
-                        my_db.action('UPDATE tv_shows SET rls_global_exclude_ignore = ?'
-                                     ' WHERE indexer = ? AND indexer_id = ?',
-                                     [helpers.generate_word_str(exclude_ignore), self.tvid, self.prodid])
-                        show_obj.rls_global_exclude_ignore = copy.copy(exclude_ignore)
+                            sg_db.action('UPDATE tv_shows SET rls_global_exclude_ignore = ?'
+                                         ' WHERE indexer = ? AND indexer_id = ?',
+                                         [helpers.generate_word_str(exclude_ignore), self.tvid, self.prodid])
+                            show_obj.rls_global_exclude_ignore = copy.copy(exclude_ignore)
 
                     return_data['global exclude ignore'] = exclude_ignore
         elif (None is self.tvid) != (None is self.prodid):
@@ -3048,12 +3049,12 @@ class CMD_SickGearListRequireWords(ApiCall):
     def run(self):
         """ get require word list """
         if self.tvid and self.prodid:
-            my_db = db.DBConnection()
-            sql_result = my_db.select(
-                'SELECT show_name, rls_require_words, rls_global_exclude_require'
-                ' FROM tv_shows'
-                ' WHERE indexer = ? AND indexer_id = ?',
-                [self.tvid, self.prodid])
+            with db.DBConnection() as sg_db:
+                sql_result = sg_db.select(
+                    'SELECT show_name, rls_require_words, rls_global_exclude_require'
+                    ' FROM tv_shows'
+                    ' WHERE indexer = ? AND indexer_id = ?',
+                    [self.tvid, self.prodid])
             if sql_result:
                 require_words = sql_result[0]['rls_require_words']
                 return_data = {'type': 'show', 'indexer': self.tvid, 'indexerid': self.prodid,
@@ -3120,42 +3121,42 @@ class CMD_SickGearSetRequireWords(ApiSetWords):
                            'show name': show_obj.name}
 
             if any([self.add, self.remove, self.add_exclude, self.remove_exclude]):
-                my_db = db.DBConnection()
-                sql_result = my_db.select(
-                    'SELECT show_name, rls_require_words, rls_global_exclude_require'
-                    ' FROM tv_shows'
-                    ' WHERE indexer = ? AND indexer_id = ?', [self.tvid, self.prodid])
-                if sql_result:
-                    require_words = sql_result[0]['rls_require_words']
-                    require_list, use_regex = helpers.split_word_str(require_words)
-                    exclude_require = helpers.split_word_str(sql_result[0]['rls_global_exclude_require'])[0]
-                    exclude_require = {r for r in exclude_require if r in sickgear.REQUIRE_WORDS}
-                    return_type = f'{sql_result[0]["show_name"]}:'
+                with db.DBConnection() as sg_db:
+                    sql_result = sg_db.select(
+                        'SELECT show_name, rls_require_words, rls_global_exclude_require'
+                        ' FROM tv_shows'
+                        ' WHERE indexer = ? AND indexer_id = ?', [self.tvid, self.prodid])
+                    if sql_result:
+                        require_words = sql_result[0]['rls_require_words']
+                        require_list, use_regex = helpers.split_word_str(require_words)
+                        exclude_require = helpers.split_word_str(sql_result[0]['rls_global_exclude_require'])[0]
+                        exclude_require = {r for r in exclude_require if r in sickgear.REQUIRE_WORDS}
+                        return_type = f'{sql_result[0]["show_name"]}:'
 
-                    if self.add or self.remove:
-                        use_regex, require_list, new_require_words = \
-                            self._create_words(require_words, sickgear.REQUIRE_WORDS)
-                        my_db.action('UPDATE tv_shows'
-                                     ' SET rls_require_words = ?'
-                                     ' WHERE indexer = ? AND indexer_id = ?',
-                                     [new_require_words, self.tvid, self.prodid])
-                        show_obj.rls_require_words, show_obj.rls_require_words_regex = \
-                            helpers.split_word_str(new_require_words)
+                        if self.add or self.remove:
+                            use_regex, require_list, new_require_words = \
+                                self._create_words(require_words, sickgear.REQUIRE_WORDS)
+                            sg_db.action('UPDATE tv_shows'
+                                         ' SET rls_require_words = ?'
+                                         ' WHERE indexer = ? AND indexer_id = ?',
+                                         [new_require_words, self.tvid, self.prodid])
+                            show_obj.rls_require_words, show_obj.rls_require_words_regex = \
+                                helpers.split_word_str(new_require_words)
 
-                    if self.add_exclude or self.remove_exclude:
-                        for a in self.add_exclude or []:
-                            if a in sickgear.REQUIRE_WORDS:
-                                exclude_require.add(a)
-                        for r in self.remove_exclude or []:
-                            try:
-                                exclude_require.remove(r)
-                            except KeyError:
-                                pass
-                        my_db.action(
-                            'UPDATE tv_shows SET rls_global_exclude_require = ?'
-                            ' WHERE indexer = ? AND indexer_id = ?',
-                            [helpers.generate_word_str(exclude_require), self.tvid, self.prodid])
-                        show_obj.rls_global_exclude_require = copy.copy(exclude_require)
+                        if self.add_exclude or self.remove_exclude:
+                            for a in self.add_exclude or []:
+                                if a in sickgear.REQUIRE_WORDS:
+                                    exclude_require.add(a)
+                            for r in self.remove_exclude or []:
+                                try:
+                                    exclude_require.remove(r)
+                                except KeyError:
+                                    pass
+                            sg_db.action(
+                                'UPDATE tv_shows SET rls_global_exclude_require = ?'
+                                ' WHERE indexer = ? AND indexer_id = ?',
+                                [helpers.generate_word_str(exclude_require), self.tvid, self.prodid])
+                            show_obj.rls_global_exclude_require = copy.copy(exclude_require)
 
                     return_data['global exclude require'] = exclude_require
         elif (None is self.tvid) != (None is self.prodid):
@@ -3882,7 +3883,7 @@ class CMD_SickGearShowRateFanart(ApiCall):
     _help = {'desc': 'set a fanart rating',
              'requiredParameters': {'indexer': {'desc': 'indexer of a show'},
                                     'indexerid': {'desc': 'unique id of a show'},
-                                    'fanartname': {'desc': 'fanart name form sg.show.listfanart'},
+                                    'fanartname': {'desc': 'fanart name from sg.show.listfanart'},
                                     'rating': {'desc': 'rate: unrate, group, favorite, avoid'},
                                     },
              }
@@ -3923,7 +3924,7 @@ class CMD_SickGearShowGetFanart(ApiCall):
              'requiredParameters': {'indexer': {'desc': 'indexer of a show'},
                                     'indexerid': {'desc': 'unique id of a show'},
                                     },
-             'optionalParameters': {'fanartname': {'desc': 'fanart name form sg.show.listfanart'},
+             'optionalParameters': {'fanartname': {'desc': 'fanart name from sg.show.listfanart'},
                                     },
              }
 
@@ -4103,22 +4104,22 @@ class CMD_SickGearShowSeasonList(ApiCall):
         if not show_obj:
             return _responds(RESULT_FAILURE, msg='Show not found')
 
-        my_db = db.DBConnection(row_type='dict')
-        if 'asc' == self.sort:
-            # noinspection SqlRedundantOrderingDirection
-            sql_result = my_db.select(
-                'SELECT DISTINCT season'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?'
-                ' ORDER BY season ASC',
-                [self.tvid, self.prodid])
-        else:
-            sql_result = my_db.select(
-                'SELECT DISTINCT season'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?'
-                ' ORDER BY season DESC',
-                [self.tvid, self.prodid])
+        with db.DBConnection(row_type='dict') as sg_db:
+            if 'asc' == self.sort:
+                # noinspection SqlRedundantOrderingDirection
+                sql_result = sg_db.select(
+                    'SELECT DISTINCT season'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?'
+                    ' ORDER BY season ASC',
+                    [self.tvid, self.prodid])
+            else:
+                sql_result = sg_db.select(
+                    'SELECT DISTINCT season'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?'
+                    ' ORDER BY season DESC',
+                    [self.tvid, self.prodid])
         seasonList = []  # a list with all season numbers
         for cur_result in sql_result:
             seasonList.append(int(cur_result['season']))
@@ -4173,65 +4174,65 @@ class CMD_SickGearShowSeasons(ApiCall):
         if not show_obj:
             return _responds(RESULT_FAILURE, msg='Show not found')
 
-        my_db = db.DBConnection(row_type='dict')
+        with db.DBConnection(row_type='dict') as sg_db:
 
-        if None is self.season:
-            sql_result = my_db.select(
-                'SELECT name, description, absolute_number, scene_absolute_number, episode,'
-                ' scene_episode, scene_season, airdate, status, season'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ?',
-                [self.tvid, self.prodid])
-            seasons = {}  # type: Dict[int, Dict]
-            for cur_result in sql_result:
-                status, quality = Quality.split_composite_status(int(cur_result['status']))
-                cur_result['status'] = _get_status_Strings(status)
-                cur_result['quality'] = _get_quality_string(quality)
-                timezone, cur_result['timezone'] = network_timezones.get_network_timezone(show_obj.network,
-                                                                                          return_name=True)
-                dtEpisodeAirs = SGDatetime.convert_to_setting(
-                    network_timezones.parse_date_time(cur_result['airdate'], show_obj.airs, timezone))
-                cur_result['airdate'] = SGDatetime.sbfdate(dtEpisodeAirs, d_preset=dateFormat)
-                cur_result['scene_episode'] = helpers.try_int(cur_result['scene_episode'])
-                cur_result['scene_season'] = helpers.try_int(cur_result['scene_season'])
-                cur_result['absolute_number'] = helpers.try_int(cur_result['absolute_number'])
-                cur_result['scene_absolute_number'] = helpers.try_int(cur_result['scene_absolute_number'])
-                curSeason = int(cur_result['season'])
-                curEpisode = int(cur_result['episode'])
-                del cur_result['season']
-                del cur_result['episode']
-                if curSeason not in seasons:
-                    seasons[curSeason] = {}
-                seasons[curSeason][curEpisode] = cur_result
+            if None is self.season:
+                sql_result = sg_db.select(
+                    'SELECT name, description, absolute_number, scene_absolute_number, episode,'
+                    ' scene_episode, scene_season, airdate, status, season'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ?',
+                    [self.tvid, self.prodid])
+                seasons = {}  # type: Dict[int, Dict]
+                for cur_result in sql_result:
+                    status, quality = Quality.split_composite_status(int(cur_result['status']))
+                    cur_result['status'] = _get_status_Strings(status)
+                    cur_result['quality'] = _get_quality_string(quality)
+                    timezone, cur_result['timezone'] = network_timezones.get_network_timezone(show_obj.network,
+                                                                                              return_name=True)
+                    dtEpisodeAirs = SGDatetime.convert_to_setting(
+                        network_timezones.parse_date_time(cur_result['airdate'], show_obj.airs, timezone))
+                    cur_result['airdate'] = SGDatetime.sbfdate(dtEpisodeAirs, d_preset=dateFormat)
+                    cur_result['scene_episode'] = helpers.try_int(cur_result['scene_episode'])
+                    cur_result['scene_season'] = helpers.try_int(cur_result['scene_season'])
+                    cur_result['absolute_number'] = helpers.try_int(cur_result['absolute_number'])
+                    cur_result['scene_absolute_number'] = helpers.try_int(cur_result['scene_absolute_number'])
+                    curSeason = int(cur_result['season'])
+                    curEpisode = int(cur_result['episode'])
+                    del cur_result['season']
+                    del cur_result['episode']
+                    if curSeason not in seasons:
+                        seasons[curSeason] = {}
+                    seasons[curSeason][curEpisode] = cur_result
 
-        else:
-            sql_result = my_db.select(
-                'SELECT name, description, absolute_number, scene_absolute_number,'
-                ' episode, scene_episode, scene_season, airdate, status'
-                ' FROM tv_episodes'
-                ' WHERE indexer = ? AND showid = ? AND season = ?',
-                [self.tvid, self.prodid, self.season])
-            if len(sql_result) == 0:
-                return _responds(RESULT_FAILURE, msg='Season not found')
-            seasons = {}
-            for cur_result in sql_result:
-                curEpisode = int(cur_result['episode'])
-                del cur_result['episode']
-                status, quality = Quality.split_composite_status(int(cur_result['status']))
-                cur_result['status'] = _get_status_Strings(status)
-                cur_result['quality'] = _get_quality_string(quality)
-                timezone, cur_result['timezone'] = network_timezones.get_network_timezone(show_obj.network,
-                                                                                          return_name=True)
-                dtEpisodeAirs = SGDatetime.convert_to_setting(
-                    network_timezones.parse_date_time(cur_result['airdate'], show_obj.airs, timezone))
-                cur_result['airdate'] = SGDatetime.sbfdate(dtEpisodeAirs, d_preset=dateFormat)
-                cur_result['scene_episode'] = helpers.try_int(cur_result['scene_episode'])
-                cur_result['scene_season'] = helpers.try_int(cur_result['scene_season'])
-                cur_result['absolute_number'] = helpers.try_int(cur_result['absolute_number'])
-                cur_result['scene_absolute_number'] = helpers.try_int(cur_result['scene_absolute_number'])
-                if curEpisode not in seasons:
-                    seasons[curEpisode] = {}
-                seasons[curEpisode] = cur_result
+            else:
+                sql_result = sg_db.select(
+                    'SELECT name, description, absolute_number, scene_absolute_number,'
+                    ' episode, scene_episode, scene_season, airdate, status'
+                    ' FROM tv_episodes'
+                    ' WHERE indexer = ? AND showid = ? AND season = ?',
+                    [self.tvid, self.prodid, self.season])
+                if len(sql_result) == 0:
+                    return _responds(RESULT_FAILURE, msg='Season not found')
+                seasons = {}
+                for cur_result in sql_result:
+                    curEpisode = int(cur_result['episode'])
+                    del cur_result['episode']
+                    status, quality = Quality.split_composite_status(int(cur_result['status']))
+                    cur_result['status'] = _get_status_Strings(status)
+                    cur_result['quality'] = _get_quality_string(quality)
+                    timezone, cur_result['timezone'] = network_timezones.get_network_timezone(show_obj.network,
+                                                                                              return_name=True)
+                    dtEpisodeAirs = SGDatetime.convert_to_setting(
+                        network_timezones.parse_date_time(cur_result['airdate'], show_obj.airs, timezone))
+                    cur_result['airdate'] = SGDatetime.sbfdate(dtEpisodeAirs, d_preset=dateFormat)
+                    cur_result['scene_episode'] = helpers.try_int(cur_result['scene_episode'])
+                    cur_result['scene_season'] = helpers.try_int(cur_result['scene_season'])
+                    cur_result['absolute_number'] = helpers.try_int(cur_result['absolute_number'])
+                    cur_result['scene_absolute_number'] = helpers.try_int(cur_result['scene_absolute_number'])
+                    if curEpisode not in seasons:
+                        seasons[curEpisode] = {}
+                    seasons[curEpisode] = cur_result
 
         return _responds(RESULT_SUCCESS, seasons)
 
@@ -4379,10 +4380,10 @@ class CMD_SickGearShowStats(ApiCall):
                 continue
             episode_qualities_counts_snatch[statusCode] = 0
 
-        my_db = db.DBConnection(row_type='dict')
-        sql_result = my_db.select('SELECT status, season FROM tv_episodes WHERE season != 0 AND showid = ? '
-                                  'AND indexer = ?',
-                                  [self.prodid, self.tvid])
+        with db.DBConnection(row_type='dict') as sg_db:
+            sql_result = sg_db.select('SELECT status, season FROM tv_episodes WHERE season != 0 AND showid = ? '
+                                      'AND indexer = ?',
+                                      [self.prodid, self.tvid])
         # the main loop that goes through all episodes
         for cur_result in sql_result:
             status, quality = Quality.split_composite_status(int(cur_result['status']))
@@ -4725,7 +4726,6 @@ class CMD_SickGearShowsStats(ApiCall):
         stats = {}
 
         indexer_limit = ('', f' AND indexer = {TVINFO_TVDB}')[self.sickbeard_call]
-        my_db = db.DBConnection()
         today = str(datetime.date.today().toordinal())
 
         stats['shows_total'] = (len(sickgear.showList),
@@ -4738,15 +4738,18 @@ class CMD_SickGearShowsStats(ApiCall):
              and (not self.sickbeard_call
                   or TVINFO_TVDB == cur_so.tvid)])
 
-        stats['ep_downloaded'] = my_db.select('SELECT COUNT(*) FROM tv_episodes WHERE status IN (' + ','.join(
-            [str(status) for status in
-             Quality.DOWNLOADED + Quality.ARCHIVED]) + ') AND season != 0 and episode != 0 AND airdate <= ' + today +
-                                             indexer_limit)[0][0]
+        with db.DBConnection() as sg_db:
+            stats['ep_downloaded'] = sg_db.select(
+                'SELECT COUNT(*) FROM tv_episodes'
+                ' WHERE status IN ('
+                + ','.join([str(status) for status in Quality.DOWNLOADED + Quality.ARCHIVED])
+                + ') AND season != 0 and episode != 0 AND airdate <= ' + today + indexer_limit)[0][0]
 
-        stats['ep_total'] = my_db.select(
-            'SELECT COUNT(*) FROM tv_episodes WHERE season != 0 AND episode != 0 AND (airdate != 1 OR status IN (' +
-            ','.join([str(status) for status in Quality.SNATCHED_ANY + Quality.DOWNLOADED + Quality.ARCHIVED]) +
-            ')) AND airdate <= ' + today + ' AND status != ' + str(IGNORED) + indexer_limit)[0][0]
+            stats['ep_total'] = sg_db.select(
+                'SELECT COUNT(*) FROM tv_episodes'
+                ' WHERE season != 0 AND episode != 0 AND (airdate != 1 OR status IN ('
+                + ','.join([str(status) for status in Quality.SNATCHED_ANY + Quality.DOWNLOADED + Quality.ARCHIVED])
+                + ')) AND airdate <= ' + today + ' AND status != ' + str(IGNORED) + indexer_limit)[0][0]
 
         return _responds(RESULT_SUCCESS, stats)
 

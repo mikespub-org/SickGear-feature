@@ -24,7 +24,7 @@ from exceptions_helper import ex
 import sickgear
 from . import db, logger, network_timezones, properFinder, ui
 from .scheduler import Job
-from .config import backup_config
+from .config import backup_config, backup_btn_status
 
 # noinspection PyUnreachableCode
 if False:
@@ -170,19 +170,19 @@ class ShowUpdater(Job):
 
             # last_update_date <= 90 days, sorted ASC because dates are ordinal
             from sickgear.tv import TVidProdid
-            my_db = db.DBConnection()
-            # noinspection SqlRedundantOrderingDirection
-            mass_sql_result = my_db.mass_action([
-                ['SELECT indexer || ? || indexer_id AS tvid_prodid'
-                 ' FROM tv_shows'
-                 ' WHERE last_update_indexer <= ?'
-                 ' AND last_update_indexer >= ?'
-                 ' ORDER BY last_update_indexer ASC LIMIT 10;',
-                 [TVidProdid.glue, stale_update_date, stale_update_date_max]],
-                ['SELECT indexer || ? || indexer_id AS tvid_prodid'
-                 ' FROM tv_shows'
-                 ' WHERE last_update_indexer < ?;',
-                 [TVidProdid.glue, stale_update_date_max]]])
+            with db.DBConnection() as sg_db:
+                # noinspection SqlRedundantOrderingDirection
+                mass_sql_result = sg_db.mass_action([
+                    ['SELECT indexer || ? || indexer_id AS tvid_prodid'
+                     ' FROM tv_shows'
+                     ' WHERE last_update_indexer <= ?'
+                     ' AND last_update_indexer >= ?'
+                     ' ORDER BY last_update_indexer ASC LIMIT 10;',
+                     [TVidProdid.glue, stale_update_date, stale_update_date_max]],
+                    ['SELECT indexer || ? || indexer_id AS tvid_prodid'
+                     ' FROM tv_shows'
+                     ' WHERE last_update_indexer < ?;',
+                     [TVidProdid.glue, stale_update_date_max]]])
 
             for sql_result in mass_sql_result:
                 for cur_result in sql_result:

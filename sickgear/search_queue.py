@@ -55,8 +55,8 @@ class SearchQueue(generic_queue.GenericQueue):
 
     def load_queue(self):
         try:
-            my_db = db.DBConnection('cache.db')
-            queue_sql = my_db.select('SELECT * FROM search_queue')
+            with db.DBConnection('cache.db') as sg_db:
+                queue_sql = sg_db.select('SELECT * FROM search_queue')
             for q in queue_sql:
                 if q['action_id'] in (BACKLOG_SEARCH, FAILED_SEARCH, MANUAL_SEARCH):
                     show_obj = helpers.find_show_by_id({q['indexer']: q['indexer_id']})
@@ -411,9 +411,9 @@ class RecentSearchQueueItem(generic_queue.QueueItem):
             return
 
         propers = {}
-        my_db = db.DBConnection('cache.db')
-        sql_result = my_db.select('SELECT * FROM provider_cache')
-        re_p = rf"\brepack|proper|real{('', '|v[2-9]')[needed.need_anime]}\b"
+        with db.DBConnection('cache.db') as sg_db:
+            sql_result = sg_db.select('SELECT * FROM provider_cache')
+            re_p = rf"\brepack|proper|real{('', '|v[2-9]')[needed.need_anime]}\b"
 
         proper_regex = re.compile(re_p, flags=re.I)
 
@@ -445,13 +445,13 @@ class RecentSearchQueueItem(generic_queue.QueueItem):
 
         cur_time = datetime.datetime.now(network_timezones.SG_TIMEZONE)
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            'SELECT indexer AS tvid, showid AS prodid, airdate, season, episode, timestamp,'
-            ' timezone, network, airtime, runtime'
-            ' FROM tv_episodes'
-            ' WHERE status = ? AND season > 0 AND airdate <= ? AND airdate > 1'
-            ' ORDER BY indexer, showid', [common.UNAIRED, cur_date])
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                'SELECT indexer AS tvid, showid AS prodid, airdate, season, episode, timestamp,'
+                ' timezone, network, airtime, runtime'
+                ' FROM tv_episodes'
+                ' WHERE status = ? AND season > 0 AND airdate <= ? AND airdate > 1'
+                ' ORDER BY indexer, showid', [common.UNAIRED, cur_date])
 
         sql_l = []
         show_obj = None
@@ -498,9 +498,9 @@ class RecentSearchQueueItem(generic_queue.QueueItem):
         if not wanted:
             logger.log('No unaired episodes marked wanted')
 
-        if 0 < len(sql_l):
-            my_db = db.DBConnection()
-            my_db.mass_action(sql_l)
+        if sql_l:
+            with db.DBConnection() as sg_db:
+                sg_db.mass_action(sql_l)
             if wanted:
                 logger.log('Found new episodes marked wanted')
 

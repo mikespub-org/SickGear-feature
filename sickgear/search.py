@@ -37,6 +37,7 @@ from six import iteritems, itervalues, string_types
 if False:
     from typing import AnyStr, Dict, List, Optional, Tuple, Union
     from .classes import NZBDataSearchResult, NZBSearchResult, SearchResult, TorrentSearchResult
+    from sqlite3 import SQLITE_ROW
     search_result_type = Union[NZBDataSearchResult, NZBSearchResult, SearchResult, TorrentSearchResult]
 
 
@@ -177,9 +178,9 @@ def snatch_episode(result, end_status=SNATCHED):
 
             update_imdb_data = update_imdb_data and cur_ep_obj.show_obj.load_imdb_info()
 
-    if 0 < len(sql_l):
-        my_db = db.DBConnection()
-        my_db.mass_action(sql_l)
+    if sql_l:
+        with db.DBConnection() as sg_db:
+            sg_db.mass_action(sql_l)
 
     return True
 
@@ -471,28 +472,28 @@ def get_aired_in_season(show_obj, return_sql=False):
     ep_count = {}
     ep_count_scene = {}
     tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).toordinal()
-    my_db = db.DBConnection()
 
     if show_obj.air_by_date:
-        sql_string = 'SELECT ep.status, ep.season, ep.scene_season, ep.episode, ep.airdate ' + \
-                     'FROM [tv_episodes] AS ep, [tv_shows] AS show ' + \
-                     'WHERE ep.showid = show.indexer_id AND show.paused = 0 AND season != 0 AND' \
-                     ' ep.indexer = ? AND ep.showid = ?' \
-                     ' AND show.air_by_date = 1'
+        sql_string = ('SELECT ep.status, ep.season, ep.scene_season, ep.episode, ep.airdate'
+                      ' FROM [tv_episodes] AS ep, [tv_shows] AS show'
+                      ' WHERE ep.showid = show.indexer_id AND show.paused = 0 AND season != 0'
+                      ' AND ep.indexer = ? AND ep.showid = ?'
+                      ' AND show.air_by_date = 1')
     else:
-        sql_string = 'SELECT status, season, scene_season, episode, airdate ' + \
-                     'FROM [tv_episodes] ' + \
-                     'WHERE indexer = ? AND showid = ?' \
-                     ' AND season > 0'
+        sql_string = ('SELECT status, season, scene_season, episode, airdate'
+                      ' FROM [tv_episodes]'
+                      ' WHERE indexer = ? AND showid = ?'
+                      ' AND season > 0')
 
-    sql_result = my_db.select(sql_string, [show_obj.tvid, show_obj.prodid])
-    for cur_result in sql_result:
-        if 1 < helpers.try_int(cur_result['airdate']) <= tomorrow:
-            cur_season = helpers.try_int(cur_result['season'])
-            ep_count[cur_season] = ep_count.setdefault(cur_season, 0) + 1
-            cur_scene_season = helpers.try_int(cur_result['scene_season'], -1)
-            if -1 != cur_scene_season:
-                ep_count_scene[cur_scene_season] = ep_count.setdefault(cur_scene_season, 0) + 1
+    with db.DBConnection() as sg_db:
+        sql_result = sg_db.select(sql_string, [show_obj.tvid, show_obj.prodid])
+        for cur_result in sql_result:
+            if 1 < helpers.try_int(cur_result['airdate']) <= tomorrow:
+                cur_season = helpers.try_int(cur_result['season'])
+                ep_count[cur_season] = ep_count.setdefault(cur_season, 0) + 1
+                cur_scene_season = helpers.try_int(cur_result['scene_season'], -1)
+                if -1 != cur_scene_season:
+                    ep_count_scene[cur_scene_season] = ep_count.setdefault(cur_scene_season, 0) + 1
 
     if return_sql:
         return ep_count, ep_count_scene, sql_result
@@ -529,11 +530,11 @@ def wanted_episodes(show_obj,  # type: TVShow
     total_wanted = total_replacing = total_unaired = 0
 
     if 0 < len(sql_result) and 2 < len(sql_result) - len(show_obj.sxe_ep_obj):
-        my_db = db.DBConnection()
-        ep_sql_result = my_db.select(
-            'SELECT * FROM tv_episodes'
-            ' WHERE indexer = ? AND showid = ?',
-            [show_obj.tvid, show_obj.prodid])
+        with db.DBConnection() as sg_db:
+            ep_sql_result = sg_db.select(
+                'SELECT * FROM tv_episodes'
+                ' WHERE indexer = ? AND showid = ?',
+                [show_obj.tvid, show_obj.prodid])
     else:
         ep_sql_result = None
 
@@ -932,12 +933,12 @@ def search_providers(
             logger.debug(f'{Quality.qualityStrings[season_qual]} is the quality of the season'
                          f' {best_season_result.provider.providerType}')
 
-            my_db = db.DBConnection()
-            sql = 'SELECT season, episode' \
-                  ' FROM tv_episodes' \
-                  ' WHERE indexer = %s AND showid = %s AND (season IN (%s))' % \
-                  (show_obj.tvid, show_obj.prodid, ','.join([str(x.season) for x in ep_obj_list]))
-            ep_nums = [(int(x['season']), int(x['episode'])) for x in my_db.select(sql)]
+            with db.DBConnection() as sg_db:
+                sql = 'SELECT season, episode' \
+                      ' FROM tv_episodes' \
+                      ' WHERE indexer = %s AND showid = %s AND (season IN (%s))' % \
+                      (show_obj.tvid, show_obj.prodid, ','.join([str(x.season) for x in ep_obj_list]))
+                ep_nums = [(int(x['season']), int(x['episode'])) for x in sg_db.select(sql)]
 
             logger.log(f'Executed query: [{sql}]')
             logger.debug(f'Episode list: {ep_nums}')

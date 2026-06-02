@@ -50,12 +50,12 @@ class MainSanityCheck(db.DBSanityCheck):
     def fix_episode_subtitles(self):
         if not self.connection.has_flag('fix_episode_subtitles'):
             cleaned = False
-            cl = []
+            sql_l = []
 
             ep_result = self.connection.select(
                 'SELECT episode_id'
                 ' FROM tv_episodes'
-                ' WHERE subtitles LIKE "%,%"')
+                " WHERE subtitles LIKE '%,%'")
 
             ep_len, cur_p = len(ep_result), 0
             ep_step = ep_len / 100.0
@@ -80,11 +80,11 @@ class MainSanityCheck(db.DBSanityCheck):
                 for cur_result in sql_result:
                     raw_langs = re.sub(r',+', '', cur_result['truncated_langs'])
                     subt_value = ','.join(re.findall('[a-z]{2}', raw_langs))
-                    cl.append(['UPDATE tv_episodes SET subtitles = ? WHERE episode_id = ?',
-                               [(subt_value, '')[bool(len(raw_langs) % 2)], cur_ep['episode_id']]])
+                    sql_l.append(['UPDATE tv_episodes SET subtitles = ? WHERE episode_id = ?',
+                                  [(subt_value, '')[bool(len(raw_langs) % 2)], cur_ep['episode_id']]])
 
-            if 0 < len(cl):
-                self.connection.mass_action(cl)
+            if sql_l:
+                self.connection.mass_action(sql_l)
 
                 logger.debug('Performing a vacuum on the database.')
                 self.connection.upgrade_log(fix_msg % 'VACUUM')
@@ -118,14 +118,14 @@ class MainSanityCheck(db.DBSanityCheck):
                     [cur_result[column], int(cur_result['count']) - 1]
                 )
 
-                cl = []
+                sql_l = []
                 for cur_dupe_id in cur_dupe_results:
                     logger.log(f'Deleting duplicate show with {column}: {cur_dupe_id[column]}'
                                f' show_id: {cur_dupe_id["show_id"]}')
-                    cl.append(['DELETE FROM tv_shows WHERE show_id = ?', [cur_dupe_id['show_id']]])
+                    sql_l.append(['DELETE FROM tv_shows WHERE show_id = ?', [cur_dupe_id['show_id']]])
 
-                if 0 < len(cl):
-                    self.connection.mass_action(cl)
+                if sql_l:
+                    self.connection.mass_action(sql_l)
 
             else:
                 logger.log('No duplicate show, check passed')
@@ -160,13 +160,13 @@ class MainSanityCheck(db.DBSanityCheck):
                      int(cur_result['count']) - 1]
                 )
 
-                cl = []
+                sql_l = []
                 for cur_dupe_id in cur_dupe_results:
                     logger.log(f'Deleting duplicate episode with episode_id: {cur_dupe_id["episode_id"]}')
-                    cl.append(['DELETE FROM tv_episodes WHERE episode_id = ?', [cur_dupe_id["episode_id"]]])
+                    sql_l.append(['DELETE FROM tv_episodes WHERE episode_id = ?', [cur_dupe_id["episode_id"]]])
 
-                if 0 < len(cl):
-                    self.connection.mass_action(cl)
+                if sql_l:
+                    self.connection.mass_action(sql_l)
 
             else:
                 logger.log('No duplicate episode, check passed')
@@ -179,15 +179,15 @@ class MainSanityCheck(db.DBSanityCheck):
             ' LEFT JOIN tv_shows ON tv_episodes.showid=tv_shows.indexer_id AND tv_episodes.indexer=tv_shows.indexer '
             ' WHERE tv_shows.indexer_id is NULL')
 
-        cl = []
+        sql_l = []
         for cur_result in sql_result:
             logger.debug(f'Orphan episode detected! episode_id: {cur_result["episode_id"]}'
                          f' showid: {cur_result["showid"]}')
             logger.log(f'Deleting orphan episode with episode_id: {cur_result["episode_id"]}')
-            cl.append(['DELETE FROM tv_episodes WHERE episode_id = ?', [cur_result['episode_id']]])
+            sql_l.append(['DELETE FROM tv_episodes WHERE episode_id = ?', [cur_result['episode_id']]])
 
-        if 0 < len(cl):
-            self.connection.mass_action(cl)
+        if sql_l:
+            self.connection.mass_action(sql_l)
 
         else:
             logger.log('No orphan episodes, check passed')
@@ -237,16 +237,16 @@ class MainSanityCheck(db.DBSanityCheck):
             'SELECT episode_id, showid FROM tv_episodes WHERE status = ? or ( airdate > ? AND status in (?,?) ) or '
             '( airdate <= 1 AND status = ? )', ['', cur_date.toordinal(), common.SKIPPED, common.WANTED, common.WANTED])
 
-        cl = []
+        sql_l = []
         for cur_result in sql_result:
             logger.debug(f'UNAIRED episode detected! episode_id: {cur_result["episode_id"]}'
                          f' showid: {cur_result["showid"]}')
             logger.log(f'Fixing unaired episode status with episode_id: {cur_result["episode_id"]}')
-            cl.append(['UPDATE tv_episodes SET status = ? WHERE episode_id = ?',
+            sql_l.append(['UPDATE tv_episodes SET status = ? WHERE episode_id = ?',
                        [common.UNAIRED, cur_result['episode_id']]])
 
-        if 0 < len(cl):
-            self.connection.mass_action(cl)
+        if sql_l:
+            self.connection.mass_action(sql_l)
 
         else:
             logger.log('No UNAIRED episodes, check passed')
@@ -644,7 +644,7 @@ class Add1080pAndRawHDQualities(db.SchemaUpgrade):
 
         # update qualities (including templates)
         self.upgrade_log('[1/4] Updating pre-defined templates and the quality for each show...')
-        cl = []
+        sql_l = []
         shows = self.connection.select('SELECT * FROM tv_shows')
         for cur_show in shows:
             if old_hd == cur_show['quality']:
@@ -653,41 +653,41 @@ class Add1080pAndRawHDQualities(db.SchemaUpgrade):
                 new_quality = new_any
             else:
                 new_quality = self._update_composite_qualities(cur_show['quality'])
-            cl.append(['UPDATE tv_shows SET quality = ? WHERE show_id = ?', [new_quality, cur_show['show_id']]])
-        self.connection.mass_action(cl)
+            sql_l.append(['UPDATE tv_shows SET quality = ? WHERE show_id = ?', [new_quality, cur_show['show_id']]])
+        self.connection.mass_action(sql_l)
 
         # update status that are are within the old hdwebdl
         # (1<<3 which is 8) and better -- exclude unknown (1<<15 which is 32768)
         self.upgrade_log('[2/4] Updating the status for the episodes within each show...')
-        cl = []
+        sql_l = []
         sql_result = self.connection.select('SELECT * FROM tv_episodes WHERE status < 3276800 AND status >= 800')
         for cur_result in sql_result:
-            cl.append(['UPDATE tv_episodes SET status = ? WHERE episode_id = ?',
-                       [self._update_status(cur_result['status']), cur_result['episode_id']]])
-        self.connection.mass_action(cl)
+            sql_l.append(['UPDATE tv_episodes SET status = ? WHERE episode_id = ?',
+                          [self._update_status(cur_result['status']), cur_result['episode_id']]])
+        self.connection.mass_action(sql_l)
 
         # make two seperate passes through the history since snatched and downloaded (action & quality)
         # may not always coordinate together
 
         # update previous history so it shows the correct action
         self.upgrade_log('[3/4] Updating history to reflect the correct action...')
-        cl = []
+        sql_l = []
         # noinspection SqlResolve
         history_action = self.connection.select('SELECT * FROM history WHERE action < 3276800 AND action >= 800')
         for cur_entry in history_action:
-            cl.append(['UPDATE history SET action = ? WHERE showid = ? AND date = ?',
-                       [self._update_status(cur_entry['action']), cur_entry['showid'], cur_entry['date']]])
-        self.connection.mass_action(cl)
+            sql_l.append(['UPDATE history SET action = ? WHERE showid = ? AND date = ?',
+                          [self._update_status(cur_entry['action']), cur_entry['showid'], cur_entry['date']]])
+        self.connection.mass_action(sql_l)
 
         # update previous history so it shows the correct quality
         self.upgrade_log('[4/4] Updating history to reflect the correct quality...')
-        cl = []
+        sql_l = []
         # noinspection SqlResolve
         history_quality = self.connection.select('SELECT * FROM history WHERE quality < 32768 AND quality >= 8')
         for cur_entry in history_quality:
-            cl.append(['UPDATE history SET quality = ? WHERE showid = ? AND date = ?',
-                       [self._update_quality(cur_entry['quality']), cur_entry['showid'], cur_entry['date']]])
-        self.connection.mass_action(cl)
+            sql_l.append(['UPDATE history SET quality = ? WHERE showid = ? AND date = ?',
+                          [self._update_quality(cur_entry['quality']), cur_entry['showid'], cur_entry['date']]])
+        self.connection.mass_action(sql_l)
 
         self.inc_db_version()
 
@@ -1027,16 +1027,16 @@ class ConvertIndexerToInteger(db.SchemaUpgrade):
     def execute(self):
         db.backup_database(self.connection, 'sickbeard.db', self.call_check_db_version())
 
-        cl = []
+        sql_l = []
         self.upgrade_log('Converting Indexer to Integer ...')
-        cl.append(['UPDATE tv_shows SET indexer = ? WHERE LOWER(indexer) = ?', ['1', 'tvdb']])
-        cl.append(['UPDATE tv_shows SET indexer = ? WHERE LOWER(indexer) = ?', ['2', 'tvrage']])
-        cl.append(['UPDATE tv_episodes SET indexer = ? WHERE LOWER(indexer) = ?', ['1', 'tvdb']])
-        cl.append(['UPDATE tv_episodes SET indexer = ? WHERE LOWER(indexer) = ?', ['2', 'tvrage']])
-        cl.append(['UPDATE scene_numbering SET indexer = ? WHERE LOWER(indexer) = ?', ['1', 'tvdb']])
-        cl.append(['UPDATE scene_numbering SET indexer = ? WHERE LOWER(indexer) = ?', ['2', 'tvrage']])
+        sql_l.append(['UPDATE tv_shows SET indexer = ? WHERE LOWER(indexer) = ?', ['1', 'tvdb']])
+        sql_l.append(['UPDATE tv_shows SET indexer = ? WHERE LOWER(indexer) = ?', ['2', 'tvrage']])
+        sql_l.append(['UPDATE tv_episodes SET indexer = ? WHERE LOWER(indexer) = ?', ['1', 'tvdb']])
+        sql_l.append(['UPDATE tv_episodes SET indexer = ? WHERE LOWER(indexer) = ?', ['2', 'tvrage']])
+        sql_l.append(['UPDATE scene_numbering SET indexer = ? WHERE LOWER(indexer) = ?', ['1', 'tvdb']])
+        sql_l.append(['UPDATE scene_numbering SET indexer = ? WHERE LOWER(indexer) = ?', ['2', 'tvrage']])
 
-        self.connection.mass_action(cl)
+        self.connection.mass_action(sql_l)
 
         self.inc_db_version()
         return self.call_check_db_version()
@@ -1082,14 +1082,14 @@ class AddSportsOption(db.SchemaUpgrade):
             self.upgrade_log('[4/4] Updating tv_shows to reflect the correct sports value...')
             if not db_backed_up:
                 db.backup_database(self.connection, 'sickbeard.db', self.call_check_db_version())
-            cl = []
+            sql_l = []
             history_quality = self.connection.select(
                 'SELECT * FROM tv_shows WHERE LOWER(classification) = "sports" AND air_by_date = 1 AND sports = 0')
             for cur_entry in history_quality:
-                cl.append(['UPDATE tv_shows SET sports = ? WHERE show_id = ?',
-                           [cur_entry['air_by_date'], cur_entry['show_id']]])
-                cl.append(['UPDATE tv_shows SET air_by_date = 0 WHERE show_id = ?', [cur_entry['show_id']]])
-            self.connection.mass_action(cl)
+                sql_l.append(['UPDATE tv_shows SET sports = ? WHERE show_id = ?',
+                              [cur_entry['air_by_date'], cur_entry['show_id']]])
+                sql_l.append(['UPDATE tv_shows SET air_by_date = 0 WHERE show_id = ?', [cur_entry['show_id']]])
+            self.connection.mass_action(sql_l)
 
         self.inc_db_version()
         return self.call_check_db_version()
@@ -1424,19 +1424,19 @@ class ChangeMapIndexer(db.SchemaUpgrade):
                                ' indexer_id INTEGER KEY, show_name TEXT, season NUMERIC, custom NUMERIC)')
 
         try:
-            cachedb = db.DBConnection(filename='cache.db')
-            if cachedb.has_table('scene_exceptions'):
-                sql_result = cachedb.action('SELECT * FROM scene_exceptions')
-                cs = []
-                for cur_result in sql_result:
-                    cs.append(
-                        ['INSERT OR REPLACE INTO scene_exceptions (exception_id, indexer_id, show_name, season, custom)'
-                         ' VALUES (?,?,?,?,?)',
-                         [cur_result['exception_id'], cur_result['indexer_id'],
-                          cur_result['show_name'], cur_result['season'], cur_result['custom']]])
+            with db.DBConnection('cache.db') as sg_db:
+                if sg_db.has_table('scene_exceptions'):
+                    sql_result = sg_db.action('SELECT * FROM scene_exceptions')
+                    cs = []
+                    for cur_result in sql_result:
+                        cs.append(
+                            ['INSERT OR REPLACE INTO scene_exceptions (exception_id, indexer_id, show_name, season, custom)'
+                             ' VALUES (?,?,?,?,?)',
+                             [cur_result['exception_id'], cur_result['indexer_id'],
+                              cur_result['show_name'], cur_result['season'], cur_result['custom']]])
 
-                if 0 < len(cs):
-                    self.connection.mass_action(cs)
+                    if 0 < len(cs):
+                        self.connection.mass_action(cs)
         except (BaseException, Exception):
             pass
 
@@ -1555,11 +1555,11 @@ class AddIndexerToTables(db.SchemaUpgrade):
             if not self.has_column(t[0], 'indexer'):
                 self.upgrade_log(f'Adding TV info support to {t[0]} table')
                 self.add_column(t[0], 'indexer')
-                cl = []
+                sql_l = []
                 for s_id, i in iteritems(show_ids):
                     # noinspection SqlResolve
-                    cl.append([f'UPDATE {t[0]} SET indexer = ? WHERE {t[1]} = ?', [i, s_id]])
-                self.connection.mass_action(cl)
+                    sql_l.append([f'UPDATE {t[0]} SET indexer = ? WHERE {t[1]} = ?', [i, s_id]])
+                self.connection.mass_action(sql_l)
                 # noinspection SqlResolve
                 self.connection.action(f'CREATE INDEX idx_id_indexer_{t[0]} ON {t[0]} (indexer, {t[1]})')
 
@@ -1591,11 +1591,11 @@ class AddIndexerToTables(db.SchemaUpgrade):
                                       'scene_absolute_number FROM tmp_scene_numbering'],
                                      ['DROP TABLE tmp_scene_numbering']])
 
-        cl = []
+        sql_l = []
         for s_id, i in iteritems(show_ids):
-            cl.append(['UPDATE scene_numbering SET indexer = ? WHERE indexer_id = ?', [i, s_id]])
-        cl.append(['DELETE FROM scene_numbering WHERE indexer = ?', [0]])
-        self.connection.mass_action(cl)
+            sql_l.append(['UPDATE scene_numbering SET indexer = ? WHERE indexer_id = ?', [i, s_id]])
+        sql_l.append(['DELETE FROM scene_numbering WHERE indexer = ?', [0]])
+        self.connection.mass_action(sql_l)
 
         self.upgrade_log('Adding TV info support to imdb_info')
         # noinspection SqlResolve
@@ -1611,11 +1611,11 @@ class AddIndexerToTables(db.SchemaUpgrade):
                                       'rating, votes, last_update FROM tmp_imdb_info'],
                                      ['DROP TABLE tmp_imdb_info']])
 
-        cl = []
+        sql_l = []
         for s_id, i in iteritems(show_ids):
-            cl.append(['UPDATE imdb_info SET indexer = ? WHERE indexer_id = ?', [i, s_id]])
-        cl.append(['DELETE FROM imdb_info WHERE indexer = ?', [0]])
-        self.connection.mass_action(cl)
+            sql_l.append(['UPDATE imdb_info SET indexer = ? WHERE indexer_id = ?', [i, s_id]])
+        sql_l.append(['DELETE FROM imdb_info WHERE indexer = ?', [0]])
+        self.connection.mass_action(sql_l)
         self.connection.action('CREATE INDEX idx_id_indexer_imdb_info ON imdb_info (indexer,indexer_id)')
 
         if self.connection.has_table('backup_imdb_info'):
@@ -1958,22 +1958,22 @@ class ChangeShowData(db.SchemaUpgrade):
             ],
         }
 
-        cl = []
+        sql_l = []
         tables = self.list_tables()
         for t in ('castlist', 'characters', 'character_ids', 'persons', 'person_ids', 'character_person_map',
                   'character_person_years', 'tv_src_switch', 'switch_ep_result'):
             if f'backup_{t}' in tables:
                 # noinspection SqlResolve
-                cl.append([f'ALTER TABLE backup_{t} RENAME TO {t}'])
+                sql_l.append([f'ALTER TABLE backup_{t} RENAME TO {t}'])
             elif t not in tables:
-                cl.extend(table_create_sql[t])
+                sql_l.extend(table_create_sql[t])
             if f'idx_{t}' in table_create_sql:
-                cl.extend(table_create_sql[f'idx_{t}'])
+                sql_l.extend(table_create_sql[f'idx_{t}'])
 
-        cl.extend(sickgear.tv.TVShow.orphaned_cast_sql())
+        sql_l.extend(sickgear.tv.TVShow.orphaned_cast_sql())
 
-        if cl:
-            self.connection.mass_action(cl)
+        if sql_l:
+            self.connection.mass_action(sql_l)
             self.connection.action('VACUUM')
 
         return self.set_db_version(20015)

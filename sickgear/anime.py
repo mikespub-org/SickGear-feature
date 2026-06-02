@@ -63,18 +63,18 @@ class AniGroupList(object):
         :param table: table name
         :return: list of words
         """
-        my_db = db.DBConnection()
-        # noinspection SqlResolve
-        sql_result = my_db.select(f'SELECT keyword FROM [{table}] WHERE indexer = ? AND show_id = ?',
-                                  [self.tvid, self.prodid])
-        if not sql_result or not len(sql_result):
-            return []
-
         groups = []
-        for cur_result in sql_result:
-            groups.append(cur_result['keyword'])
+        with db.DBConnection() as sg_db:
+            # noinspection SqlResolve
+            sql_result = sg_db.select(f'SELECT keyword FROM [{table}] WHERE indexer = ? AND show_id = ?',
+                                      [self.tvid, self.prodid])
+            if not sql_result or not len(sql_result):
+                return []
 
-        logger.debug(f'AniPermsList: {self.tvid_prodid} loaded keywords from {table}: {groups}')
+            for cur_result in sql_result:
+                groups.append(cur_result['keyword'])
+
+            logger.debug(f'AniPermsList: {self.tvid_prodid} loaded keywords from {table}: {groups}')
 
         return groups
 
@@ -106,9 +106,9 @@ class AniGroupList(object):
 
         :param table: table name
         """
-        my_db = db.DBConnection()
-        # noinspection SqlResolve
-        my_db.action(f'DELETE FROM [{table}] WHERE indexer = ? AND show_id = ?', [self.tvid, self.prodid])
+        with db.DBConnection() as sg_db:
+            # noinspection SqlResolve
+            sg_db.action(f'DELETE FROM [{table}] WHERE indexer = ? AND show_id = ?', [self.tvid, self.prodid])
 
     def _add_keywords(self, table, values):
         # type: (AnyStr, List[AnyStr]) -> None
@@ -117,11 +117,11 @@ class AniGroupList(object):
         :param table: table name
         :param values: list of words
         """
-        my_db = db.DBConnection()
-        for cur_value in values:
-            # noinspection SqlResolve
-            my_db.action(f'INSERT INTO [{table}] (indexer, show_id, keyword) VALUES (?,?,?)',
-                         [self.tvid, self.prodid, cur_value])
+        with db.DBConnection() as sg_db:
+            for cur_value in values:
+                # noinspection SqlResolve
+                sg_db.action(f'INSERT INTO [{table}] (indexer, show_id, keyword) VALUES (?,?,?)',
+                             [self.tvid, self.prodid, cur_value])
 
     def is_valid(self, result):
         # type: (NZBSearchResult or NZBDataSearchResult or TorrentSearchResult) -> bool

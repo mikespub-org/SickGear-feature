@@ -473,50 +473,50 @@ class PostProcessor(object):
         if self.folder_name:
             names.append(self.folder_name)
 
-        my_db = db.DBConnection()
+        with db.DBConnection() as sg_db:
 
-        # search the database for a possible match and return immediately if we find one
-        for curName in names:
-            # The underscore character ( _ ) represents a single character to match a pattern from a word or string
-            search_name = re.sub(r'[ .\-]', '_', curName)
-            # noinspection SqlResolve
-            sql_result = my_db.select('SELECT * FROM history WHERE (%s) AND resource LIKE ? ORDER BY date DESC'
-                                      ' LIMIT 1' % ' OR '.join(["action LIKE '%%%02d'" % x for x in
-                                                                common.Quality.SNATCHED_ANY]),
-                                      [search_name])
+            # search the database for a possible match and return immediately if we find one
+            for curName in names:
+                # The underscore character ( _ ) represents a single character to match a pattern from a word or string
+                search_name = re.sub(r'[ .\-]', '_', curName)
+                # noinspection SqlResolve
+                sql_result = sg_db.select('SELECT * FROM history WHERE (%s) AND resource LIKE ? ORDER BY date DESC'
+                                          ' LIMIT 1' % ' OR '.join(["action LIKE '%%%02d'" % x for x in
+                                                                    common.Quality.SNATCHED_ANY]),
+                                          [search_name])
 
-            if 0 == len(sql_result):
-                continue
-
-            tvid = int(sql_result[0]['indexer'])
-            prodid = int(sql_result[0]['showid'])
-            season_number = int(sql_result[0]['season'])
-            episode_numbers = []
-            quality = int(sql_result[0]['quality'])
-            self.anime_version = int(sql_result[0]['version'])
-            show_obj = helpers.find_show_by_id({tvid: prodid})
-
-            if show_obj:
-                try:
-                    parsed_show, season, episodes, quality = \
-                        self._analyze_name(sql_result[0]['resource'], show_obj=show_obj)
-                    # validate that the history ep number is in parsed result
-                    if parsed_show and season and season_number == season and \
-                            episodes and int(sql_result[0]['episode']) in episodes:
-                        episode_numbers = episodes
-                except (BaseException, Exception):
+                if 0 == len(sql_result):
                     continue
 
-            if common.Quality.UNKNOWN == quality:
-                quality = None
+                tvid = int(sql_result[0]['indexer'])
+                prodid = int(sql_result[0]['showid'])
+                season_number = int(sql_result[0]['season'])
+                episode_numbers = []
+                quality = int(sql_result[0]['quality'])
+                self.anime_version = int(sql_result[0]['version'])
+                show_obj = helpers.find_show_by_id({tvid: prodid})
 
-            self.in_history = True
-            to_return = (show_obj, season_number, episode_numbers, quality)
-            if not show_obj:
-                self._log('Unknown show, check availability on ShowList page', logger.DEBUG)
+                if show_obj:
+                    try:
+                        parsed_show, season, episodes, quality = \
+                            self._analyze_name(sql_result[0]['resource'], show_obj=show_obj)
+                        # validate that the history ep number is in parsed result
+                        if parsed_show and season and season_number == season and \
+                                episodes and int(sql_result[0]['episode']) in episodes:
+                            episode_numbers = episodes
+                    except (BaseException, Exception):
+                        continue
+
+                if common.Quality.UNKNOWN == quality:
+                    quality = None
+
+                self.in_history = True
+                to_return = (show_obj, season_number, episode_numbers, quality)
+                if not show_obj:
+                    self._log('Unknown show, check availability on ShowList page', logger.DEBUG)
+                    break
+                self._log(f'Found a match in history for {show_obj.name}', logger.DEBUG)
                 break
-            self._log(f'Found a match in history for {show_obj.name}', logger.DEBUG)
-            break
 
         return to_return
 
@@ -671,36 +671,36 @@ class PostProcessor(object):
                 self._log('Looks like this is an air-by-date or sports show,'
                           ' attempting to convert the date to season/episode', logger.DEBUG)
                 airdate = episode_numbers[0].toordinal()
-                my_db = db.DBConnection()
-                sql_result = my_db.select(
-                    'SELECT season, episode'
-                    ' FROM tv_episodes'
-                    ' WHERE indexer = ? AND showid = ? AND airdate = ?',
-                    [show_obj.tvid, show_obj.prodid, airdate])
+                with db.DBConnection() as sg_db:
+                    sql_result = sg_db.select(
+                        'SELECT season, episode'
+                        ' FROM tv_episodes'
+                        ' WHERE indexer = ? AND showid = ? AND airdate = ?',
+                        [show_obj.tvid, show_obj.prodid, airdate])
 
-                if sql_result:
-                    season_number = int(sql_result[0][0])
-                    episode_numbers = [int(sql_result[0][1])]
-                else:
-                    self._log(f'Unable to find episode with date {episode_numbers[0]} for show {show_obj.tvid_prodid},'
-                              f' skipping', logger.DEBUG)
-                    # don't leave dates in the episode list if we can't convert them to real episode numbers
-                    episode_numbers = []
-                    continue
+                    if sql_result:
+                        season_number = int(sql_result[0][0])
+                        episode_numbers = [int(sql_result[0][1])]
+                    else:
+                        self._log(f'Unable to find episode with date {episode_numbers[0]} for show {show_obj.tvid_prodid},'
+                                  f' skipping', logger.DEBUG)
+                        # don't leave dates in the episode list if we can't convert them to real episode numbers
+                        episode_numbers = []
+                        continue
 
             # if there's no season then we can hopefully just use 1 automatically
             elif None is season_number and show_obj:
-                my_db = db.DBConnection()
-                num_seasons_sql_result = my_db.select(
-                    'SELECT COUNT(DISTINCT season) AS numseasons'
-                    ' FROM tv_episodes'
-                    ' WHERE indexer = ? AND showid = ? AND season != 0',
-                    [show_obj.tvid, show_obj.prodid])
-                if 1 == int(num_seasons_sql_result[0][0]) and None is season_number:
-                    self._log(
-                        'No season number found, but this show appears to only have 1 season,'
-                        ' setting season number to 1...', logger.DEBUG)
-                    season_number = 1
+                with db.DBConnection() as sg_db:
+                    num_seasons_sql_result = sg_db.select(
+                        'SELECT COUNT(DISTINCT season) AS numseasons'
+                        ' FROM tv_episodes'
+                        ' WHERE indexer = ? AND showid = ? AND season != 0',
+                        [show_obj.tvid, show_obj.prodid])
+                    if 1 == int(num_seasons_sql_result[0][0]) and None is season_number:
+                        self._log(
+                            'No season number found, but this show appears to only have 1 season,'
+                            ' setting season number to 1...', logger.DEBUG)
+                        season_number = 1
 
             if show_obj and season_number and episode_numbers:
                 break
@@ -874,7 +874,7 @@ class PostProcessor(object):
         """
 
         try:
-            existing_show_path = os.path.isdir(ep_obj.show.location)
+            existing_show_path = os.path.isdir(ep_obj.show_obj.location)
         except exceptions_helper.ShowDirNotFoundException:
             existing_show_path = False
 
@@ -1030,9 +1030,9 @@ class PostProcessor(object):
                 if None is not sql:
                     sql_l.append(sql)
 
-        if 0 < len(sql_l):
-            my_db = db.DBConnection()
-            my_db.mass_action(sql_l)
+        if sql_l:
+            with db.DBConnection() as sg_db:
+                sg_db.mass_action(sql_l)
 
     def process_minimal(self):
         self._log('Processing without any files...')
@@ -1223,9 +1223,9 @@ class PostProcessor(object):
                 if None is not sql:
                     sql_l.append(sql)
 
-        if 0 < len(sql_l):
-            my_db = db.DBConnection()
-            my_db.mass_action(sql_l)
+        if sql_l:
+            with db.DBConnection() as sg_db:
+                sg_db.mass_action(sql_l)
 
         # generate nfo/tbn
         ep_obj.create_meta_files()

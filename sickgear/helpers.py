@@ -553,18 +553,18 @@ def get_absolute_number_from_season_and_episode(show_obj, season, episode):
     absolute_number = None
 
     if season and episode:
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT *'
-                                  ' FROM tv_episodes'
-                                  ' WHERE indexer = ? AND showid = ? AND season = ? AND episode = ?',
-                                  [show_obj.tvid, show_obj.prodid, season, episode])
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT *'
+                                      ' FROM tv_episodes'
+                                      ' WHERE indexer = ? AND showid = ? AND season = ? AND episode = ?',
+                                      [show_obj.tvid, show_obj.prodid, season, episode])
 
-        if 1 == len(sql_result):
-            absolute_number = int(sql_result[0]["absolute_number"])
-            logger.debug(f'Found absolute_number:{absolute_number} by {season}x{episode}')
-        else:
-            logger.debug('No entries for absolute number in show: %s found using %sx%s' %
-                         (show_obj.unique_name, str(season), str(episode)))
+            if 1 == len(sql_result):
+                absolute_number = int(sql_result[0]["absolute_number"])
+                logger.debug(f'Found absolute_number:{absolute_number} by {season}x{episode}')
+            else:
+                logger.debug('No entries for absolute number in show: %s found using %sx%s' %
+                             (show_obj.unique_name, str(season), str(episode)))
 
     return absolute_number
 
@@ -1287,9 +1287,9 @@ def clear_unused_providers():
     providers = [x.cache.providerID for x in sickgear.providers.sorted_sources() if x.is_active()]
 
     if providers:
-        my_db = db.DBConnection('cache.db')
-        my_db.action(f'DELETE FROM provider_cache WHERE provider NOT IN ({",".join(["?"] * len(providers))})',
-                     providers)
+        with db.DBConnection('cache.db') as sg_db:
+            sg_db.action(f'DELETE FROM provider_cache WHERE provider NOT IN ({",".join(["?"] * len(providers))})',
+                         providers)
 
 
 def make_search_segment_html_string(segment, max_eps=5):
@@ -1609,22 +1609,22 @@ def count_files_dirs(base_dir):
 
 
 def upgrade_new_naming():
-    my_db = db.DBConnection()
-    sql_result = my_db.select('SELECT indexer AS tv_id, indexer_id AS prod_id FROM tv_shows')
-    show_list = {}
-    for cur_result in sql_result:
-        show_list[int(cur_result['prod_id'])] = int(cur_result['tv_id'])
+    with db.DBConnection() as sg_db:
+        sql_result = sg_db.select('SELECT indexer AS tv_id, indexer_id AS prod_id FROM tv_shows')
+        show_list = {}
+        for cur_result in sql_result:
+            show_list[int(cur_result['prod_id'])] = int(cur_result['tv_id'])
 
-    if sickgear.FANART_RATINGS:
-        from sickgear.tv import TVidProdid
-        ne = {}
-        for k, v in iteritems(sickgear.FANART_RATINGS):
-            nk = show_list.get(try_int(k))
-            if nk:
-                ne[TVidProdid({nk: int(k)})()] = sickgear.FANART_RATINGS[k]
-        sickgear.FANART_RATINGS = ne
-        sickgear.CFG.setdefault('GUI', {})['fanart_ratings'] = f'{ne}'
-        sickgear.CFG.write()
+        if sickgear.FANART_RATINGS:
+            from sickgear.tv import TVidProdid
+            ne = {}
+            for k, v in iteritems(sickgear.FANART_RATINGS):
+                nk = show_list.get(try_int(k))
+                if nk:
+                    ne[TVidProdid({nk: int(k)})()] = sickgear.FANART_RATINGS[k]
+            sickgear.FANART_RATINGS = ne
+            sickgear.CFG.setdefault('GUI', {})['fanart_ratings'] = f'{ne}'
+            sickgear.CFG.write()
 
     image_cache_dir = os.path.join(sickgear.CACHE_DIR, 'images')
     bp_match = re.compile(r'(\d+)\.((?:banner|poster|(?:\d+(?:\.\w*)?\.\w{5,8}\.)?fanart)\.jpg)', flags=re.I)

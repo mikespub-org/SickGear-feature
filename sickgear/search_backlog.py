@@ -141,24 +141,24 @@ class BacklogSearcher(Job):
     @staticmethod
     def change_backlog_parts(old_count, new_count):
         try:
-            my_db = db.DBConnection('cache.db')
-            sql_result = my_db.select('SELECT * FROM backlogparts')
-            if sql_result:
-                current_parts = len(set([s['part'] for s in sql_result]))
-                parts_count = len(sql_result)
-                new_part_count = int(ceil(new_count / old_count * current_parts))
-                parts = int(ceil(parts_count / new_part_count))
-                # noinspection SqlConstantCondition
-                cl = ([], [['DELETE FROM backlogparts WHERE 1=1']])[1 < parts_count]
-                p = new_count - new_part_count
-                for i, s in enumerate(sql_result):
-                    if 0 == i % parts:
-                        p += 1
-                    cl.append(['INSERT INTO backlogparts (part, indexerid, indexer) VALUES (?,?,?)',
-                               [p, s['indexerid'], s['indexer']]])
+            with db.DBConnection('cache.db') as sg_db:
+                sql_result = sg_db.select('SELECT * FROM backlogparts')
+                if sql_result:
+                    current_parts = len(set([s['part'] for s in sql_result]))
+                    parts_count = len(sql_result)
+                    new_part_count = int(ceil(new_count / old_count * current_parts))
+                    parts = int(ceil(parts_count / new_part_count))
+                    # noinspection SqlConstantCondition
+                    sql_l = ([], [['DELETE FROM backlogparts WHERE 1=1']])[1 < parts_count]
+                    p = new_count - new_part_count
+                    for i, s in enumerate(sql_result):
+                        if 0 == i % parts:
+                            p += 1
+                        sql_l.append(['INSERT INTO backlogparts (part, indexerid, indexer)'
+                                      ' VALUES (?,?,?)', [p, s['indexerid'], s['indexer']]])
 
-                if 0 < len(cl):
-                    my_db.mass_action(cl)
+                    if sql_l:
+                        sg_db.mass_action(sql_l)
         except (BaseException, Exception):
             pass
 
@@ -236,20 +236,20 @@ class BacklogSearcher(Job):
         if standard_backlog and not any_torrent_enabled and sickgear.BACKLOG_NOFULL:
             logger.log('Skipping automated full backlog search because it is disabled in search settings')
 
-        my_db = db.DBConnection('cache.db')
-        if standard_backlog and not any_torrent_enabled and not sickgear.BACKLOG_NOFULL:
-            sql_result = my_db.select('SELECT * FROM backlogparts WHERE part in (SELECT MIN(part) FROM backlogparts)')
-            if sql_result:
-                sl = []
-                part_nr = int(sql_result[0]['part'])
-                for s in sql_result:
-                    show_obj = find_show_by_id({int(s['indexer']): int(s['indexerid'])})
-                    if show_obj:
-                        sl.append(show_obj)
-                        runparts.append(show_obj.tvid_prodid)
-                show_list = sl
-                continued_backlog = True
-                my_db.action('DELETE FROM backlogparts WHERE part = ?', [part_nr])
+        with db.DBConnection('cache.db') as sg_db:
+            if standard_backlog and not any_torrent_enabled and not sickgear.BACKLOG_NOFULL:
+                sql_result = sg_db.select('SELECT * FROM backlogparts WHERE part in (SELECT MIN(part) FROM backlogparts)')
+                if sql_result:
+                    sl = []
+                    part_nr = int(sql_result[0]['part'])
+                    for s in sql_result:
+                        show_obj = find_show_by_id({int(s['indexer']): int(s['indexerid'])})
+                        if show_obj:
+                            sl.append(show_obj)
+                            runparts.append(show_obj.tvid_prodid)
+                    show_list = sl
+                    continued_backlog = True
+                    sg_db.action('DELETE FROM backlogparts WHERE part = ?', [part_nr])
 
         forced = standard_backlog and force_type != NORMAL_BACKLOG
 
@@ -302,15 +302,16 @@ class BacklogSearcher(Job):
 
         if standard_backlog and not sickgear.BACKLOG_NOFULL and not any_torrent_enabled and not continued_backlog:
             # noinspection SqlConstantCondition
-            cl = ([], [['DELETE FROM backlogparts WHERE 1=1']])[any(parts)]
+            sql_l = ([], [['DELETE FROM backlogparts WHERE 1=1']])[any(parts)]
             for i, l in enumerate(parts):
                 if 0 == i:
                     continue
-                cl += list(map(lambda m: ['INSERT INTO backlogparts (part, indexer, indexerid) VALUES (?,?,?)',
-                                          [i + 1] + TVidProdid(m).list], l))
+                sql_l += list(map(lambda m: ['INSERT INTO backlogparts (part, indexer, indexerid)'
+                                             ' VALUES (?,?,?)', [i + 1] + TVidProdid(m).list], l))
 
-            if 0 < len(cl):
-                my_db.mass_action(cl)
+            if sql_l:
+                with db.DBConnection('cache.db') as sg_db:
+                    sg_db.mass_action(sql_l)
 
         # don't consider this an actual backlog search if we only did recent eps
         # or if we only did certain shows
@@ -327,35 +328,36 @@ class BacklogSearcher(Job):
     def _get_last_runtime():
         logger.debug('Retrieving the last runtime of Backlog from the DB')
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT * FROM info')
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT * FROM info')
 
-        if 0 == len(sql_result):
-            last_run_time = 1
-        elif None is sql_result[0]['last_run_backlog'] or '' == sql_result[0]['last_run_backlog']:
-            last_run_time = 1
-        else:
-            last_run_time = int(sql_result[0]['last_run_backlog'])
-            if last_run_time > SGDatetime.timestamp_near():
+            if 0 == len(sql_result):
                 last_run_time = 1
+            elif None is sql_result[0]['last_run_backlog'] or '' == sql_result[0]['last_run_backlog']:
+                last_run_time = 1
+            else:
+                last_run_time = int(sql_result[0]['last_run_backlog'])
+                if last_run_time > SGDatetime.timestamp_near():
+                    last_run_time = 1
 
         return last_run_time
 
     def _set_last_runtime(self, when):
         logger.debug(f'Setting the last backlog runtime in the DB to {when}')
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT * FROM info')
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT * FROM info')
 
-        if isinstance(when, datetime.datetime):
-            when = SGDatetime.timestamp_near(when)
-        else:
-            when = SGDatetime.timestamp_far(when, default=0)
-        if 0 == len(sql_result):
-            my_db.action('INSERT INTO info (last_backlog, last_indexer, last_run_backlog) VALUES (?,?,?)', [1, 0, when])
-        else:
-            # noinspection SqlConstantCondition
-            my_db.action(f'UPDATE info SET last_run_backlog={when} WHERE 1=1')
+            if isinstance(when, datetime.datetime):
+                when = SGDatetime.timestamp_near(when)
+            else:
+                when = SGDatetime.timestamp_far(when, default=0)
+            if 0 == len(sql_result):
+                sg_db.action('INSERT INTO info'
+                             ' (last_backlog, last_indexer, last_run_backlog) VALUES (?,?,?)', [1, 0, when])
+            else:
+                # noinspection SqlConstantCondition
+                sg_db.action(f'UPDATE info SET last_run_backlog={when} WHERE 1=1')
 
         self.nextBacklog = datetime.datetime.fromtimestamp(1)
 
@@ -363,19 +365,19 @@ class BacklogSearcher(Job):
 
         logger.debug('Retrieving the last check time from the DB')
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT * FROM info')
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT * FROM info')
 
-        if 0 == len(sql_result):
-            last_backlog = 1
-        elif None is sql_result[0]['last_backlog'] or '' == sql_result[0]['last_backlog']:
-            last_backlog = 1
-        else:
-            last_backlog = int(sql_result[0]['last_backlog'])
-            if last_backlog > datetime.date.today().toordinal():
+            if 0 == len(sql_result):
                 last_backlog = 1
+            elif None is sql_result[0]['last_backlog'] or '' == sql_result[0]['last_backlog']:
+                last_backlog = 1
+            else:
+                last_backlog = int(sql_result[0]['last_backlog'])
+                if last_backlog > datetime.date.today().toordinal():
+                    last_backlog = 1
 
-        self.last_backlog = last_backlog
+            self.last_backlog = last_backlog
         return self.last_backlog
 
     @staticmethod
@@ -383,15 +385,15 @@ class BacklogSearcher(Job):
 
         logger.debug(f'Setting the last backlog in the DB to {when}')
 
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT * FROM info')
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT * FROM info')
 
-        if 0 == len(sql_result):
-            my_db.action('INSERT INTO info (last_backlog, last_indexer, last_run_backlog) VALUES (?,?,?)',
-                         [str(when), 0, 1])
-        else:
-            # noinspection SqlConstantCondition
-            my_db.action(f'UPDATE info SET last_backlog={when} WHERE 1=1')
+            if 0 == len(sql_result):
+                sg_db.action('INSERT INTO info (last_backlog, last_indexer, last_run_backlog) VALUES (?,?,?)',
+                             [str(when), 0, 1])
+            else:
+                # noinspection SqlConstantCondition
+                sg_db.action(f'UPDATE info SET last_backlog={when} WHERE 1=1')
 
     def job_run(self):
         try:

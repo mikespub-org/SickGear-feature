@@ -172,45 +172,45 @@ class ProviderFailList(object):
         if self.dirty:
             self.clear_old()
             with self.lock:
-                my_db = db.DBConnection('cache.db')
-                cl = []
+                sql_l = []
                 for f in self._fails:
                     if isinstance(f.fail_time, datetime.datetime):
                         value = SGDatetime.timestamp_near(f.fail_time)
                     else:
                         value = SGDatetime.timestamp_far(f.fail_time)
-                    cl.append(['INSERT OR IGNORE INTO provider_fails (prov_name, fail_type, fail_code, fail_time) '
-                               'VALUES (?,?,?,?)', [self.provider_name(), f.fail_type, f.code, value]])
+                    sql_l.append(['INSERT OR IGNORE INTO provider_fails (prov_name, fail_type, fail_code, fail_time) '
+                                  'VALUES (?,?,?,?)', [self.provider_name(), f.fail_type, f.code, value]])
                 self.dirty = False
-                if cl:
-                    my_db.mass_action(cl)
+                if sql_l:
+                    with db.DBConnection('cache.db') as sg_db:
+                        sg_db.mass_action(sql_l)
             self.last_save = datetime.datetime.now()
 
     def load_list(self):
         with self.lock:
             try:
-                my_db = db.DBConnection('cache.db')
-                if my_db.has_table('provider_fails'):
-                    results = my_db.select('SELECT * FROM provider_fails WHERE prov_name = ?', [self.provider_name()])
-                    self._fails = []
-                    for r in results:
-                        try:
-                            self._fails.append(ProviderFail(
-                                fail_type=helpers.try_int(r['fail_type']), code=helpers.try_int(r['fail_code']),
-                                fail_time=datetime.datetime.fromtimestamp(helpers.try_int(r['fail_time']))))
-                        except (BaseException, Exception):
-                            continue
+                with db.DBConnection('cache.db') as sg_db:
+                    if sg_db.has_table('provider_fails'):
+                        results = sg_db.select('SELECT * FROM provider_fails WHERE prov_name = ?', [self.provider_name()])
+                        self._fails = []
+                        for r in results:
+                            try:
+                                self._fails.append(ProviderFail(
+                                    fail_type=helpers.try_int(r['fail_type']), code=helpers.try_int(r['fail_code']),
+                                    fail_time=datetime.datetime.fromtimestamp(helpers.try_int(r['fail_time']))))
+                            except (BaseException, Exception):
+                                continue
             except (BaseException, Exception):
                 pass
 
     def clear_old(self):
         with self.lock:
             try:
-                my_db = db.DBConnection('cache.db')
-                if my_db.has_table('provider_fails'):
-                    # noinspection PyCallByClass,PyTypeChecker
-                    time_limit = SGDatetime.timestamp_near(td=datetime.timedelta(days=28))
-                    my_db.action('DELETE FROM provider_fails WHERE fail_time < ?', [time_limit])
+                with db.DBConnection('cache.db') as sg_db:
+                    if sg_db.has_table('provider_fails'):
+                        # noinspection PyCallByClass,PyTypeChecker
+                        time_limit = SGDatetime.timestamp_near(td=datetime.timedelta(days=28))
+                        sg_db.action('DELETE FROM provider_fails WHERE fail_time < ?', [time_limit])
             except (BaseException, Exception):
                 pass
 
@@ -290,34 +290,34 @@ class GenericProvider(object):
 
     def _load_fail_values(self):
         if hasattr(sickgear, 'DATA_DIR'):
-            my_db = db.DBConnection('cache.db')
-            if my_db.has_table('provider_fails_count'):
-                r = my_db.select('SELECT * FROM provider_fails_count WHERE prov_name = ?', [self.get_id()])
-                if r:
-                    self._failure_count = helpers.try_int(r[0]['failure_count'], 0)
-                    if r[0]['failure_time']:
-                        self._failure_time = datetime.datetime.fromtimestamp(r[0]['failure_time'])
-                    else:
-                        self._failure_time = None
-                    self._tmr_limit_count = helpers.try_int(r[0]['tmr_limit_count'], 0)
-                    if r[0]['tmr_limit_time']:
-                        self._tmr_limit_time = datetime.datetime.fromtimestamp(r[0]['tmr_limit_time'])
-                    else:
-                        self._tmr_limit_time = None
-                    if r[0]['tmr_limit_wait']:
-                        self._tmr_limit_wait = datetime.timedelta(seconds=helpers.try_int(r[0]['tmr_limit_wait'], 0))
-                    else:
-                        self._tmr_limit_wait = None
-                self._last_fail_type = self.last_fail
+            with db.DBConnection('cache.db') as sg_db:
+                if sg_db.has_table('provider_fails_count'):
+                    r = sg_db.select('SELECT * FROM provider_fails_count WHERE prov_name = ?', [self.get_id()])
+                    if r:
+                        self._failure_count = helpers.try_int(r[0]['failure_count'], 0)
+                        if r[0]['failure_time']:
+                            self._failure_time = datetime.datetime.fromtimestamp(r[0]['failure_time'])
+                        else:
+                            self._failure_time = None
+                        self._tmr_limit_count = helpers.try_int(r[0]['tmr_limit_count'], 0)
+                        if r[0]['tmr_limit_time']:
+                            self._tmr_limit_time = datetime.datetime.fromtimestamp(r[0]['tmr_limit_time'])
+                        else:
+                            self._tmr_limit_time = None
+                        if r[0]['tmr_limit_wait']:
+                            self._tmr_limit_wait = datetime.timedelta(seconds=helpers.try_int(r[0]['tmr_limit_wait'], 0))
+                        else:
+                            self._tmr_limit_wait = None
+                    self._last_fail_type = self.last_fail
 
     def _save_fail_value(self, field, value):
-        my_db = db.DBConnection('cache.db')
-        if my_db.has_table('provider_fails_count'):
-            r = my_db.action(f'UPDATE provider_fails_count SET {field} = ? WHERE prov_name = ?',
-                             [value, self.get_id()])
-            if 0 == r.rowcount:
-                my_db.action(f'REPLACE INTO provider_fails_count (prov_name, {field}) VALUES (?,?)',
-                             [self.get_id(), value])
+        with db.DBConnection('cache.db') as sg_db:
+            if sg_db.has_table('provider_fails_count'):
+                r = sg_db.action(f'UPDATE provider_fails_count SET {field} = ? WHERE prov_name = ?',
+                                 [value, self.get_id()])
+                if 0 == r.rowcount:
+                    sg_db.action(f'REPLACE INTO provider_fails_count (prov_name, {field}) VALUES (?,?)',
+                                 [self.get_id(), value])
 
     @property
     def last_fail(self):
@@ -1194,7 +1194,7 @@ class GenericProvider(object):
             item_list += items_unknown if items_unknown else []
 
         # filter results
-        cl = []
+        sql_l = []
         for item in item_list:
             (title, url) = self._title_and_url(item)
 
@@ -1284,7 +1284,7 @@ class GenericProvider(object):
                 logger.debug(f'Adding item from search to cache: {title}')
                 ci = self.cache.add_cache_entry(title, url, parse_result=parse_result)
                 if None is not ci:
-                    cl.append(ci)
+                    sql_l.append(ci)
                 continue
 
             # make sure we want the episode
@@ -1309,7 +1309,7 @@ class GenericProvider(object):
             for cur_ep_num in episode_numbers:
                 ep_obj_results.append(parsed_show_obj.get_episode(season_number, cur_ep_num))
 
-            result = self.get_result(ep_obj_results, url)
+            result = self.get_result(ep_obj_results, url)  # type: Union[NZBSearchResult, TorrentSearchResult]
             if None is result:
                 continue
             result.show_obj = parsed_show_obj
@@ -1344,9 +1344,9 @@ class GenericProvider(object):
                 results[ep_num].append(result)
 
         # check if we have items to add to cache
-        if 0 < len(cl):
-            my_db = self.cache.get_db()
-            my_db.mass_action(cl)
+        if sql_l:
+            with self.cache.get_db() as sg_db:
+                sg_db.mass_action(sql_l)
 
         return results
 
@@ -2231,10 +2231,11 @@ class TorrentProvider(GenericProvider):
     def last_recent_search(self):
         if not self._last_recent_search:
             try:
-                my_db = db.DBConnection('cache.db')
-                res = my_db.select("SELECT \"datetime\" FROM \"lastrecentsearch\" WHERE \"name\"=?", [self.get_id()])
-                if res:
-                    self._last_recent_search = res[0]['datetime']
+                with db.DBConnection('cache.db') as sg_db:
+                    res = sg_db.select("SELECT 'datetime' FROM 'lastrecentsearch' WHERE 'name'=?",
+                                       [self.get_id()])
+                    if res:
+                        self._last_recent_search = res[0]['datetime']
             except (BaseException, Exception):
                 pass
         return self._last_recent_search
@@ -2243,9 +2244,9 @@ class TorrentProvider(GenericProvider):
     def last_recent_search(self, value):
         value = 0 if not value else re.sub('^(id-)+', r'\1', f'id-{value}')
         try:
-            my_db = db.DBConnection('cache.db')
-            my_db.action('INSERT OR REPLACE INTO "lastrecentsearch" (name, datetime) VALUES (?,?)',
-                         [self.get_id(), value])
+            with db.DBConnection('cache.db') as sg_db:
+                sg_db.action("INSERT OR REPLACE INTO 'lastrecentsearch' (name, datetime) VALUES (?,?)",
+                             [self.get_id(), value])
         except (BaseException, Exception):
             pass
         self._last_recent_search = value

@@ -228,9 +228,10 @@ def map_indexers_to_show(show_obj, update=False, force=False, recheck=False, im_
             sql_result.append(cur_row)
 
     if not sql_result:
-        my_db = db.DBConnection()
-        sql_result = my_db.select(
-            'SELECT * FROM indexer_mapping WHERE indexer = ? AND indexer_id = ?', [show_obj.tvid, show_obj.prodid])
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select(
+                'SELECT * FROM indexer_mapping WHERE indexer = ? AND indexer_id = ?',
+                [show_obj.tvid, show_obj.prodid])
 
     # for each mapped entry
     for cur_row in sql_result or []:
@@ -309,10 +310,10 @@ def map_indexers_to_show(show_obj, update=False, force=False, recheck=False, im_
                         ' WHERE indexer = ? AND indexer_id = ? AND mindexer = ?',
                         [show_obj.tvid, show_obj.prodid, tvid]])
 
-            if 0 < len(sql_l):
+            if sql_l:
                 logger.debug(f'Adding TV info mapping to DB for show: {show_obj.unique_name}')
-                my_db = db.DBConnection()
-                my_db.mass_action(sql_l)
+                with db.DBConnection() as sg_db:
+                    sg_db.mass_action(sql_l)
 
     show_obj.ids = mapped
     return mapped
@@ -345,10 +346,10 @@ def save_mapping(show_obj, save_map=None):
                 'DELETE FROM indexer_mapping WHERE indexer = ? AND indexer_id = ? AND mindexer = ?',
                 [show_obj.tvid, show_obj.prodid, tvid]])
 
-    if 0 < len(sql_l):
+    if sql_l:
         logger.debug(f'Saving TV info mapping to DB for show: {show_obj.unique_name}')
-        my_db = db.DBConnection()
-        my_db.mass_action(sql_l)
+        with db.DBConnection() as sg_db:
+            sg_db.mass_action(sql_l)
 
 
 def del_mapping(tvid, prodid):
@@ -359,8 +360,8 @@ def del_mapping(tvid, prodid):
     :param prodid: prodid
     :type prodid: int or long
     """
-    my_db = db.DBConnection()
-    my_db.action('DELETE FROM indexer_mapping WHERE indexer = ? AND indexer_id = ?', [tvid, prodid])
+    with db.DBConnection() as sg_db:
+        sg_db.action('DELETE FROM indexer_mapping WHERE indexer = ? AND indexer_id = ?', [tvid, prodid])
 
 
 def should_recheck_update_ids(show_obj):
@@ -393,8 +394,8 @@ def load_mapped_ids(**kwargs):
     logger.log('Start loading TV info mappings...')
     if 'load_all' in kwargs:
         del kwargs['load_all']
-        my_db = db.DBConnection()
-        sql_result = my_db.select('SELECT * FROM indexer_mapping ORDER BY indexer, indexer_id')
+        with db.DBConnection() as sg_db:
+            sql_result = sg_db.select('SELECT * FROM indexer_mapping ORDER BY indexer, indexer_id')
     else:
         sql_result = None
     for cur_show_obj in sickgear.showList:

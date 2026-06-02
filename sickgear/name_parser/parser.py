@@ -345,13 +345,13 @@ class NameParser(object):
                     season_number, episode_numbers = None, []
 
                     airdate = best_result.air_date.toordinal()
-                    my_db = db.DBConnection()
-                    sql_result = my_db.select(
-                        'SELECT season, episode, name'
-                        ' FROM tv_episodes'
-                        ' WHERE indexer = ? AND showid = ?'
-                        ' AND airdate = ?',
-                        [show_obj.tvid, show_obj.prodid, airdate])
+                    with db.DBConnection() as sg_db:
+                        sql_result = sg_db.select(
+                            'SELECT season, episode, name'
+                            ' FROM tv_episodes'
+                            ' WHERE indexer = ? AND showid = ?'
+                            ' AND airdate = ?',
+                            [show_obj.tvid, show_obj.prodid, airdate])
 
                     if sql_result:
                         season_number = int(sql_result[0]['season'])
