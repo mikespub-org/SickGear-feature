@@ -194,6 +194,9 @@ def _check_pip_env(pip_outdated=False, reset_fails=False):
             environment[cur_distinfo['Name']] = parse(cur_distinfo['Version'])  # type: Version
         except (BaseException, Exception):
             pass
+    # older? Pythons have version as '' here, this fills that gap
+    environment.update({cur_distinfo.metadata['Name']: parse(cur_distinfo.metadata['Version'])
+                        for cur_distinfo in distributions() if not environment.get(cur_distinfo.metadata['Name'])})
 
     save_failed = False
     known_failed = load_ignorables(DATA_DIR)
