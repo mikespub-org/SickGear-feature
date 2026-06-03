@@ -1103,8 +1103,8 @@ class QueueItemAdd(ShowQueueItem):
         # if they gave a custom status then change all the eps to it
         with db.DBConnection() as sg_db:
             if SKIPPED != self.default_status:
-	            logger.log(f'Setting all episodes to the specified default status:'
-    	                   f' {sickgear.common.statusStrings[self.default_status]}')
+                logger.log(f'Setting all episodes to the specified default status:'
+                           f' {sickgear.common.statusStrings[self.default_status]}')
                 sg_db.action(
                     """
                     UPDATE tv_episodes
