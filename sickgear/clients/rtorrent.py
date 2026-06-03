@@ -62,8 +62,8 @@ class RtorrentAPI(GenericClient):
                 if torrent and sickgear.TORRENT_LABEL:
                     label = torrent.get_custom(custom_var)
                     if sickgear.TORRENT_LABEL != label:
-                        logger.warning('%s: could not change custom%s label value \'%s\' to \'%s\' for %s' % (
-                            self.name, custom_var, label, sickgear.TORRENT_LABEL, torrent.name))
+                        logger.warning(f'{self.name}: could not change custom{custom_var}'
+                                       f' label value \'{label}\' to \'{sickgear.TORRENT_LABEL}\' for {torrent.name}')
 
             except (BaseException, Exception):
                 pass

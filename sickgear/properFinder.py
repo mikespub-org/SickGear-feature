@@ -64,8 +64,8 @@ def search_propers(provider_proper_obj=None):
         if propers:
             _download_propers(propers)
     else:
-        logger.log('No downloads or snatches found for the last %s%s days to use for a Propers search' %
-                   (age_shows, ('', ' (%s for anime)' % age_anime)[helpers.has_anime()]))
+        logger.log(f'No downloads or snatches found for the last {age_shows}'
+                   f'{("", f" ({age_anime} for anime)")[helpers.has_anime()]} days to use for a Propers search')
 
     run_at = ''
     if None is provider_proper_obj:

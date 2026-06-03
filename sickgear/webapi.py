@@ -100,7 +100,7 @@ def api_log(obj, msg, level=logger.MESSAGE):
     apikey_name = getattr(obj, 'apikey_name', '')
     if apikey_name:
         apikey_name = f' ({apikey_name})'
-    logger.log('%s%s' % ('API%s:: ' % apikey_name, msg), level)
+    logger.log(f'API{apikey_name}:: {msg}', level)
 
 
 class ApiServerLoading(webserve.BaseHandler):

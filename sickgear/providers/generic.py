@@ -164,8 +164,9 @@ class ProviderFailList(object):
             with self.lock:
                 self.dirty = True
                 self._fails.append(fail)
-                logger.debug('Adding fail.%s for %s' % (ProviderFailTypes.names.get(
-                    fail.fail_type, ProviderFailTypes.names[ProviderFailTypes.other]), self.provider_name()))
+                fail_type = ProviderFailTypes.names.get(
+                    fail.fail_type, ProviderFailTypes.names[ProviderFailTypes.other])
+                logger.debug(f'Adding fail.{fail_type} for {self.provider_name()}')
             self.save_list()
 
     def save_list(self):
@@ -525,9 +526,11 @@ class GenericProvider(object):
             if self.is_waiting():
                 if log_warning:
                     time_left = self.wait_time() - self.fail_newest_delta()
-                    logger.warning('Failed %s times, skipping provider for %s, last failure at %s with fail type: %s' % (
-                        self.failure_count, self.fmt_delta(time_left), self.fmt_delta(self.failure_time),
-                        ProviderFailTypes.names.get(self.last_fail, ProviderFailTypes.names[ProviderFailTypes.other])))
+                    fail_type = ProviderFailTypes.names.get(
+                        self.last_fail, ProviderFailTypes.names[ProviderFailTypes.other])
+                    logger.warning(
+                        f'Failed {self.failure_count} times, skipping provider for {self.fmt_delta(time_left)},'
+                        f' last failure at {self.fmt_delta(self.failure_time)} with fail type: {fail_type}')
                 return True
         return False
 
@@ -1983,9 +1986,9 @@ class TorrentProvider(GenericProvider):
         if self.should_skip():
             return None
 
-        logger.log('Failed to identify a "%s" page with %s %s (local network issue, site down, or ISP blocked) ' %
-                   (self.name, len(url_list), ('URL', 'different URLs')[1 < len(url_list)]) +
-                   (attempt_fetch and (f'Suggest; 1) Disable "{self.get_id()}" 2) Use a proxy/VPN') or ''),
+        logger.log(f'Failed to identify a "{self.name}" page with {len(url_list)}'
+                   f' {("URL", "different URLs")[1 < len(url_list)]} (local network issue, site down, or ISP blocked) '
+                   + (attempt_fetch and (f'Suggest; 1) Disable "{self.get_id()}" 2) Use a proxy/VPN') or ''),
                    (logger.WARNING, logger.ERROR)[self.enabled])
         if not hasattr(self, 'url_api'):
             self.urls = {}

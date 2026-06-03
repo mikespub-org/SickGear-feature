@@ -559,12 +559,12 @@ def get_absolute_number_from_season_and_episode(show_obj, season, episode):
                                       ' WHERE indexer = ? AND showid = ? AND season = ? AND episode = ?',
                                       [show_obj.tvid, show_obj.prodid, season, episode])
 
-            if 1 == len(sql_result):
-                absolute_number = int(sql_result[0]["absolute_number"])
-                logger.debug(f'Found absolute_number:{absolute_number} by {season}x{episode}')
-            else:
-                logger.debug('No entries for absolute number in show: %s found using %sx%s' %
-                             (show_obj.unique_name, str(season), str(episode)))
+        if 1 == len(sql_result):
+            absolute_number = int(sql_result[0]["absolute_number"])
+            logger.debug(f'Found absolute_number:{absolute_number} by {season}x{episode}')
+        else:
+            logger.debug(f'No entries for absolute number in show: {show_obj.unique_name}'
+                         f' found using {str(season)}x{str(episode)}')
 
     return absolute_number
 
@@ -1668,8 +1668,7 @@ def upgrade_new_naming():
                                 try:
                                     move_file(entry.path, new_name)
                                 except (BaseException, Exception) as e:
-                                    logger.warning('Unable to rename %s to %s: %s / %s'
-                                                   % (entry.path, new_name, repr(e), ex(e)))
+                                    logger.warning(f'Unable to rename {entry.path} to {new_name}: {repr(e)} / {ex(e)}')
                             else:
                                 # clean up files without reference in db
                                 try:

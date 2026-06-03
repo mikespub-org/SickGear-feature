@@ -245,8 +245,8 @@ class DownloadStationAPI(GenericClient):
                     retry_ids = item['fail']
                 else:
                     if max(tries) == i:
-                        logger.debug('%s: failed to %s %s item(s) after %s tries over %s mins, aborted' %
-                                     (self.name, act, len(item['fail']), len(tries), sum(tries) / 60))
+                        logger.debug(f'{self.name}: failed to {act} {len(item["fail"])} item(s)'
+                                     f' after {len(tries)} tries over {sum(tries) / 60} mins, aborted')
 
             return (item['fail'] + item['ignore']) or True
 
@@ -260,8 +260,7 @@ class DownloadStationAPI(GenericClient):
         if 3 <= self._task_version:
             return self._add_torrent(uri={'uri': search_result.url})
 
-        logger.warning('%s: the API at %s doesn\'t support torrent magnet, download skipped' %
-                       (self.name, self.host))
+        logger.warning(f'{self.name}: the API at {self.host} doesn\'t support torrent magnet, download skipped')
 
     def _add_torrent_file(self, search_result):
         # type: (TorrentSearchResult) -> Union[AnyStr, bool]

@@ -764,8 +764,8 @@ class BacklogQueueItem(BaseSearchQueueItem):
             logger.error(traceback.format_exc())
 
         finally:
-            logger.log('Completed backlog search %sfor: [%s]'
-                       % (('', 'with a debug error ')[is_error], self.show_obj.unique_name))
+            logger.log(f'Completed backlog search {("", "with a debug error ")[is_error]}'
+                       f'for: [{self.show_obj.unique_name}]')
             self.finish()
 
 

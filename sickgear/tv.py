@@ -1800,8 +1800,8 @@ class TVShow(TVShowBase):
             if no_create:
                 return
 
-            # logger.debug('%s: An object for episode %sx%s did not exist in the cache, trying to create it' %
-            #              (self.tvid_prodid, season, episode))
+            # logger.debug(f'{self.tvid_prodid}: An object for episode {season}x{episode}'
+            #              f' did not exist in the cache, trying to create it')
 
             if path and not existing_only:
                 ep_obj = TVEpisode(self, season, episode, path, show_result=ep_result)
@@ -2346,8 +2346,8 @@ class TVShow(TVShowBase):
         if 0 != self._dvdorder:
             tvinfo_config['dvdorder'] = True
 
-        logger.log('%s: Loading all episodes for [%s] from %s..'
-                   % (self.tvid_prodid, self._name, sickgear.TVInfoAPI(self.tvid).name))
+        logger.log(f'{self.tvid_prodid}: Loading all episodes for [{self._name}]'
+                   f' from {sickgear.TVInfoAPI(self.tvid).name}..')
 
         if getattr(tvinfo_data, 'id', None) == self.prodid:
             show_obj = tvinfo_data
@@ -2380,9 +2380,9 @@ class TVShow(TVShowBase):
                 try:
                     ep_obj = self.get_episode(cur_season, cur_episode, ep_result=sql_result)  # type: TVEpisode
                 except exceptions_helper.EpisodeNotFoundException:
-                    logger.log('%s: %s object for %sx%s from [%s] is incomplete, skipping this episode' %
-                               (self.tvid_prodid, sickgear.TVInfoAPI(
-                                   self.tvid).name, cur_season, cur_episode, self._name))
+                    logger.log(f'{self.tvid_prodid}: {sickgear.TVInfoAPI(self.tvid).name}'
+                               f' object for {cur_season}x{cur_episode} from [{self._name}] is incomplete,'
+                               f' skipping this episode')
                     continue
                 else:
                     try:
@@ -2642,9 +2642,9 @@ class TVShow(TVShowBase):
                         tvinfo_config['language'] = self._lang
                     t = sickgear.TVInfoAPI(self.tvid).setup(**tvinfo_config)
                     cached_show = t.get_show(self.prodid, load_episodes=False, language=self._lang)
-                    vals = (self.prodid, '' if not cached_show else f' [{cached_show["seriesname"].strip()}]')
                     if len(sql_result):
-                        logger.log('%s: Loading show info%s from database' % vals)
+                        logger.log(f'{self.prodid}: Loading show info%s from database'
+                                   % '' if not cached_show else f' [{cached_show["seriesname"].strip()}]')
                         raise exceptions_helper.MultipleDBShowsException()
                 logger.log(f'{self.tvid_prodid}: Unable to find the show{self.name} in the database')
                 return
@@ -2854,8 +2854,8 @@ class TVShow(TVShowBase):
                 f'Found {self.tvid_prodid}, but attribute "seriesname" was empty.')
 
         if show_info:
-            logger.log('%s: Loading show info [%s] from %s' % (
-                self.tvid_prodid, self._name, sickgear.TVInfoAPI(self.tvid).name))
+            logger.log(f'{self.tvid_prodid}: Loading show info [{self._name}]'
+                       f' from {sickgear.TVInfoAPI(self.tvid).name}')
 
         self.classification = self.dict_prevent_nonetype(show_info, 'classification', 'Scripted')
         self.genre = '|'.join([_g for _g in (self.dict_prevent_nonetype(show_info, 'genre') or '').split('|') if _g])
@@ -3387,8 +3387,7 @@ class TVShow(TVShowBase):
         self.load_episodes_from_dir()
 
         # run through all locations from DB, check that they exist
-        logger.log('%s: Loading all episodes for [%s] with a location from the database'
-                   % (self.tvid_prodid, self._name))
+        logger.log(f'{self.tvid_prodid}: Loading all episodes for [{self._name}] with a location from the database')
 
         with db.DBConnection() as sg_db:
             # noinspection SqlResolve
@@ -3466,9 +3465,8 @@ class TVShow(TVShowBase):
                     ep_obj.airdate_modify_stamp()
 
         if deleted:
-            logger.log('%s: %s %s media file%s and kept %s most recent downloads' % (
-                self.tvid_prodid, ('Permanently deleted', 'Trashed')[sickgear.TRASH_REMOVE_SHOW],
-                deleted, helpers.maybe_plural(deleted), kept))
+            logger.log(f'{self.tvid_prodid}: {("Permanently deleted", "Trashed")[sickgear.TRASH_REMOVE_SHOW]}'
+                       f' {deleted} media file{helpers.maybe_plural(deleted)} and kept {kept} most recent downloads')
 
         if sql_l:
             with db.DBConnection() as sg_db:
@@ -3988,9 +3986,10 @@ class TVEpisode(TVEpisodeBase):
         self.dirty_setter('_indexerid')(self, int(val))
 
     def _set_location(self, val):
-        log_vals = (('clears', ''), ('sets', ' to ' + val))[any(val)]
-        # noinspection PyStringFormat
-        logger.debug('Setter %s location%s' % log_vals)
+        if any(val):
+            logger.debug(f'Setter sets location to {val}')
+        else:
+            logger.debug(f'Setter clears location')
 
         # self._location = newLocation
         self.dirty_setter('_location')(self, val)
@@ -4358,8 +4357,8 @@ class TVEpisode(TVEpisodeBase):
             return False
 
         if getattr(ep_info, 'absolute_number', None) in (None, ''):
-            logger.debug('This episode (%s - %sx%s) has no absolute number on %s' %
-                         (self.show_obj.unique_name, season, episode, sickgear.TVInfoAPI(self.tvid).name))
+            logger.debug(f'This episode ({self.show_obj.unique_name} - {season}x{episode})'
+                         f' has no absolute number on {sickgear.TVInfoAPI(self.tvid).name}')
         else:
             logger.debug(f'{self._show_obj.tvid_prodid}:'
                          f' The absolute_number for {season}x{episode} is : {ep_info["absolute_number"]}')
@@ -5387,9 +5386,8 @@ class TVEpisode(TVEpisodeBase):
             if not helpers.touch_file(self.location, aired_epoch):
                 result, loglevel = 'Error changing', logger.WARNING
 
-            logger.log('%s: %s modify date of %s to show air date %s'
-                       % (self._show_obj.tvid_prodid, result, os.path.basename(self.location),
-                          'n/a' if not aired_dt else aired_dt.strftime('%b %d,%Y (%H:%M)')), loglevel)
+            logger.log(f'{self._show_obj.tvid_prodid}: {result} modify date of {os.path.basename(self.location)} '
+                       f'to show air date {"n/a" if not aired_dt else aired_dt.strftime("%b %d,%Y (%H:%M)")}', loglevel)
 
     def __getstate__(self):
         d = dict(self.__dict__)

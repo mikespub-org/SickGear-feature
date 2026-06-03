@@ -256,7 +256,7 @@ class BaseStaticFileHandler(StaticFileHandler):
                        f'{self.request.headers}{body}')
         # suppress traceback by removing 'exc_info' kwarg
         if 'exc_info' in kwargs:
-            logger.debug('Gracefully handled exception text:\n%s' % traceback.format_exception(*kwargs["exc_info"]))
+            logger.debug(f'Gracefully handled exception text:\n{traceback.format_exception(*kwargs["exc_info"])}')
             del kwargs['exc_info']
         return super(BaseStaticFileHandler, self).write_error(status_code, **kwargs)
 
@@ -341,7 +341,7 @@ class RouteHandler(RequestHandler):
                        f' request for `{self.request.path}` with headers:\n{self.request.headers}{body}')
         # suppress traceback by removing 'exc_info' kwarg
         if 'exc_info' in kwargs:
-            logger.debug('Gracefully handled exception text:\n%s' % traceback.format_exception(*kwargs["exc_info"]))
+            logger.debug(f'Gracefully handled exception text:\n{traceback.format_exception(*kwargs["exc_info"])}')
             del kwargs['exc_info']
         return super(RouteHandler, self).write_error(status_code, **kwargs)
 
@@ -625,7 +625,7 @@ class RepoHandler(BaseStaticFileHandler):
     kodi_is_legacy = None
 
     def parse_url_path(self, url_path):
-        logger.debug('Kodi req... get(path): %s' % url_path)
+        logger.debug(f'Kodi req... get(path): {url_path}')
         return super(RepoHandler, self).parse_url_path(url_path)
 
     def set_extra_headers(self, *args, **kwargs):
@@ -640,7 +640,7 @@ class RepoHandler(BaseStaticFileHandler):
 
         super(RepoHandler, self).initialize(*args, **kwargs)
 
-        logger.debug('Kodi req... initialize(path): %s' % kwargs['path'])
+        logger.debug(f'Kodi req... initialize(path): {kwargs["path"]}')
         cache_client = os.path.join(sickgear.CACHE_DIR, 'clients')
         cache_client_kodi = os.path.join(cache_client, 'kodi')
         cache_client_kodi_watchedstate = os.path.join(cache_client_kodi, 'service.sickgear.watchedstate.updater')
@@ -879,7 +879,7 @@ class RepoHandler(BaseStaticFileHandler):
                     infile = fh.read()
                 zh.writestr('repository.sickgear/icon.png', infile, zipfile.ZIP_DEFLATED)
         except OSError as e:
-            logger.warning('Unable to zip: %r / %s' % (e, ex(e)))
+            logger.warning(f'Unable to zip: {e!r} / {ex(e)}')
 
         zip_data = bfr.getvalue()
         bfr.close()
@@ -918,7 +918,7 @@ class RepoHandler(BaseStaticFileHandler):
                     zh.writestr(os.path.relpath(direntry.path.replace(self.kodi_legacy, ''), basepath),
                                 infile, zipfile.ZIP_DEFLATED)
             except OSError as e:
-                logger.warning('Unable to zip %s: %r / %s' % (direntry.path, e, ex(e)))
+                logger.warning(f'Unable to zip {direntry.path}: {e!r} / {ex(e)}')
 
         zip_data = bfr.getvalue()
         bfr.close()
@@ -971,14 +971,14 @@ class NoXSRFHandler(RouteHandler):
                     break
 
         if mapping:
-            logger.log('Folder mappings used, the first of %s is [%s] in Kodi is [%s] in SickGear' %
-                       (mapped, mapping[0], mapping[1]))
+            logger.log(f'Folder mappings used, the first of {mapped} is [{mapping[0]}]'
+                       f' in Kodi is [{mapping[1]}] in SickGear')
 
         req_version = tuple([int(x) for x in kwargs.get('version', '0.0.0').split('.')])
         this_version = RepoHandler.get_addon_version(self.kodi_include)
         if not kwargs or (req_version < tuple([int(x) for x in this_version.split('.')])):
-            logger.log('Kodi Add-on update available. To upgrade to version %s; '
-                       'select "Check for updates" on menu of "SickGear Add-on repository"' % this_version)
+            logger.log(f'Kodi Add-on update available. To upgrade to version {this_version};'
+                       f' select "Check for updates" on menu of "SickGear Add-on repository"')
 
         return MainHandler.update_watched_state(data, as_json)
 
@@ -1630,7 +1630,7 @@ r.close()
                 if not bname:
                     msg = 'Missing media file name provided'
                     data[k] = msg
-                    logger.warning('Update watched state skipped an item: %s' % msg)
+                    logger.warning(f'Update watched state skipped an item: {msg}')
                     continue
 
                 if bname in ep_results:
@@ -1659,7 +1659,7 @@ r.close()
         if as_json:
             if not data:
                 data = dict(error='Request made to SickGear with invalid payload')
-                logger.warning('Update watched state failed: %s' % data['error'])
+                logger.warning(f'Update watched state failed: {data["error"]}')
 
             return json_dumps(data)
 
@@ -1975,7 +1975,7 @@ class Home(MainHandler):
         method = n.test_update_library if server else n.test_notify
         result = method(hosts, username, password)
 
-        ui.notifications.message('Tested Plex %s(s): ' % ('client', 'Media Server host')[server],
+        ui.notifications.message(f'Tested Plex {("client", "Media Server host")[server]}(s): ',
                                  unquote_plus(hosts.replace(',', ', ')))
         return result
 
@@ -2290,11 +2290,11 @@ class Home(MainHandler):
     def maybe_ignore(self, task):
         response = Scheduler.blocking_jobs()
         if response:
-            task and logger.log('%s aborted because %s' % (task, response.lower()), logger.DEBUG)
+            task and logger.log(f'{task} aborted because {response.lower()}', logger.DEBUG)
 
             self.redirect(self.request.headers['Referer'])
             if task:
-                ui.notifications.message(u'Fail %s because %s, please try later' % (task.lower(), response.lower()))
+                ui.notifications.message(f'Fail {task.lower()} because {response.lower()}, please try later')
                 return True
         return False
 
@@ -2307,7 +2307,8 @@ class Home(MainHandler):
             return self.restart(pid)
 
         return self._generic_message('Update Failed',
-                                     'Update wasn\'t successful, not restarting. Check your log for more information.')
+                                     'Update wasn\'t successful, not restarting.'
+                                     ' Check your log for more information.')
 
     def branch_checkout(self, branch):
         sickgear.BRANCH = branch
@@ -2852,7 +2853,7 @@ class Home(MainHandler):
                                                              new_prodid=m_prodid, force_id=True,
                                                              set_pause=set_pause, mark_wanted=mark_wanted)
         except (BaseException, Exception) as e:
-            logger.warning('Could not add show %s to switch queue: %s' % (show_obj.tvid_prodid, ex(e)))
+            logger.warning(f'Could not add show {show_obj.tvid_prodid} to switch queue: {ex(e)}')
 
         ui.notifications.message('TV info source switch', 'Queued switch of tv info source')
         return {'Success': 'Switched to new TV info source'}
@@ -3281,9 +3282,9 @@ class Home(MainHandler):
 
         show_obj.delete_show(bool(full))
 
-        ui.notifications.message('%s with %s' % (('Deleting', 'Trashing')[sickgear.TRASH_REMOVE_SHOW],
-                                                 ('media left untouched', 'all related media')[bool(full)]),
-                                 '<b>%s</b>' % show_obj.unique_name)
+        ui.notifications.message(f'{("Deleting", "Trashing")[sickgear.TRASH_REMOVE_SHOW]} with'
+                                 f' {("media left untouched", "all related media")[bool(full)]}',
+                                 f'<b>{show_obj.unique_name}</b>')
         self.redirect('/home/')
 
     def update_cast(self, tvid_prodid=None):
@@ -3370,9 +3371,9 @@ class Home(MainHandler):
 
         if notifiers.NotifierFactory().get('EMBY').update_library(
                 helpers.find_show_by_id(tvid_prodid), force=True):
-            ui.notifications.message('Library update command sent to Emby host(s): ' + sickgear.EMBY_HOST)
+            ui.notifications.message(f'Library update command sent to Emby host(s): {sickgear.EMBY_HOST}')
         else:
-            ui.notifications.error('Unable to contact one or more Emby host(s): ' + sickgear.EMBY_HOST)
+            ui.notifications.error(f'Unable to contact one or more Emby host(s): {sickgear.EMBY_HOST}')
         self.redirect('/home/')
 
     def update_kodi(self, show_name=None):
@@ -3385,9 +3386,9 @@ class Home(MainHandler):
             host = sickgear.KODI_HOST
 
         if notifiers.NotifierFactory().get('KODI').update_library(show_name=show_name):
-            ui.notifications.message('Library update command sent to Kodi host(s): ' + host)
+            ui.notifications.message(f'Library update command sent to Kodi host(s): {host}')
         else:
-            ui.notifications.error('Unable to contact one or more Kodi host(s): ' + host)
+            ui.notifications.error(f'Unable to contact one or more Kodi host(s): {host}')
         self.redirect('/home/')
 
     def update_plex(self):
@@ -3527,7 +3528,7 @@ class Home(MainHandler):
                 cur_failed_queue_item = search_queue.FailedQueueItem(show_obj, segment)
                 sickgear.search_queue_scheduler.action.add_item(cur_failed_queue_item)
 
-                msg += '<li>Season %s</li>' % season
+                msg += f'<li>Season {season}</li>'
                 logger.log(f'Retrying search for {show_obj.unique_name} season {season}'
                            f' because some eps were set to failed')
 
@@ -4622,8 +4623,8 @@ class AddShows(Home):
         except (BaseException, Exception) as e:
             if getattr(cls, 'levenshtein_error', None) != dt_date.today():
                 cls.levenshtein_error = dt_date.today()
-                logger.error('Error generating relevance rating: %s' % ex(e))
-                logger.debug('Traceback: %s' % traceback.format_exc())
+                logger.error(f'Error generating relevance rating: {ex(e)}')
+                logger.debug(f'Traceback: {traceback.format_exc()}')
             return 0
 
         # if lang param is supplied, add scale in order to reorder elements 1) en:lang 2) other:lang 3) alias
@@ -5051,7 +5052,7 @@ class AddShows(Home):
         except IMDbException as e:
             logger.warning(f'Could not connect to Imdb service: {ex(e)}')
         except exceptions_helper.ConnectionSkipException as e:
-            logger.log('Skipping Imdb because of previous failure: %s' % ex(e))
+            logger.log(f'Skipping Imdb because of previous failure: {ex(e)}')
         except ValueError as e:
             raise e
         except (IndexError, KeyError):
@@ -5985,7 +5986,7 @@ class AddShows(Home):
         except TraktException as e:
             logger.warning(f'Could not connect to Trakt service: {ex(e)}')
         except exceptions_helper.ConnectionSkipException as e:
-            logger.log('Skipping Trakt because of previous failure: %s' % ex(e))
+            logger.log(f'Skipping Trakt because of previous failure: {ex(e)}')
         except ValueError as e:
             raise e
         except (IndexError, KeyError):
@@ -8202,16 +8203,16 @@ class Manage(MainHandler):
             new_show_id = new_show.split(':')
             new_tvid = int(new_show_id[0])
             if new_tvid not in tv_sources:
-                logger.warning('Skipping %s because target is not a valid source' % show)
-                errors.append('Skipping %s because target is not a valid source' % show)
+                logger.warning(f'Skipping {show} because target is not a valid source')
+                errors.append(f'Skipping {show} because target is not a valid source')
                 continue
             try:
                 show_obj = helpers.find_show_by_id({old_tvid: old_prodid})
             except (BaseException, Exception):
                 show_obj = None
             if not show_obj:
-                logger.warning('Skipping %s because source is not a valid show' % show)
-                errors.append('Skipping %s because source is not a valid show' % show)
+                logger.warning(f'Skipping {show} because source is not a valid show')
+                errors.append(f'Skipping {show} because source is not a valid show')
                 continue
             if 2 == len(new_show_id):
                 new_prodid = int(new_show_id[1])
@@ -8220,21 +8221,21 @@ class Manage(MainHandler):
                 except (BaseException, Exception):
                     new_show_obj = None
                 if new_show_obj:
-                    logger.warning('Skipping %s because target show with that id already exists in db' % show)
-                    errors.append('Skipping %s because target show with that id already exists in db' % show)
+                    logger.warning(f'Skipping {show} because target show with that id already exists in db')
+                    errors.append(f'Skipping {show} because target show with that id already exists in db')
                     continue
             else:
                 new_prodid = None
             if show_obj.tvid == new_tvid and (not new_prodid or new_prodid == show_obj.prodid):
-                logger.warning('Skipping %s because target same as source' % show)
-                errors.append('Skipping %s because target same as source' % show)
+                logger.warning(f'Skipping {show} because target same as source')
+                errors.append(f'Skipping {show} because target same as source')
                 continue
             try:
                 sickgear.show_queue_scheduler.action.switch_show(show_obj=show_obj, new_tvid=new_tvid,
                                                                  new_prodid=new_prodid, force_id=force_id)
             except (BaseException, Exception) as e:
-                logger.warning('Could not add show %s to switch queue: %s' % (show_obj.tvid_prodid, ex(e)))
-                errors.append('Could not add show %s to switch queue: %s' % (show_obj.tvid_prodid, ex(e)))
+                logger.warning(f'Could not add show {show_obj.tvid_prodid} to switch queue: {ex(e)}')
+                errors.append(f'Could not add show {show_obj.tvid_prodid} to switch queue: {ex(e)}')
 
         return json_dumps(({'result': 'success'}, {'errors': ', '.join(errors)})[0 < len(errors)])
 
@@ -8902,7 +8903,7 @@ class History(MainHandler):
                 # noinspection HttpUrlsUsage
                 parts = re.search(r'(.*):(\d+)$', urlparse('http://' + re.sub(r'^\w+://', '', cur_host)).netloc)
                 if not parts:
-                    logger.warning('Skipping host not in min. host:port format : %s' % cur_host)
+                    logger.warning(f'Skipping host not in min. host:port format : {cur_host}')
                 elif parts.group(1):
                     plex.plex_host = parts.group(1)
                     if None is not parts.group(2):
@@ -8927,7 +8928,7 @@ class History(MainHandler):
 
                             idx += 1
 
-                    logger.debug('Fetched %s of %s played for host : %s' % (len(plex.show_states), played, cur_host))
+                    logger.debug(f'Fetched {len(plex.show_states)} of {played} played for host : {cur_host}')
             if mapping:
                 logger.debug(f'Folder mappings used, the first of {mapped} is [{mapping[0]}] in Plex is'
                              f' [{mapping[1]}] in SickGear')
@@ -9032,13 +9033,12 @@ class History(MainHandler):
         else:
             msg = []
             if deleted:
-                msg += ['%s %s media file%s' % (
-                    ('Permanently deleted', 'Trashed')[sickgear.TRASH_REMOVE_SHOW],
-                    len(deleted), helpers.maybe_plural(deleted))]
+                msg += [f'{("Permanently deleted", "Trashed")[sickgear.TRASH_REMOVE_SHOW]}'
+                        f' {len(deleted)} media file{helpers.maybe_plural(deleted)}']
             elif removed:
-                msg += ['Removed %s watched history item%s' % (len(removed), helpers.maybe_plural(removed))]
+                msg += [f'Removed {len(removed)} watched history item{helpers.maybe_plural(removed)}']
             else:
-                msg += ['Deleted %s watched history item%s' % (len(h_records), helpers.maybe_plural(h_records))]
+                msg += [f'Deleted {len(h_records)} watched history item{helpers.maybe_plural(h_records)}']
             msg = '<br>'.join(msg)
 
         ui.notifications.message('History : Watch', msg)
@@ -9227,7 +9227,7 @@ class ConfigGeneral(Config):
                 result['result'] = 'Failed: apikey already exists, try again'
             else:
                 sickgear.API_KEYS.append([app_name, api_key])
-                logger.debug('Created apikey for [%s]' % app_name)
+                logger.debug(f'Created apikey for [{app_name}]')
                 result.update(dict(result='Success: apikey added', added=api_key))
                 sickgear.USE_API = 1
                 sickgear.save_config()
@@ -9246,7 +9246,7 @@ class ConfigGeneral(Config):
             result['result'] = 'Failed: key doesn\'t exist'
         else:
             sickgear.API_KEYS = [ak for ak in sickgear.API_KEYS if ak[0] and api_key != ak[1]]
-            logger.debug('Revoked [%s] apikey [%s]' % (app_name, api_key))
+            logger.debug(f'Revoked [{app_name}] apikey [{api_key}]')
             result.update(dict(result='Success: apikey removed', removed=True))
             sickgear.save_config()
             ui.notifications.message('Configuration Saved', os.path.join(sickgear.CONFIG_FILE))
@@ -9558,7 +9558,7 @@ class ConfigSearch(Config):
         sickgear.TORRENT_LABEL = torrent_label
         sickgear.TORRENT_LABEL_VAR = config.to_int((0, torrent_label_var)['rtorrent' == torrent_method], 1)
         if not (0 <= sickgear.TORRENT_LABEL_VAR <= 5):
-            logger.debug('Setting rTorrent custom%s is not 0-5, defaulting to custom1' % torrent_label_var)
+            logger.debug(f'Setting rTorrent custom{torrent_label_var} is not 0-5, defaulting to custom1')
             sickgear.TORRENT_LABEL_VAR = 1
         sickgear.TORRENT_VERIFY_CERT = config.checkbox_to_value(torrent_verify_cert)
         sickgear.TORRENT_PATH = torrent_path
