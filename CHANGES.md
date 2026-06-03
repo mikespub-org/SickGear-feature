@@ -78,6 +78,7 @@
 
 
 [develop]
+* Fix crash on startup with indentation issue
 * Change disable check_same_thread for sqllite connection to make sure that finalize __del__ doesn't throw exceptions
 * Update apprise 1.10.0 (343c960) to 1.11.0 (158c4e1)
 * Update certifi 2026.04.22 to 2026.05.20
