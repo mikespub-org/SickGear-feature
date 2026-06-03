@@ -75,6 +75,7 @@
 * Change refactor some CSS to improve browser processing time
 * Change py2 strings to py3 f-strings and make use of quoted string types consistent
 * Change add db connection context manager to ensure connections are closed properly
+* Fix gaps in package version collection on some Python installations that cause some package updates to be missed 
 
 
 [develop]
