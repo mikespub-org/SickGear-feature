@@ -435,8 +435,7 @@ class KodiNotifier(Notifier):
                 self._maybe_log_failed_detection(cur_host, 'connect and detect version for')
             else:
                 if 4 >= api_version:
-                    self._log_debug(f'Detected {self.prefix and f' {self.prefix.capitalize()}'}version <= 11,'
-                                    f' using HTTP API')
+                    self._log_debug(f'Detected {self.prefix}version <= 11, using HTTP API {self.prefix.capitalize()}')
                     __method_send = self._send
                     command = dict(command='ExecBuiltIn',
                                    parameter=f'Notification({title},{body})')

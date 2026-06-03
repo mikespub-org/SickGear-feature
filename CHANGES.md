@@ -96,6 +96,7 @@
 * Change restore filters
 * Fix for old Pythons that don't support certain quotation use in f-string
 * Fix hover styling of Remove and Edit buttons on light theme
+* Fix Kodi notifier f-string conversion
 
 
 ### 3.35.7 (2026-05-19 20:00:00 UTC)
