@@ -423,7 +423,7 @@ class ProcessTVShow(object):
                                     force, force_replace, use_trash=cleanup, show_obj=show_obj)
 
         except OSError as e:
-            logger.warning('Batch skipped, %s%s' % (ex(e), e.filename and (' (file %s)' % e.filename) or ''))
+            logger.warning(f'Batch skipped, {ex(e)}{e.filename and f" (file {e.filename})" or ""}')
 
         # Process video files in TV subdirectories
         for directory in [x for x in dirs if self._validate_dir(
@@ -882,11 +882,11 @@ class ProcessTVShow(object):
                             return result
                 else:
                     if base_filesize == sum(chunk_sizes):
-                        logger.log('Join skipped. Total size of %s input files equal to output.. %s (%s bytes)' % (
-                            len(chunk_set), base_filepath, base_filesize))
+                        logger.log(f'Join skipped. Total size of {len(chunk_set)} input files equal to output..'
+                                   f' {base_filepath} ({base_filesize} bytes)')
                     else:
-                        logger.log('Join skipped. Found output file larger than input.. %s (%s bytes)' % (
-                            base_filepath, base_filesize))
+                        logger.log(f'Join skipped. Found output file larger than input..'
+                                   f' {base_filepath} ({base_filesize} bytes)')
                     return result
 
             with open(base_filepath, 'ab') as newfile:

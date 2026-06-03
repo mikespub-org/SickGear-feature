@@ -1103,8 +1103,8 @@ class QueueItemAdd(ShowQueueItem):
         # if they gave a custom status then change all the eps to it
         with db.DBConnection() as sg_db:
             if SKIPPED != self.default_status:
-                logger.log('Setting all episodes to the specified default status: %s'
-                           % sickgear.common.statusStrings[self.default_status])
+	            logger.log(f'Setting all episodes to the specified default status:'
+    	                   f' {sickgear.common.statusStrings[self.default_status]}')
                 sg_db.action(
                     """
                     UPDATE tv_episodes
@@ -1183,9 +1183,9 @@ class QueueItemAdd(ShowQueueItem):
         if WANTED == self.default_status or items_wanted:
             logger.log('Launching backlog for this show since episodes are WANTED')
             sickgear.search_backlog_scheduler.action.search_backlog([self.show_obj], prevent_same=True)
-            ui.notifications.message('Show added/search', 'Adding and searching for episodes of' + msg)
+            ui.notifications.message('Show added/search', f'Adding and searching for episodes of{msg}')
         else:
-            ui.notifications.message('Show added', 'Adding' + msg)
+            ui.notifications.message('Show added', f'Adding{msg}')
 
         self.finish()
 
@@ -1376,8 +1376,8 @@ class QueueItemUpdate(ShowQueueItem):
         old_name = self.show_obj.name
 
         if not sickgear.TVInfoAPI(self.show_obj.tvid).config['active']:
-            logger.log('TV info source %s is marked inactive, aborting update for show %s and continue with refresh.'
-                       % (sickgear.TVInfoAPI(self.show_obj.tvid).config['name'], self.show_obj.name))
+            logger.log(f'TV info source {sickgear.TVInfoAPI(self.show_obj.tvid).config["name"]} is marked inactive,'
+                       f' aborting update for show {self.show_obj.name} and continue with refresh.')
             sickgear.show_queue_scheduler.action.refresh_show(self.show_obj, self.force, self.scheduled_update,
                                                               after_update=True)
             return
@@ -1428,8 +1428,8 @@ class QueueItemUpdate(ShowQueueItem):
             logger.error('No data returned from %s, unable to update episodes for show: %s' %
                          (sickgear.TVInfoAPI(self.show_obj.tvid).name, self.show_obj.unique_name))
         elif not tvinfo_ep_list or 0 == len(tvinfo_ep_list):
-            logger.warning('No episodes returned from %s for show: %s' %
-                           (sickgear.TVInfoAPI(self.show_obj.tvid).name, self.show_obj.unique_name))
+            logger.warning(f'No episodes returned from {sickgear.TVInfoAPI(self.show_obj.tvid).name}'
+                           f' for show: {self.show_obj.unique_name}')
         else:
             # for each ep we found on TVDB delete it from the DB list
             for cur_season in tvinfo_ep_list:

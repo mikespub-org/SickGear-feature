@@ -234,8 +234,9 @@ def revert_episode(ep_obj):
                 status_revert = history_eps[ep_obj.episode]['old_status']
 
                 status, quality = Quality.split_composite_status(status_revert)
-                logger.log('Found in failed.db history with status: %s quality: %s' % (
-                    statusStrings[status], Quality.qualityStrings[quality]))
+                logger.log(f'Found in failed.db history with'
+                           f' status: {statusStrings[status]}'
+                           f' quality: {Quality.qualityStrings[quality]}')
             else:
                 status_revert = WANTED
 
@@ -297,7 +298,7 @@ def find_release(ep_obj):
         provider = None
 
         # Release not found
-        logger.debug('No found failed.db history release for %sx%s: [%s]' % (
-            ep_obj.season, ep_obj.episode, ep_obj.show_obj.unique_name))
+        logger.debug(f'No found failed.db history release for'
+                     f' {ep_obj.season}x{ep_obj.episode}: [{ep_obj.show_obj.unique_name}]')
 
     return release, provider

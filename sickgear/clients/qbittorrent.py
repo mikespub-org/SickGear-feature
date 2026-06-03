@@ -325,8 +325,8 @@ class QbittorrentAPI(GenericClient):
                     retry_ids = item['fail']
                 else:
                     if max(tries) == i:
-                        logger.debug('%s: failed to %s %s item(s) after %s tries over %s mins, aborted' %
-                                     (self.name, act, len(item['fail']), len(tries), sum(tries) / 60))
+                        logger.debug(f'{self.name}: failed to {act} {len(item["fail"])} item(s)'
+                                     f' after {len(tries)} tries over {sum(tries) / 60} mins, aborted')
 
             return (item['fail'] + item['ignore']) or True
 

@@ -299,8 +299,8 @@ class ConnectionFailList(object):
         if not limit_set:
             time_index = self.fail_time_index(base_limit=0)
             self.tmr_limit_wait = self.wait_time(time_index)
-        logger.warning('Request limit reached. Waiting for %s until next retry. Message: %s' %
-                       (self.tmr_limit_wait, desc or 'none found'))
+        logger.warning(f'Request limit reached. Waiting for {self.tmr_limit_wait} until next retry.'
+                       f' Message: {desc or "none found"}')
 
     @property
     def tmr_limit_time(self):
@@ -436,8 +436,8 @@ class ConnectionFailList(object):
             time_left = self.tmr_limit_time + self.tmr_limit_wait - datetime.datetime.now()
             if time_left > datetime.timedelta(seconds=0):
                 if log_warning:
-                    logger.warning('%sToo many requests reached at %s, waiting for %s' % (
-                        self.url, self.fmt_delta(self.tmr_limit_time), self.fmt_delta(time_left)))
+                    logger.warning(f'{self.url}Too many requests reached at {self.fmt_delta(self.tmr_limit_time)},'
+                                   f' waiting for {self.fmt_delta(time_left)}')
                 return use_tmr_limit
             else:
                 self.tmr_limit_time = None
@@ -448,11 +448,12 @@ class ConnectionFailList(object):
             if self.is_waiting():
                 if log_warning:
                     time_left = self.wait_time() - self.fail_newest_delta()
-                    logger.warning('Failed %s times, skipping domain %s for %s, '
-                                   'last failure at %s with fail type: %s' %
-                                   (self.failure_count, self.url, self.fmt_delta(time_left),
-                                    self.fmt_delta(self.failure_time), ConnectionFailTypes.names.get(
-                                       self.last_fail, ConnectionFailTypes.names[ConnectionFailTypes.other])))
+                    fail_type = ConnectionFailTypes.names.get(
+                        self.last_fail, ConnectionFailTypes.names[ConnectionFailTypes.other])
+                    logger.warning(f'Failed {self.failure_count} times, skipping domain {self.url}'
+                                   f' for {self.fmt_delta(time_left)},'
+                                   f' last failure at {self.fmt_delta(self.failure_time)}'
+                                   f' with fail type: {fail_type}')
                 return True
         return False
 
@@ -522,8 +523,9 @@ class ConnectionFailList(object):
             with self.lock:
                 self.dirty = True
                 self._fails.append(fail)
-                logger.debug('Adding fail.%s for %s' % (ConnectionFailTypes.names.get(
-                    fail.fail_type, ConnectionFailTypes.names[ConnectionFailTypes.other]), self.url))
+                fail_type = ConnectionFailTypes.names.get(
+                    fail.fail_type, ConnectionFailTypes.names[ConnectionFailTypes.other])
+                logger.debug(f'Adding fail.{fail_type} for {self.url}')
             self.save_list()
 
     def _load_fail_values(self):
@@ -627,10 +629,10 @@ def _log_failure_url(url, post_data=None, post_json=None):
     if DOMAIN_FAILURES.should_skip(url, log_warning=False):
         post = []
         if post_data:
-            post += [' .. Post params: [%s]' % '&'.join([post_data])]
+            post += [f' .. Post params: [{"&".join([post_data])}]']
         if post_json:
-            post += [' .. Json params: [%s]' % '&'.join([post_json])]
-        logger.warning('Failure URL: %s%s' % (url, ''.join(post)))
+            post += [f' .. Json params: [{"&".join([post_json])}]']
+        logger.warning(f'Failure URL: {url}{"".join(post)}')
 
 
 # try to convert to int, if the value is not already int
@@ -909,10 +911,10 @@ def get_url(url,  # type: AnyStr
             (proxy_address, pac_found) = proxy_setting(PROXY_SETTING, url)
             msg = '%sproxy for url: %s' % (('', 'PAC parsed ')[pac_found], url)
             if None is proxy_address:
-                logger.debug('Proxy error, aborted the request using %s' % msg)
+                logger.debug(f'Proxy error, aborted the request using {msg}')
                 return
             elif proxy_address:
-                logger.debug('Using %s' % msg)
+                logger.debug(f'Using {msg}')
                 session.proxies = {'http': proxy_address, 'https': proxy_address}
 
         if None is not use_method:
@@ -1067,7 +1069,7 @@ def get_url(url,  # type: AnyStr
                                or isinstance(result, tuple) and result[0]):
             domain = DOMAIN_FAILURES.get_domain(url)
             if 0 != DOMAIN_FAILURES.domain_list[domain].failure_count:
-                logger.info('Unblocking: %s' % domain)
+                logger.info(f'Unblocking: {domain}')
             DOMAIN_FAILURES.domain_list[domain].failure_count = 0
             DOMAIN_FAILURES.domain_list[domain].failure_time = None
             save_failure(url, domain, False, post_data, post_json)
@@ -1233,7 +1235,7 @@ def remove_file_perm(filepath, log_err=True):
         except OSError as e:
             if getattr(e, 'winerror', 0) not in (5, 32):  # 5=access denied (e.g. av), 32=another process has lock
                 if log_err:
-                    logger.warning('Unable to delete %s: %r / %s' % (filepath, e, ex(e)))
+                    logger.warning(f'Unable to delete {filepath}: {e!r} / {ex(e)}')
                 return
         except (BaseException, Exception):
             pass
@@ -1241,7 +1243,7 @@ def remove_file_perm(filepath, log_err=True):
         if not os.path.exists(filepath):
             return True
     if log_err:
-        logger.warning('Unable to delete %s' % filepath)
+        logger.warning(f'Unable to delete {filepath}')
 
 
 def remove_file(filepath, tree=False, prefix_failure='', log_level=logging.INFO):
@@ -1548,8 +1550,8 @@ def compress_file(target, filename, prefer_7z=True, remove_source=True):
             with zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED) as zip_fh:
                 zip_fh.write(target, filename)
     except (BaseException, Exception) as e:
-        logger.error('error compressing %s' % target)
-        logger.debug('traceback: %s' % ex(e))
+        logger.error(f'error compressing {target}')
+        logger.debug(f'traceback: {ex(e)}')
         return False
     if remove_source:
         remove_file_perm(target)

@@ -244,8 +244,9 @@ class XBMC12PlusMetadata(generic.GenericMetadata):
             try:
                 ep_info = show_info[cur_ep_obj.season][cur_ep_obj.episode]
             except (BaseTVinfoEpisodenotfound, BaseTVinfoSeasonnotfound) as e:
-                logger.log('Unable to find episode %sx%s on %s.. has it been removed? Should I delete from db?' %
-                           (cur_ep_obj.season, cur_ep_obj.episode, sickgear.TVInfoAPI(ep_obj.show_obj.tvid).name))
+                logger.log(f'Unable to find episode {cur_ep_obj.season}x{cur_ep_obj.episode}'
+                           f' on {sickgear.TVInfoAPI(ep_obj.show_obj.tvid).name}.. has it been removed?'
+                           f' Should I delete from db?')
                 return None
             except (BaseException, Exception):
                 logger.debug('Not generating nfo because failed to fetched tv info data at this time')

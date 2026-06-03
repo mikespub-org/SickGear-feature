@@ -434,8 +434,8 @@ class NewznabProvider(generic.NZBProvider):
                         self.tmr_limit_update(retry_time, unit, description)
                         self.log_failure_url(url)
                 elif 910 == code:
-                    logger.warning('%s %s, please check with provider' %
-                                   (self.name, ('currently has their API disabled', description)[bool(description)]))
+                    logger.warning(f'{self.name} {("currently has their API disabled", description)[bool(description)]},'
+                                   f' please check with provider')
             return False
 
         self.tmr_limit_count = 0

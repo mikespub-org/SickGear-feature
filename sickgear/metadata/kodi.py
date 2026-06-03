@@ -308,8 +308,9 @@ class KODIMetadata(generic.GenericMetadata):
             try:
                 ep_info = show_info[cur_ep_obj.season][cur_ep_obj.episode]
             except (BaseException, Exception):
-                logger.log('Unable to find episode %sx%s on %s.. has it been removed? Should I delete from db?' %
-                           (cur_ep_obj.season, cur_ep_obj.episode, sickgear.TVInfoAPI(ep_obj.show_obj.tvid).name))
+                logger.log(f'Unable to find episode {cur_ep_obj.season}x{cur_ep_obj.episode}'
+                           f' on {sickgear.TVInfoAPI(ep_obj.show_obj.tvid).name}..'
+                           f' has it been removed? Should I delete from db?')
                 return None
 
             if None is getattr(ep_info, 'firstaired', None):
