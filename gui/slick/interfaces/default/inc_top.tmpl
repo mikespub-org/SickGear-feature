@@ -375,7 +375,7 @@
                 #end for
             #else
                 #set $first = False
-                #set $btn_class = f'{('', 'confirm')['confirm' in subitem]} {subitem.get("addclass", "")}'.strip()
+                #set $btn_class = f'{("", "confirm")["confirm" in subitem]} {subitem.get("addclass", "")}'.strip()
                 #set $btn_class = (f' {btn_class}', '')[not $btn_class]
                 #set $icon = '' if 'icon' not in $subitem else f'<i class="sgicon-{subitem["icon"]}"></i>'
                 ##
