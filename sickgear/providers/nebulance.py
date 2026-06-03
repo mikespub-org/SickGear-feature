@@ -218,7 +218,8 @@ class NebulanceProvider(generic.TorrentProvider):
         profile_page = 'profile page'
         try:
             if self._check_auth(True) and self._authorised():
-                profile_page = f'<a href="{self.urls['api_key'] % self.uid}">{profile_page}</a>'
+                api_url = self.urls['api_key'] % self.uid
+                profile_page = f'<a href="{api_url}">{profile_page}</a>'
         except (BaseException, Exception):
             pass
 

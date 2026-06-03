@@ -168,7 +168,8 @@ class XBMCNotifier(Notifier):
             result = decode_str(http_response_obj.read(), sickgear.SYS_ENCODING)
             http_response_obj.close()
 
-            self._log_debug(f'HTTP response: {result.replace("\n", "")}')
+            newline = '\n'
+            self._log_debug(f'HTTP response: {result.replace(f"{newline}", "")}')
             return result
 
         except (urllib.error.URLError, IOError) as e:
