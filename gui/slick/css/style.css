@@ -3086,6 +3086,21 @@ config*.tmpl
 	text-align:left
 }
 
+.feature-toggle{
+	margin:-51px -10px
+}
+
+.feature-toggle.client{
+	display:none
+}
+
+.component-group-list{
+	min-width:0;
+	padding:0;
+	margin:0;
+	border:0 none
+}
+
 .ui-tabs .ui-tabs-panel{
 	padding-left:15px;
 	padding-right:15px
@@ -3133,6 +3148,12 @@ config*.tmpl
 
 #config div.field-pair{
 	padding:12px 0
+}
+
+#config .adv,
+#config .adv-hide{
+	display:none;
+	border-right:2px dashed
 }
 
 #config .linefix div.field-pair{
@@ -4561,6 +4582,35 @@ fieldset[disabled] .navbar-default .btn-link:focus{
 .btn-warning:active,
 .btn-warning.active{
 	background-color:#c67605 \9
+}
+
+.btn.btn-yellow{
+	background-color:#faa732;
+	*background-color:#ea9500;
+	background-image:-ms-linear-gradient(top, #fdfa3e, #ea9500);
+	background-image:-webkit-gradient(linear,0 0,0 100%, from(#fdfa3e), to(#ea9500));
+	background-image:-webkit-linear-gradient(top, #fdfa3e, #ea9500);
+	background-image:-o-linear-gradient(top, #fdfa3e, #ea9500);
+	background-image:-moz-linear-gradient(top, #fdfa3e, #ea9500);
+	background-image:linear-gradient(to bottom, #fdfa3e, #ea9500);
+	background-repeat:repeat-x;
+	border-color:#ebe434 #ebe434 #d18d0c;
+	border-color:rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
+	zoom:1;
+	filter:progid:dximagetransform.microsoft.gradient(startColorstr="#fdfa3e", endColorstr="#ea9500", GradientType=0);
+	filter:progid:dximagetransform.microsoft.gradient(enabled=false)
+}
+.btn.btn-yellow,
+.btn.btn-yellow:hover,
+.btn.btn-yellow:active,
+.btn.btn-yellow:focus,
+.btn.btn-yellow.active,
+.btn.btn-yellow.disabled,
+.btn.btn-yellow[disabled]{
+	background-color:#ea9500;
+	*background-color:#ea9500;
+	color:#000;
+	text-shadow:0 -1px 0 rgba(255,255,255,0.5)
 }
 
 .btn-danger{

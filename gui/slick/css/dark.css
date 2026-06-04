@@ -20,6 +20,8 @@ pre .prelight2{
 
 .shows-not-found.nnn .snf .sgicon-warning,
 .navbar-default .navbar-nav .logger.errors.nnn,
+#config .adv .component-title,
+#config .adv-hide .component-title,
 pre .prelight-num{
 	color:#ffba57
 }
@@ -701,6 +703,10 @@ config*.tmpl
 
 .infoTableSeperator{
 	border-top:1px dotted #666
+}
+
+#config .adv, #config .adv-hide {
+	border-right-color: #ffba57;
 }
 
 /* =======================================================================

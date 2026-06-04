@@ -148,15 +148,13 @@ $(document).ready(function () {
 			function (data) {
 				if (data.text) {
 					$.confirm({
-						'title'		: 'Export names/numbers',
-						'message'	: 'Copy/paste the following for export...' +
-							'<div><pre style="width:95%;margin:0 auto;max-height:250px">' + data.text + '</pre></div>',
-						'buttons'	: {
-							'close'	: {
-								'class'	: 'green',
-								'action': function(){}	// Nothing to do in this case. You can as well omit the action property.
-							}
-						}
+						title	: 'Export names/numbers',
+						text	: 'Copy/paste the following for export...' +
+							'<div><pre style="width:95%;margin:10px auto 0;max-height:250px">' + data.text + '</pre></div>',
+						confirm	: function(){},
+						cancel	: function(){},
+						confirmButton: 'Close', confirmButtonClass: 'green',
+						cancelButton: '', cancelButtonClass: 'red'
 					});
 				}
 				that$.removeAttr('disabled');
@@ -374,20 +372,12 @@ $(document).ready(function () {
 			checkAction = !newMain ? 'save ID changes' : 'change the TV info source';
 
 		$.confirm({
-			'title': save ? 'Confirm changes' : 'Get default IDs',
-			'message':  extraWarn + 'Are you sure you want to ' + (save ? checkAction : 'fetch default IDs') + ' ?',
-			'buttons': {
-				'Yes': {
-					'class': 'green',
-					'action': function () {
-						save ? saveMapping(paused, 'on' === $('#mark-wanted:checked').val()) : resetMapping()
-					}
-				},
-				'No': {
-					'class': 'red',
-					'action': function () {}
-				}
-			}
+			title	: save ? 'Confirm changes' : 'Get default IDs',
+			text	: extraWarn + 'Are you sure you want to ' + (save ? checkAction : 'fetch default IDs') + ' ?',
+			confirm	: function(){save ? saveMapping(paused, 'on' === $('#mark-wanted:checked').val()) : resetMapping()},
+			cancel	: function(){},
+			confirmButton: 'Yes', confirmButtonClass: 'green',
+			cancelButton: 'No', cancelButtonClass: 'red'
 		});
 
 	});

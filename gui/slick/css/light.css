@@ -9,6 +9,8 @@ inc_top.tmpl
 ========================================================================== */
 .shows-not-found.n .snf .sgicon-warning,
 .navbar-default .navbar-nav .logger.errors.n,
+#config .adv .component-title,
+#config .adv-hide .component-title,
 pre .prelight{
 	color:#6f8c53
 }
@@ -297,21 +299,7 @@ a.ui-font{
 	border-right:0
 }
 
-.show-title:after{
-	content:"";
-	pointer-events:none;
-	position:absolute;
-	width:20px;
-	height:100%;
-	top:0;
-	right:0;
-	background-image:-webkit-linear-gradient(right, rgba(223, 218, 207, 1), rgba(223, 218, 207, 0));
-	background-image:-moz-linear-gradient(right, rgba(223, 218, 207, 1), rgba(223, 218, 207, 0));
-	background-image:-ms-linear-gradient(right, rgba(223, 218, 207, 1), rgba(223, 218, 207, 0));
-	background-image:-o-linear-gradient(right, rgba(223, 218, 207, 1), rgba(223, 218, 207, 0));
-	background-image:linear-gradient(to left, rgba(223, 218, 207, 1), rgba(223, 218, 207, 0))
-}
-
+.show-title:after,
 .show-date:after{
 	content:"";
 	pointer-events:none;
@@ -668,6 +656,11 @@ config*.tmpl
 
 .infoTableSeperator{
 	border-top:1px dotted #666
+}
+
+#config .adv,
+#config .adv-hide{
+	border-right-color:#7bad2b
 }
 
 /* =======================================================================

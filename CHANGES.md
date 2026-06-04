@@ -73,6 +73,9 @@
 * Change color headings of 'Logout', 'Restart', 'Shutdown' and show 'Remove' confirmation dialogs
 * Change add confirmation dialog to 'Clear errors' button on 'View Errors' page
 * Change refactor some CSS to improve browser processing time
+* Change migrate Bulk Change, Edit Show, Manage Show Tasks, and Config pages to the new confirmation dialog
+* Add "More Gear" button to some config pages to simplify view of settings
+* Change tweak About page
 * Change py2 strings to py3 f-strings and make use of quoted string types consistent
 * Change add db connection context manager to ensure connections are closed properly
 * Fix gaps in package version collection on some Python installations that cause some package updates to be missed 
