@@ -668,23 +668,12 @@ $(document).ready(function(){
 			$(this).prop('disabled', !0);
 			if ('new' !== elSelected.val()) {
 				$.confirm({
-					'title'		: 'Replace Trakt Account',
-					'message'	: 'Are you sure you want to replace <span class="footerhighlight">' + elSelected.text() + '</span> ?<br><br>',
-					'buttons'	: {
-						'Yes'	: {
-							'class'	: 'green',
-							'action': function() {
-									traktSendAuth();
-								}
-						},
-						'No'	: {
-							'class'	: 'red',
-							'action': function() {
-								e.preventDefault();
-								elTraktAuth.prop('disabled', !1);
-							}
-						}
-					}
+					title	: 'Replace Trakt Account',
+					text	: 'Are you sure you want to replace <span class="footerhighlight">' + elSelected.text() + '</span> ?<br><br>',
+					confirm	: function(){traktSendAuth();},
+					cancel	: function(){e.preventDefault();elTraktAuth.prop('disabled', !1);},
+					confirmButton: 'Yes', confirmButtonClass: 'green',
+					cancelButton: 'No', cancelButtonClass: 'red'
 				});
 			}
 			else
@@ -703,51 +692,43 @@ $(document).ready(function(){
 
 		that.prop('disabled', !0);
 		$.confirm({
-			'title'		: 'Remove Trakt Account',
-			'message'	: 'Are you sure you want to remove <span class="footerhighlight">' + elSelected.text() + '</span> ?<br><br>',
-			'buttons'	: {
-				'Yes'	: {
-					'class'	: 'green',
-					'action': function() {
-						$.get(sbRoot + '/home/trakt-delete',
-							{accountid: elSelected.val()})
-							.done(function(data) {
-								that.prop('disabled', !1);
-								var JSONData = $.parseJSON(data);
-								if ('Success' === JSONData.result) {
-									var elCollection = $('#trakt-collection'), elUpdateRows = elCollection.find('tr'),
-										header = elCollection.find('th[class*="tid-' + JSONData.account_id + '"]'),
-										numAcc = parseInt(JSONData.num_accounts, 10);
+			title	: 'Remove Trakt Account',
+			text	: 'Are you sure you want to remove <span class="footerhighlight">' + elSelected.text() + '</span> ?<br><br>',
+			confirm	: function() {
+				$.get(sbRoot + '/home/trakt-delete',
+					{accountid: elSelected.val()}
+				).done(function(data) {
+					that.prop('disabled', !1);
+					const JSONData = $.parseJSON(data);
+					if ('Success' === JSONData.result) {
+						let elCollection = $('#trakt-collection'),
+							elUpdateRows = elCollection.find('tr'),
+							header = elCollection.find('th[class*="tid-' + JSONData.account_id + '"]'),
+							numAcc = parseInt(JSONData.num_accounts, 10);
 
-									elUpdateRows.eq(0).find('th').last().html(!numAcc && '<i>Connect New Pin</i>' ||
-										(1 < numAcc ? 'Trakt accounts' : 'Account'));
-									elUpdateRows.find('th[colspan]').attr('colspan', 1 < numAcc ? numAcc : 1);
+						elUpdateRows.eq(0).find('th').last().html(!numAcc && '<i>Connect New Pin</i>' ||
+							(1 < numAcc ? 'Trakt accounts' : 'Account'));
+						elUpdateRows.find('th[colspan]').attr('colspan', 1 < numAcc ? numAcc : 1);
 
-									!numAcc && header.html('..') || header.remove();
+						!numAcc && header.html('..') || header.remove();
 
-									var elInputs = elUpdateRows.find('input[id*=update-trakt-' + JSONData.account_id + ']');
-									!numAcc && elInputs.parent().html('..') || elInputs.parent().remove();
+						var elInputs = elUpdateRows.find('input[id*=update-trakt-' + JSONData.account_id + ']');
+						!numAcc && elInputs.parent().html('..') || elInputs.parent().remove();
 
-									elUpdateRows.find('td[colspan]').each(function() {
-										$(this).attr('colspan', (numAcc ? 1 + numAcc : 2))
-									});
+						elUpdateRows.find('td[colspan]').each(function() {
+							$(this).attr('colspan', (numAcc ? 1 + numAcc : 2))
+						});
 
-									elSelected.remove();
-									$('#trakt-accounts').change();
-
-									elTraktAuthResult.html('Deleted account: ' + JSONData.account_name);
-								}
-							});
-					}
-				},
-				'No'	: {
-					'class'	: 'red',
-					'action': function() {
-						e.preventDefault();
+						elSelected.remove();
 						$('#trakt-accounts').change();
+
+						elTraktAuthResult.html('Deleted account: ' + JSONData.account_name);
 					}
-				}
-			}
+				});
+			},
+			cancel	: function(){e.preventDefault(); $('#trakt-accounts').change();},
+			confirmButton: 'Yes', confirmButtonClass: 'green',
+			cancelButton: 'No', cancelButtonClass: 'red'
 		});
 	});
 
