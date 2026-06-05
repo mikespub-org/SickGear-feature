@@ -326,12 +326,10 @@ class DBConnection(object):
     def table_info(self, table_name):
         # type: (AnyStr) -> Dict[AnyStr, Dict[AnyStr, AnyStr]]
 
-        # FIXME ? binding is not supported here, but I cannot find a way to escape a string manually
-        sql_result = self.select(f'PRAGMA table_info([{table_name}])')
-        columns = {}
-        for cur_column in sql_result:
-            columns[cur_column['name']] = {'type': cur_column['type']}
-        return columns
+        # SQLite 3.16.0+ supports bindings with the table-valued pragma_table_info() function
+        # and replaces the unsafe self.select(f'PRAGMA table_info([{table_name}])')
+        return {_r['name']: {'type': _r['type']}
+                for _r in self.select('SELECT * FROM pragma_table_info(?)', (table_name,))}
 
     @staticmethod
     def _dict_factory(cursor, row):
@@ -347,11 +345,8 @@ class DBConnection(object):
 
     def has_index(self, table_name, index):
         # type: (AnyStr, AnyStr) -> bool
-        sql_results = self.select(f'PRAGMA index_list([{table_name}])')
-        for result in sql_results:
-            if result['name'] == index:
-                return True
-        return False
+        return any([index == _r['name']
+                    for _r in self.select('SELECT name FROM pragma_index_list(?)', (table_name,))])
 
     def remove_index(self, table, name):
         # type: (AnyStr, AnyStr) -> None

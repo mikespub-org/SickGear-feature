@@ -1610,11 +1610,12 @@ r.close()
 
             with db.DBConnection(row_type='dict') as sg_db:
                 # noinspection PyTypeChecker
-                for x in chunks(media_paths, 100):
+                for _loc in chunks(media_paths, 100):
                     # noinspection PyTypeChecker
                     sql_result += sg_db.select(
-                        'SELECT episode_id, status, location, file_size FROM tv_episodes WHERE file_size > 0 AND (%s)' %
-                        " OR ".join(["location LIKE '%%%s'" % i for i in x]))
+                        'SELECT episode_id, status, location, file_size FROM tv_episodes'
+                        ' WHERE file_size > 0 AND (%s)' %
+                        ' OR '.join(['location LIKE ?'] * len (_loc)), [f'%{_i}' for _i in _loc])
 
         if sql_result:
             sql_l = []
@@ -1662,6 +1663,7 @@ r.close()
                 logger.warning(f'Update watched state failed: {data["error"]}')
 
             return json_dumps(data)
+        return data
 
     @staticmethod
     def toggle_theme(theme):
@@ -8868,13 +8870,12 @@ class History(MainHandler):
             if states:
                 # Prune user removed items that are no longer being returned by API
                 media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), iteritems(states)))
-                sql = "FROM tv_episodes_watched WHERE hide=1 AND label LIKE '%%{Emby}'"
+                sql = "FROM [tv_episodes_watched] WHERE hide=1 AND label LIKE '%%{Emby}'"
                 with db.DBConnection(row_type='dict') as sg_db:
-                    files = sg_db.select('SELECT location %s' % sql)
-                    for i in filter(lambda f: os.path.basename(f['location']) not in media_paths, files):
-                        loc = i.get('location')
-                        if loc:
-                            sg_db.select('DELETE %s AND location="%s"' % (sql, loc))
+                    files = sg_db.select(f'SELECT location {sql}')
+                    if loc := [_i.get('location') for _i in filter(
+                        lambda _f: os.path.basename(_f['location']) not in media_paths, files)]:
+                        sg_db.select(f'DELETE {sql} AND {" OR ".join(["location=?"] * len (loc))}', loc)
 
                 MainHandler.update_watched_state(states, False)
 
@@ -8936,13 +8937,12 @@ class History(MainHandler):
             if states:
                 # Prune user removed items that are no longer being returned by API
                 media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), iteritems(states)))
-                sql = "FROM tv_episodes_watched WHERE hide=1 AND label LIKE '%%{Plex}'"
+                sql = "FROM [tv_episodes_watched] WHERE hide=1 AND label LIKE '%%{Plex}'"
                 with db.DBConnection(row_type='dict') as sg_db:
-                    files = sg_db.select('SELECT location %s' % sql)
-                    for i in filter(lambda f: os.path.basename(f['location']) not in media_paths, files):
-                        loc = i.get('location')
-                        if loc:
-                            sg_db.select('DELETE %s AND location="%s"' % (sql, loc))
+                    files = sg_db.select(f'SELECT location {sql}')
+                    if loc := [_i.get('location') for _i in filter(
+                        lambda _f: os.path.basename(_f['location']) not in media_paths, files)]:
+                        sg_db.select(f'DELETE {sql} AND {" OR ".join(["location=?"] * len (loc))}', loc)
 
                 MainHandler.update_watched_state(states, False)
 
