@@ -76,18 +76,37 @@ def mass_upsert_sql(table_name, value_dict, key_dict, sanitise=True):
     :type sanitise: Boolean
     :return: list of 2 sql command
     """
-    sql_l = []
-
-    gen_params = (lambda my_dict: [f'{x} = ?' for x in iterkeys(my_dict)])
-
     # sanity: remove k, v pairs in keyDict from valueDict
     if sanitise:
         value_dict = dict(filter(lambda k: k[0] not in key_dict, iteritems(value_dict)))
 
+    gen_params = (lambda my_dict: [f'{x} = ?' for x in my_dict.keys()])
+
+    if db_support_upsert:
+        # noinspection SqlResolve
+        update_sql = [f'UPDATE SET {", ".join(gen_params(value_dict))}'
+                      f' WHERE {" AND ".join(gen_params(key_dict))}',
+                      list(value_dict.values()) + list(key_dict.values())]
+
+        ks = list(itertools.chain(value_dict.keys(), key_dict.keys()))
+        if not sanitise:
+            value_dict = dict(filter(lambda k: k[0] not in key_dict, iteritems(value_dict)))
+        vs = list(itertools.chain(value_dict.values(), key_dict.values()))
+        # noinspection SqlResolve
+        return [[
+            'INSERT INTO [' + table_name + '] (' +
+            ', '.join(["'%s'" % ('%s' % v).replace("'", "''") for v in ks]) + ')' +
+            ' VALUES (' + ','.join(['?'] * len(ks)) + ')' +
+            ' ON CONFLICT DO ' +
+            update_sql[0],
+            vs + update_sql[1]]]
+
     # noinspection SqlResolve
-    sql_l.append([f'UPDATE [{table_name}] SET {", ".join(gen_params(value_dict))}'
+    update_sql = [f'UPDATE [{table_name}] SET {", ".join(gen_params(value_dict))}'
                   f' WHERE {" AND ".join(gen_params(key_dict))}',
-                  list(value_dict.values()) + list(key_dict.values())])
+                  list(value_dict.values()) + list(key_dict.values())]
+
+    sql_l = [update_sql]
 
     # noinspection SqlResolve
     sql_l.append(['INSERT INTO [' + table_name + '] ('
