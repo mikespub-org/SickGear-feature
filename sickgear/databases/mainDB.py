@@ -46,6 +46,7 @@ class MainSanityCheck(db.DBSanityCheck):
         self.fix_indexer_mapping_tvdb()
         self.fix_episode_subtitles()
         self.fix_genre_separator()
+        self.fix_tv_episodes_watchlist()
 
     def fix_episode_subtitles(self):
         if not self.connection.has_flag('fix_episode_subtitles'):
@@ -300,6 +301,15 @@ class MainSanityCheck(db.DBSanityCheck):
             logger.error('Error fixing genres separator')
             logger.debug(f'{traceback.format_exc()}')
 
+    def fix_tv_episodes_watchlist(self):
+        try:
+            if not self.connection.has_index('tv_episodes_watched', 'idx_tv_episodes_watchlist'):
+                self.connection.action('CREATE UNIQUE INDEX idx_tv_episodes_watchlist'
+                                       ' ON tv_episodes_watched (location,label);')
+        except (BaseException, Exception):
+            import traceback
+            logger.error('Error fixing unique index for tv_episodes_watchlist')
+            logger.debug(f'{traceback.format_exc()}')
 
 class InitialSchema(db.SchemaUpgrade):
     # ======================
