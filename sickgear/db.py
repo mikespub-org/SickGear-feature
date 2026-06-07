@@ -31,7 +31,6 @@ from .sgdatetime import SGDatetime
 from sg_helpers import make_path, compress_file, remove_file_perm, scantree
 
 from _23 import scandir
-from six import iterkeys, iteritems, itervalues
 
 # noinspection PyUnreachableCode
 if False:
@@ -78,7 +77,7 @@ def mass_upsert_sql(table_name, value_dict, key_dict, sanitise=True):
     """
     # sanity: remove k, v pairs in keyDict from valueDict
     if sanitise:
-        value_dict = dict(filter(lambda k: k[0] not in key_dict, iteritems(value_dict)))
+        value_dict = dict(filter(lambda k: k[0] not in key_dict, value_dict.items()))
 
     gen_params = (lambda my_dict: [f'{x} = ?' for x in my_dict.keys()])
 
@@ -90,7 +89,7 @@ def mass_upsert_sql(table_name, value_dict, key_dict, sanitise=True):
 
         ks = list(itertools.chain(value_dict.keys(), key_dict.keys()))
         if not sanitise:
-            value_dict = dict(filter(lambda k: k[0] not in key_dict, iteritems(value_dict)))
+            value_dict = dict(filter(lambda k: k[0] not in key_dict, value_dict.items()))
         vs = list(itertools.chain(value_dict.values(), key_dict.values()))
         # noinspection SqlResolve
         return [[
@@ -111,9 +110,9 @@ def mass_upsert_sql(table_name, value_dict, key_dict, sanitise=True):
     # noinspection SqlResolve
     sql_l.append(['INSERT INTO [' + table_name + '] ('
                   + ', '.join(["'%s'" % ('%s' % v).replace("'", "''") for v in
-                               itertools.chain(iterkeys(value_dict), iterkeys(key_dict))]) + ')'
+                               itertools.chain(value_dict.keys(), key_dict.keys())]) + ')'
                   + ' SELECT ' + ', '.join(["'%s'" % ('%s' % v).replace("'", "''") for v in
-                                            itertools.chain(itervalues(value_dict), itervalues(key_dict))])
+                                            itertools.chain(value_dict.values(), key_dict.values())])
                   + ' WHERE changes() = 0'])
     return sql_l
 
@@ -326,7 +325,7 @@ class DBConnection(object):
 
         changes_before = self.connection.total_changes
 
-        gen_params = (lambda my_dict: [f'{x} = ?' for x in iterkeys(my_dict)])
+        gen_params = (lambda my_dict: [f'{x} = ?' for x in my_dict.keys()])
 
         # noinspection SqlResolve
         query = (f'UPDATE [{table_name}]'
@@ -338,7 +337,7 @@ class DBConnection(object):
         if self.connection.total_changes == changes_before:
             # noinspection SqlResolve
             query = (f'INSERT INTO [{table_name}]'
-                     f' ({", ".join(itertools.chain(iterkeys(value_dict), iterkeys(key_dict)))})'
+                     f' ({", ".join(itertools.chain(value_dict.keys(), key_dict.keys()))})'
                      f' VALUES ({", ".join(["?"] * (len(value_dict) + len(key_dict)))})')
             self.action(query, list(value_dict.values()) + list(key_dict.values()))
 

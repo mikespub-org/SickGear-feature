@@ -78,7 +78,8 @@
 * Change tweak About page
 * Change py2 strings to py3 f-strings and make use of quoted string types consistent
 * Change add db connection context manager to ensure connections are closed properly
-* Fix gaps in package version collection on some Python installations that cause some package updates to be missed 
+* Fix gaps in package version collection on some Python installations that cause some package updates to be missed
+* Fix db issue during Plex notification updates
 
 
 [develop]
