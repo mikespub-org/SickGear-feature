@@ -29,8 +29,6 @@ from .metadata.generic import GenericMetadata
 from .sgdatetime import SGDatetime
 from .indexers.indexer_config import TVINFO_TVDB, TVINFO_TVMAZE, TVINFO_TMDB, TVINFO_IMDB
 
-from six import itervalues, iteritems
-
 # noinspection PyUnreachableCode
 if False:
     from typing import AnyStr, Optional, Tuple, Union
@@ -112,7 +110,7 @@ class ImageCache(object):
     @staticmethod
     def _person_base_name(person_obj):
         # type: (Person) -> AnyStr
-        base_id = next((v for k, v in iteritems(cache_img_base)
+        base_id = next((v for k, v in cache_img_base.items()
                         if k in (person_obj.image_url or '') or person_obj.thumb_url), 0)
         return '%s-%s' % (cache_img_src.get(base_id, base_id), person_obj.ids.get(base_id)
                           or sg_helpers.sanitize_filename(person_obj.name))
@@ -682,7 +680,7 @@ class ImageCache(object):
                        self.POSTER_THUMB: not self.has_poster_thumbnail(*arg_tvid_prodid) or force,
                        self.BANNER_THUMB: not self.has_banner_thumbnail(*arg_tvid_prodid) or force}
 
-        if not any(itervalues(need_images)):
+        if not any(need_images.values()):
             logger.log(f'{show_obj.tvid_prodid}: No new cache images needed. Done.')
             return
 
@@ -704,7 +702,7 @@ class ImageCache(object):
             checked_files = []
             crcs = []
 
-            for cur_provider in itervalues(sickgear.metadata_provider_dict):
+            for cur_provider in sickgear.metadata_provider_dict.values():
                 # check the show dir for poster or banner images and use them
                 needed = []
                 if any([need_images[self.POSTER], need_images[self.BANNER]]):

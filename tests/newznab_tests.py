@@ -19,7 +19,6 @@ from lib.dateutil import parser
 from sickgear.indexers.indexer_config import *
 from sickgear.network_timezones import SG_TIMEZONE
 from sickgear.providers import newznab
-from six import iteritems, iterkeys
 
 import sickgear
 
@@ -236,7 +235,7 @@ class BasicTests(test.SickbeardTestDBCase):
             uuid_item.set('value', f'{uuid}')
             item.append(uuid_item)
         if ids:
-            for a, b in iteritems(ids):
+            for a, b in ids.items():
                 ids_item = etree.Element('{%s}attr' % BasicTests.ns['newznab'], nsmap=BasicTests.ns)
                 ids_item.set('name', a)
                 ids_item.set('value', f'{b}')
@@ -270,13 +269,13 @@ class BasicTests(test.SickbeardTestDBCase):
 
     def test_parse_ids(self):
         ids_test_cases = []
-        for k in iterkeys(newznab.NewznabConstants.providerToIndexerMapping):
+        for k in newznab.NewznabConstants.providerToIndexerMapping.keys():
             rand_id = random.randrange(1, 99999999)
             ids_test_cases.append(({k: rand_id}, {newznab.NewznabConstants.providerToIndexerMapping[k]: rand_id}))
 
         all_case = {}
         all_case_ex = {}
-        for k in iterkeys(newznab.NewznabConstants.providerToIndexerMapping):
+        for k in newznab.NewznabConstants.providerToIndexerMapping.keys():
             rand_id = random.randrange(1, 99999999)
             all_case.update({k: rand_id})
             all_case_ex.update({newznab.NewznabConstants.providerToIndexerMapping[k]: rand_id})

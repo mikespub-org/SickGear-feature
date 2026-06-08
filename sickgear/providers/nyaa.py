@@ -22,8 +22,6 @@ from .. import logger
 from ..helpers import try_int
 from bs4_parser import BS4Parser
 
-from six import iteritems
-
 
 class NyaaProvider(generic.TorrentProvider):
 
@@ -47,7 +45,7 @@ class NyaaProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({'info': 'view', 'get': '(?:torrent|magnet:)'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {'info': 'view', 'get': '(?:torrent|magnet:)'}.items()])
         for mode in search_params:
             for search_string in search_params[mode]:
                 search_url = self.urls['search'] % ((0, 2)[self.confirmed], search_string.replace('.', ' '))

@@ -31,7 +31,7 @@ from .common import DOWNLOADED, SNATCHED, SNATCHED_BEST, SNATCHED_PROPER, MULTI_
 from .providers.generic import GenericProvider
 from .tv import TVEpisode, TVShow
 
-from six import iteritems, itervalues, string_types
+from six import string_types
 
 # noinspection PyUnreachableCode, PyStatementEffect
 if False:
@@ -720,7 +720,7 @@ def _search_provider_thread(provider, provider_results, show_obj, ep_obj_list, m
             if any(search_result_list):
                 logger.log(', '.join(['%s %s candidate%s' % (
                     len(v), (('multiep', 'season')[SEASON_RESULT == k], 'episode')['ep' in search_mode],
-                    helpers.maybe_plural(v)) for (k, v) in iteritems(search_result_list)]))
+                    helpers.maybe_plural(v)) for (k, v) in search_result_list.items()]))
         except exceptions_helper.AuthException as e:
             logger.error(f'Authentication error: {ex(e)}')
             break

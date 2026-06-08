@@ -29,7 +29,7 @@ from lib.dateutil import tz, zoneinfo
 from lib.tzlocal import get_localzone
 
 from sg_helpers import remove_file_perm, scantree
-from six import integer_types, iteritems, string_types
+from six import integer_types, string_types
 
 # noinspection PyUnreachableCode
 if False:
@@ -295,7 +295,7 @@ def update_network_dict():
 
             # list of sql commands to update the network_timezones table
             sql_l = []
-            for cur_name, cur_tz in iteritems(network_tz_data):
+            for cur_name, cur_tz in network_tz_data.items():
                 network_known = cur_name in sql_result
                 if network_known and cur_tz != sql_result[cur_name]:
                     # update old record

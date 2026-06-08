@@ -22,8 +22,6 @@ from .newznab import NewznabConstants
 from .. import logger
 import sickgear
 
-from six import iteritems, itervalues
-
 # noinspection PyUnreachableCode
 if False:
     from typing import AnyStr, List, Union
@@ -50,7 +48,7 @@ for module in __all__:
     try:
         m = importlib.import_module(f'.{module}', 'sickgear.providers')
         globals().update({n: getattr(m, n) for n in m.__all__} if hasattr(m, '__all__')
-                         else dict(filter(lambda t: '_' != t[0][0], iteritems(m.__dict__))))
+                         else dict(filter(lambda t: '_' != t[0][0], m.__dict__.items())))
     except ImportError as e:
         if 'custom' != module[0:6]:
             raise e
@@ -74,8 +72,8 @@ def sorted_sources():
             new_list.append(provider_dict[curModule])
 
     if not sickgear.PROVIDER_ORDER:
-        nzb = list(filter(lambda p: p.providerType == generic.GenericProvider.NZB, itervalues(provider_dict)))
-        tor = list(filter(lambda p: p.providerType != generic.GenericProvider.NZB, itervalues(provider_dict)))
+        nzb = list(filter(lambda p: p.providerType == generic.GenericProvider.NZB, provider_dict.values()))
+        tor = list(filter(lambda p: p.providerType != generic.GenericProvider.NZB, provider_dict.values()))
         new_list = sorted(filter(lambda p: not p.anime_only, nzb), key=lambda v: v.get_id()) + \
             sorted(filter(lambda p: not p.anime_only, tor), key=lambda v: v.get_id()) + \
             sorted(filter(lambda p: p.anime_only, nzb), key=lambda v: v.get_id()) + \

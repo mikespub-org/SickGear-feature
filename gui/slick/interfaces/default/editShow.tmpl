@@ -19,7 +19,6 @@
 ##
 #import os.path
 #from _23 import quote_plus
-#from six import iteritems
 #include $os.path.join($sg_str('PROG_DIR'), 'gui/slick/interfaces/default/inc_top.tmpl')
 
 <script>
@@ -375,7 +374,7 @@
 #set $dev = None
 					<div id="idmapping-options" style="display:#if $dev#--#end if#none">
 #set $is_main_settable = False | $unlock_main_id
-#for $tvid, $src_name in iteritems($sickgear.TVInfoAPI().all_sources)
+#for $tvid, $src_name in $sickgear.TVInfoAPI().all_sources.items()
     #set $is_main_settable |= ($dev or
         ($tvid != $show_obj.tvid and $show_obj.ids[$tvid].get('id', 0) > 0 and
          $tvid in $sickgear.TVInfoAPI().sources and not $sickgear.TVInfoAPI($tvid).config.get('defunct') and
@@ -385,7 +384,7 @@
     #end if
 #end for
 #set $search_name = quote_plus($sickgear.indexermapper.clean_show_name($show_obj.name))
-#for $tvid, $src_name in iteritems($sickgear.TVInfoAPI().all_sources)
+#for $tvid, $src_name in $sickgear.TVInfoAPI().all_sources.items()
     #set $ok_tvid = $show_obj.ids[$tvid].get('id', 0) > 0
     #set $maybe_main = ($tvid != $show_obj.tvid and
          $tvid in $sickgear.TVInfoAPI().sources and not $sickgear.TVInfoAPI($tvid).config.get('defunct') and

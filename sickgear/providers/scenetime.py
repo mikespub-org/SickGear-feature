@@ -23,8 +23,6 @@ from .. import logger
 from ..helpers import anon_url, try_int
 from bs4_parser import BS4Parser
 
-from six import iteritems
-
 
 class SceneTimeProvider(generic.TorrentProvider):
 
@@ -84,9 +82,9 @@ class SceneTimeProvider(generic.TorrentProvider):
         results = []
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
             'info': 'detail', 'get': r'.*id=(\d+).*', 'id': r'.php\/(\d+)', 'fl': r'\[freeleech\]',
-            'cats': f'cat=(?:{self._categories_string(mode=mode, template="", delimiter="|")})'})])
+            'cats': f'cat=(?:{self._categories_string(mode=mode, template="", delimiter="|")})'}.items()])
 
         lrs_found = False
         lrs_new = True

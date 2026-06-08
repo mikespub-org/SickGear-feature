@@ -26,8 +26,6 @@ from .. import logger
 from ..helpers import anon_url, try_int
 from bs4_parser import BS4Parser
 
-from six import iteritems
-
 
 class PTFProvider(generic.TorrentProvider):
 
@@ -66,9 +64,9 @@ class PTFProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({'info': 'details', 'get': 'dl.php',
-                                                                        'snatch': 'snatches', 'seeders': r'(^\d+)',
-                                                                        'leechers': r'(\d+)$'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {'info': 'details', 'get': 'dl.php',
+                                                              'snatch': 'snatches', 'seeders': r'(^\d+)',
+                                                              'leechers': r'(\d+)$'}.items()])
         log = ''
         if self.filter:
             non_marked = 'f0' in self.filter

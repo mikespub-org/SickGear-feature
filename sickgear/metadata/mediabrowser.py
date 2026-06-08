@@ -26,8 +26,6 @@ import exceptions_helper
 from exceptions_helper import ex
 from lxml_etree import etree
 
-from six import iteritems
-
 # noinspection PyUnreachableCode
 if False:
     from typing import AnyStr, Optional, Tuple, Union
@@ -539,7 +537,7 @@ class MediaBrowserMetadata(generic.GenericMetadata):
                 persons_dict['Writer'] += [x.strip() for x in ep_info['writer'].split('|') if x]
 
         # fill in Persons section with collected directors, guest starts and writers
-        for person_type, names in iteritems(persons_dict):
+        for person_type, names in persons_dict.items():
             # remove doubles
             names = list(set(names))
             for cur_name in names:

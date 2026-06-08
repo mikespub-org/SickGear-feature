@@ -57,7 +57,7 @@ from api_trakt import TraktAPI
 
 from _23 import b64encodestring, decode_bytes, scandir
 from sg_helpers import remove_file_perm
-from six import iteritems, string_types
+from six import string_types
 import sg_helpers
 
 # noinspection PyUnreachableCode
@@ -2135,7 +2135,7 @@ def _save_config(force=False, **kwargs):
             del new_config[src_id_uc]
 
     cfg_keys = []
-    for (cfg, items) in iteritems(OrderedDict([
+    for (cfg, items) in OrderedDict([
         # -----------------------------------
         # Config/Search
         # -----------------------------------
@@ -2333,7 +2333,7 @@ def _save_config(force=False, **kwargs):
             ('list', EMAIL_LIST),
         ]),
         # (, [(, )]),
-    ])):
+    ]).items():
         cfg_lc = cfg.lower()
         cfg_keys += [cfg]
         new_config[cfg] = {}

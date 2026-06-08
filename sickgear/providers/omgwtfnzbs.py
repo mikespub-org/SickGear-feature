@@ -32,7 +32,6 @@ from bs4_parser import BS4Parser
 from exceptions_helper import AuthException
 import feedparser
 
-from six import iteritems
 from _23 import urlencode
 
 # noinspection PyUnreachableCode
@@ -306,8 +305,8 @@ class OmgwtfnzbsProvider(generic.NZBProvider):
 
         cats = self._get_cats(needed=needed)
 
-        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in iteritems(
-            dict(info='detail', get=r'send\?', nuked=r'\bnuked', cat=f'cat=(?:{"|".join(cats)})')))
+        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in
+            dict(info='detail', get=r'send\?', nuked=r'\bnuked', cat=f'cat=(?:{"|".join(cats)})').items())
         mode = ('search', 'cache')['' == search]
         search_url = self.urls[f'{mode}_html'] % search
         html = self.get_url(search_url)

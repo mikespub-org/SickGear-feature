@@ -4,7 +4,6 @@
 #from sickgear.providers import thepiratebay
 #from sickgear.providers.newznab import NewznabConstants
 #from sickgear.helpers import anon_url, maybe_plural, starify
-#from six import iteritems
 ##
 #set global $title = 'Config - Providers'
 #set global $header = 'Media Providers'
@@ -312,7 +311,7 @@
 								</div>
     #if $hasattr($cur_newznab_provider, 'may_filter'):
 								<div>
-        #for $cur_fval, $filter in iteritems($cur_newznab_provider.may_filter)
+        #for $cur_fval, $filter in $cur_newznab_provider.may_filter.items()
             #set $cur_fname, $cur_is_default = $filter[0], $filter[1]
             #set $filter_id = '%s_filter_%s' % ($cur_newznab_provider.get_id(), $cur_fval)
 									<label class="space-right">
@@ -758,7 +757,7 @@ name = '' if not client else get_client_instance(sickgear.TORRENT_METHOD)().name
     #end if
     #if $hasattr($cur_torrent_provider, 'may_filter'):
 								<div>
-        #for $cur_fval, $filter in iteritems($cur_torrent_provider.may_filter)
+        #for $cur_fval, $filter in $cur_torrent_provider.may_filter.items()
             #set $cur_fname, $cur_is_default = $filter[0], $filter[1]
             #set $filter_id = '%s_filter_%s' % ($cur_torrent_provider.get_id(), $cur_fval)
 									<label class="space-right">

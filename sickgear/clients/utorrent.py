@@ -21,7 +21,6 @@ from .generic import GenericClient
 import sickgear
 
 from _23 import urlencode
-from six import iteritems
 
 
 class UtorrentAPI(GenericClient):
@@ -38,7 +37,7 @@ class UtorrentAPI(GenericClient):
             method=method,
             params='token={0:s}&{1:s}'.format(self.auth, '&'.join(
                 [f'{urlencode(dict([[key, str(value)]]))}'
-                 for key, value in iteritems(params)])) if any(params) else params,
+                 for key, value in params.items()])) if any(params) else params,
             files=files)
 
     def _get_auth(self):

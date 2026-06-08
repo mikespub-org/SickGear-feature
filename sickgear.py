@@ -95,7 +95,7 @@ from sickgear.event_queue import Events
 from sickgear.tv import TVShow
 from sickgear.webserveInit import WebServer
 
-from six import integer_types, iteritems
+from six import integer_types
 
 throwaway = datetime.datetime.strptime('20110101', '%Y%m%d')
 rollback_loaded = None
@@ -734,13 +734,13 @@ class SickGear(object):
                     tv_id = int(cur_result['tv_id'])
                     prod_id = int(cur_result['prod_id'])
                     if cur_result['ii_indexer_id']:
-                        imdb_info_sql = {_fk.replace('ii_', ''): _fv for _fk, _fv in iteritems(cur_result)
+                        imdb_info_sql = {_fk.replace('ii_', ''): _fv for _fk, _fv in cur_result.items()
                                          if _fk.startswith('ii_')}
                     else:
                         imdb_info_sql = None
                     show_obj = TVShow(tv_id, prod_id, show_result=cur_result, imdb_info_result=imdb_info_sql)
                     if cur_result['tsnf_indexer_id']:
-                        failed_result = {_fk.replace('tsnf_', ''): _fv for _fk, _fv in iteritems(cur_result)
+                        failed_result = {_fk.replace('tsnf_', ''): _fv for _fk, _fv in cur_result.items()
                                          if _fk.startswith('tsnf_')}
                         show_obj.helper_load_failed_db(sql_result=failed_result)
                     sickgear.showList.append(show_obj)

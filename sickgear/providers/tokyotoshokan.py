@@ -23,7 +23,6 @@ from ..helpers import try_int
 from bs4_parser import BS4Parser
 
 from _23 import urlencode
-from six import iteritems
 
 
 class TokyoToshokanProvider(generic.TorrentProvider):
@@ -43,9 +42,9 @@ class TokyoToshokanProvider(generic.TorrentProvider):
 
         items = {'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
             'nodots': r'[\.\s]+', 'stats': r'S:\s*?(\d)+\s*L:\s*(\d+)',
-            'size': r'size:\s*(\d+[.,]\d+\w+)'})])
+            'size': r'size:\s*(\d+[.,]\d+\w+)'}.items()])
 
         for mode in search_params:
             for search_string in search_params[mode]:
@@ -118,7 +117,7 @@ class TokyoToshokanCache(tvcache.TVCache):
         results = []
         if data and 'entries' in data:
 
-            rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({'size': r'size:\s*(\d+[.,]\d+\w+)'})])
+            rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {'size': r'size:\s*(\d+[.,]\d+\w+)'}.items()])
 
             for cur_item in data.get('entries', []):
                 try:

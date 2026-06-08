@@ -22,8 +22,6 @@ from .. import db, common, logger
 from ..name_parser.parser import NameParser, InvalidNameException, InvalidShowException
 import sickgear
 
-from six import iteritems
-
 # noinspection PyUnreachableCode
 if False:
     from _23 import DirEntry
@@ -1566,7 +1564,7 @@ class AddIndexerToTables(db.SchemaUpgrade):
                 self.upgrade_log(f'Adding TV info support to {t[0]} table')
                 self.add_column(t[0], 'indexer')
                 sql_l = []
-                for s_id, i in iteritems(show_ids):
+                for s_id, i in show_ids.items():
                     # noinspection SqlResolve
                     sql_l.append([f'UPDATE {t[0]} SET indexer = ? WHERE {t[1]} = ?', [i, s_id]])
                 self.connection.mass_action(sql_l)
@@ -1602,7 +1600,7 @@ class AddIndexerToTables(db.SchemaUpgrade):
                                      ['DROP TABLE tmp_scene_numbering']])
 
         sql_l = []
-        for s_id, i in iteritems(show_ids):
+        for s_id, i in show_ids.items():
             sql_l.append(['UPDATE scene_numbering SET indexer = ? WHERE indexer_id = ?', [i, s_id]])
         sql_l.append(['DELETE FROM scene_numbering WHERE indexer = ?', [0]])
         self.connection.mass_action(sql_l)
@@ -1622,7 +1620,7 @@ class AddIndexerToTables(db.SchemaUpgrade):
                                      ['DROP TABLE tmp_imdb_info']])
 
         sql_l = []
-        for s_id, i in iteritems(show_ids):
+        for s_id, i in show_ids.items():
             sql_l.append(['UPDATE imdb_info SET indexer = ? WHERE indexer_id = ?', [i, s_id]])
         sql_l.append(['DELETE FROM imdb_info WHERE indexer = ?', [0]])
         self.connection.mass_action(sql_l)
@@ -2042,7 +2040,7 @@ class ChangeTmdbID(db.SchemaUpgrade):
                     self.connection.select('SELECT show_id FROM tv_shows WHERE indexer = ?', [TVINFO_TVDB])}
                 dupe_tvdb_ids = current_tvdb_ids.intersection(backup_mapped_tvdb_ids.keys())
                 if dupe_tvdb_ids:
-                    dupe_ids += {_v for _k, _v in iteritems(backup_mapped_tvdb_ids) if _k in dupe_tvdb_ids}
+                    dupe_ids += {_v for _k, _v in backup_mapped_tvdb_ids.items() if _k in dupe_tvdb_ids}
                 backup_mapped_tvmaze_ids = {
                     _r['mindexer_id']: _r['indexer_id'] for _r in
                     self.connection.select('SELECT mindexer_id, indexer_id FROM backup_tmdb_indexer_mapping'
@@ -2052,7 +2050,7 @@ class ChangeTmdbID(db.SchemaUpgrade):
                     self.connection.select('SELECT show_id FROM tv_shows WHERE indexer = ?', [TVINFO_TVMAZE])}
                 dupe_tvmaze_ids = current_tvmaze_ids.intersection(backup_mapped_tvmaze_ids.keys())
                 if dupe_tvmaze_ids:
-                    dupe_ids += {_v for _k, _v in iteritems(backup_mapped_tvdb_ids) if _k in dupe_tvmaze_ids}
+                    dupe_ids += {_v for _k, _v in backup_mapped_tvdb_ids.items() if _k in dupe_tvmaze_ids}
 
                 if dupe_ids:
                     self.upgrade_log('Dupe tmdb id detected, removing from backup')

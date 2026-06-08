@@ -11,8 +11,6 @@ from json_helper import json_loads
 from sg_helpers import cmdline_runner, is_virtualenv
 from lib.requests.structures import CaseInsensitiveDict
 
-from six import iteritems
-
 # noinspection PyUnreachableCode
 if False:
     from typing import Any, AnyStr, Dict, List, Optional, Tuple, Union
@@ -294,7 +292,7 @@ def pip_update(loading_msg, updates_todo, data_dir):
     input_reco = None
 
     piper_path = os.path.join(data_dir, '.pip_req_spec_temp.txt')
-    for cur_project_name, cur_data in iteritems(updates_todo):
+    for cur_project_name, cur_data in updates_todo.items():
         msg = f'Installing package "{cur_project_name}"'
         if cur_data.get('info'):
             info = dict(name=cur_project_name, ver=cur_data.get('info').get('version'))

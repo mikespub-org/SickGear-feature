@@ -41,7 +41,7 @@ from lib.sg_helpers import md5_for_text, try_int
 from exceptions_helper import AuthException, ex, MultipleShowObjectsException
 from lxml_etree import etree
 
-from six import iteritems, itervalues, string_types
+from six import string_types
 from _23 import urlencode
 
 # noinspection PyUnreachableCode
@@ -271,7 +271,7 @@ class NewznabProvider(generic.NZBProvider):
                         ):
         if isinstance(cats, dict):
             c = []
-            for v in itervalues(cats):
+            for v in cats.values():
                 c.extend(v)
             self._exclude = set(c)
         else:
@@ -324,7 +324,7 @@ class NewznabProvider(generic.NZBProvider):
                                 cat_name = subcat.attrib['name']
                                 cat_id = subcat.attrib['id']
                                 all_cats.append({'id': cat_id, 'name': cat_name})
-                                for s, v in iteritems(NewznabConstants.catSearchStrings):
+                                for s, v in NewznabConstants.catSearchStrings.items():
                                     if None is not re.search(s, cat_name, re.IGNORECASE):
                                         cats.setdefault(v, []).append(cat_id)
                             except (BaseException, Exception):
@@ -887,7 +887,7 @@ class NewznabProvider(generic.NZBProvider):
         if self._noname in self.url.lower():
             base_params['extended'] = '1'
         else:
-            base_params['attrs'] =  ','.join([k for k, v in iteritems(NewznabConstants.providerToIndexerMapping)
+            base_params['attrs'] =  ','.join([k for k, v in NewznabConstants.providerToIndexerMapping.items()
                                               if v in self.caps])
 
         base_params_rss = {'num': self.limits, 'dl': '1'}
@@ -942,7 +942,7 @@ class NewznabProvider(generic.NZBProvider):
                 cat = []
                 if 'Episode' == mode or 'Season' == mode:
                     if not (any(x in params for x in
-                                [v for c, v in iteritems(self.caps)
+                                [v for c, v in self.caps.items()
                                  if c not in [NewznabConstants.SEARCH_EPISODE, NewznabConstants.SEARCH_SEASON]])):
                         logger.log('Show is missing either an id or search term for search')
                         continue
@@ -1072,7 +1072,7 @@ class NewznabProvider(generic.NZBProvider):
                     self._log_search(mode, len(results), search_url)
 
                 if not try_all_searches and any(x in request_params for x in [
-                    v for c, v in iteritems(self.caps)
+                    v for c, v in self.caps.items()
                     if c not in [NewznabConstants.SEARCH_EPISODE, NewznabConstants.SEARCH_SEASON,
                                  NewznabConstants.SEARCH_TEXT]]) and len(results):
                     break

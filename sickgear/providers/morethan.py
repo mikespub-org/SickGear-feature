@@ -26,8 +26,6 @@ from ..helpers import try_int
 
 from bs4_parser import BS4Parser
 
-from six import iteritems
-
 
 class MoreThanProvider(generic.TorrentProvider):
 
@@ -63,7 +61,7 @@ class MoreThanProvider(generic.TorrentProvider):
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
         rc = dict([(k, re.compile(f'(?i){v}'))
-                   for (k, v) in iteritems({'info': r'torrents.php\?id', 'get': 'download', 'nuked': 'nuked'})])
+                   for (k, v) in {'info': r'torrents.php\?id', 'get': 'download', 'nuked': 'nuked'}.items()])
         for mode in search_params:
             for search_string in search_params[mode]:
                 search_string = search_string.replace('.', ' ')

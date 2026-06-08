@@ -24,7 +24,6 @@ from ..helpers import try_int
 from bs4_parser import BS4Parser
 
 from _23 import b64decodestring, quote_plus
-from six import iteritems
 
 
 class TorLockProvider(generic.TorrentProvider):
@@ -60,8 +59,8 @@ class TorLockProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
-            'info': r'torrent.?(\d+)', 'versrc': r'ver\.', 'verified': 'Verified'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
+            'info': r'torrent.?(\d+)', 'versrc': r'ver\.', 'verified': 'Verified'}.items()])
 
         for mode in search_params:
             for search_string in search_params[mode]:

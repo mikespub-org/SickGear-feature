@@ -36,7 +36,7 @@ from .tv import TVidProdid, TVShow, TVSWITCH_DUPLICATE_SHOW, TVSWITCH_EP_DELETED
     TVSWITCH_NO_NEW_ID, TVSWITCH_NORMAL, TVSWITCH_NOT_FOUND_ERROR, TVSWITCH_SAME_ID, TVSWITCH_SOURCE_NOT_FOUND_ERROR, \
     TVSWITCH_VERIFY_ERROR
 
-from six import integer_types, iteritems, itervalues
+from six import integer_types
 from sg_helpers import try_int
 
 # noinspection PyUnreachableCode
@@ -1768,8 +1768,8 @@ class QueueItemSwitchSource(ShowQueueItem):
                     except (BaseException, Exception):
                         pass
                     try:
-                        if tp in itervalues(sickgear.switched_shows):
-                            sickgear.switched_shows = {k: v for k, v in iteritems(sickgear.switched_shows) if tp != v}
+                        if tp in sickgear.switched_shows.values():
+                            sickgear.switched_shows = {k: v for k, v in sickgear.switched_shows.items() if tp != v}
                     except (BaseException, Exception):
                         pass
                 sickgear.switched_shows[TVidProdid({self.old_tvid: self.old_prodid})()] = \

@@ -37,7 +37,7 @@ from sickgear.webserveInit import WebServer
 from sickgear import webapi, scheduler, search_backlog, search_queue, show_queue, history, db
 from sickgear.scene_numbering import set_scene_numbering_helper
 from lib import requests
-from six import integer_types, iteritems, iterkeys, itervalues, string_types
+from six import integer_types, string_types
 
 # noinspection PyUnreachableCode
 if False:
@@ -197,7 +197,7 @@ class WebAPICase(test.SickbeardTestDBCase):
                 sickgear.ROOT_DIRS = root_dirs
             for cur_show in test_shows:
                 show_obj = TVShow(cur_show['tvid'], cur_show['prodid'])
-                for k, v in iteritems(cur_show):
+                for k, v in cur_show.items():
                     if k in ('tvid', 'prodid', 'episodes', 'quality_init', 'quality_upgrade'):
                         continue
                     if f'_{k}' in show_obj.__dict__:
@@ -213,10 +213,10 @@ class WebAPICase(test.SickbeardTestDBCase):
                 sickgear.showList.append(show_obj)
                 sickgear.showDict.update({show_obj.sid_int: show_obj})
 
-                for season, eps in iteritems(cur_show['episodes']):
-                    for ep, data in iteritems(eps):
+                for season, eps in cur_show['episodes'].items():
+                    for ep, data in eps.items():
                         ep_obj = TVEpisode(show_obj, season, ep)
-                        for k, v in iteritems(data):
+                        for k, v in data.items():
                             if f'_{k}' in ep_obj.__dict__:
                                 ep_obj.__dict__[f'_{k}'] = v
                             elif k in ep_obj.__dict__:
@@ -254,8 +254,8 @@ class WebAPICase(test.SickbeardTestDBCase):
                 show_obj.upgrade_once = int(cur_show.get('upgrade_once', 0))
                 show_obj.scene = int(cur_show.get('scene', 0))
                 show_obj.save_to_db()
-                for season, data in iteritems(cur_show['episodes']):
-                    for ep_nb, cur_ep in iteritems(data):
+                for season, data in cur_show['episodes'].items():
+                    for ep_nb, cur_ep in data.items():
                         ep_obj = show_obj.get_episode(season, ep_nb)
                         ep_obj.status = cur_ep.get('status')
                         ep_obj.save_to_db()
@@ -285,7 +285,7 @@ class WebAPICase(test.SickbeardTestDBCase):
         if missing_list:
             msg.append(f'Missing fields: {", ".join(missing_list)}')
         if wrong_type:
-            msg.append(f'Wrong field type: {", ".join([f"{k}: {v}" for k, v in iteritems(wrong_type)])}')
+            msg.append(f'Wrong field type: {", ".join([f"{k}: {v}" for k, v in wrong_type.items()])}')
         return result, ('', f', {", ".join(msg)}')[0 < len(msg)]
 
     def _check_success_base_response(self, data, endpoint, message='', data_type=dict):
@@ -314,7 +314,7 @@ class WebAPICase(test.SickbeardTestDBCase):
         self.assertTrue(r, msg=f'Failed command:'
                                f' {webapi._functionMaper_reversed[webapi.CMD_SickGear]}'
                                f' - data dict{msg}')
-        needed_ele = [(k, string_types) for k in iterkeys(webapi._functionMaper) if 'listcommands' != k]
+        needed_ele = [(k, string_types) for k in webapi._functionMaper.keys() if 'listcommands' != k]
         r = all(v[0] in data['data']['api_commands'] for v in needed_ele)
         if not r:
             i = list(set(n[0] for n in needed_ele) - set(data['data']['api_commands']))
@@ -373,12 +373,12 @@ class WebAPICase(test.SickbeardTestDBCase):
             data = self._request_from_api(webapi.CMD_SickGearShowSeasons,
                                           params={'indexer': cur_show['tvid'], 'indexerid': cur_show['prodid']})
             self._check_success_base_response(data, webapi.CMD_SickGearShowSeasons)
-            for season, eps in iteritems(cur_show['episodes']):
+            for season, eps in cur_show['episodes'].items():
                 r, msg = self._check_types(data['data'], [(f'{season}', dict)])
                 self.assertTrue(r, msg=f'Failed command: '
                                        f'{webapi._functionMaper_reversed[webapi.CMD_SickGearShowSeasons]}'
                                        f' - data dict{msg}')
-                for cur_ep in iterkeys(eps):
+                for cur_ep in eps.keys():
                     r, msg = self._check_types(data['data'][f'{season}'], [(f'{cur_ep}', dict)])
                     self.assertTrue(r, msg=f'Failed command: '
                                            f'{webapi._functionMaper_reversed[webapi.CMD_SickGearShowSeasons]}'
@@ -417,7 +417,7 @@ class WebAPICase(test.SickbeardTestDBCase):
     def test_all_shows(self):
         data = self._request_from_api(webapi.CMD_SickGearShows)
         self._check_success_base_response(data, webapi.CMD_SickGearShows)
-        for show_id, cur_show in iteritems(data['data']):
+        for show_id, cur_show in data['data'].items():
             self._check_show_fields(cur_show, webapi.CMD_SickGearShows, include_season_list=False)
 
     def test_episode(self):
@@ -431,8 +431,8 @@ class WebAPICase(test.SickbeardTestDBCase):
         self.assertEqual(data['message'], 'Episode not found')
         # found episode
         for cur_show in test_shows:
-            for season, eps in iteritems(cur_show['episodes']):
-                for cur_ep in iterkeys(eps):
+            for season, eps in cur_show['episodes'].items():
+                for cur_ep in eps.keys():
                     data = self._request_from_api(webapi.CMD_SickGearEpisode,
                                                   params={'indexer': cur_show['tvid'], 'indexerid': cur_show['prodid'],
                                                           'season': season, 'episode': cur_ep})
@@ -502,16 +502,16 @@ class WebAPICase(test.SickbeardTestDBCase):
             data = self._request_from_api(webapi.CMD_SickGearShowSeasons,
                                           params={'indexer': cur_show['tvid'], 'indexerid': cur_show['prodid']})
             self._check_success_base_response(data, webapi.CMD_SickGearShowSeasons)
-            r, msg = self._check_types(data['data'], [(f'{i}', dict) for i in iterkeys(cur_show['episodes'])])
+            r, msg = self._check_types(data['data'], [(f'{i}', dict) for i in cur_show['episodes'].keys()])
             self.assertTrue(r, msg=f'Failed command:'
                                    f' {webapi._functionMaper_reversed[webapi.CMD_SickGearShowSeasons]}'
                                    f' - data dict{msg}')
-            for season, eps in iteritems(cur_show['episodes']):
+            for season, eps in cur_show['episodes'].items():
                 r, msg = self._check_types(data['data'], [(f'{season}', dict)])
                 self.assertTrue(r, msg=f'Failed command:'
                                        f' {webapi._functionMaper_reversed[webapi.CMD_SickGearShowSeasons]}'
                                        f' - data dict{msg}')
-                for cur_ep in iterkeys(eps):
+                for cur_ep in eps.keys():
                     r, msg = self._check_types(data['data'][f'{season}'], [(f'{cur_ep}', dict)])
                     self.assertTrue(r, msg=f'Failed command:'
                                            f' {webapi._functionMaper_reversed[webapi.CMD_SickGearShowSeasons]}'
@@ -588,7 +588,7 @@ class WebAPICase(test.SickbeardTestDBCase):
     def test_get_all_qualities(self):
         data = self._request_from_api(webapi.CMD_SickGearGetQualities)
         self._check_success_base_response(data, webapi.CMD_SickGearGetQualities)
-        r, msg = self._check_types(data['data'], [(q, integer_types) for q in iterkeys(webapi.quality_map)])
+        r, msg = self._check_types(data['data'], [(q, integer_types) for q in webapi.quality_map.keys()])
         self.assertTrue(r, msg=f'Failed command:'
                                f' {webapi._functionMaper_reversed[webapi.CMD_SickGearGetQualities]}'
                                f' - data dict{msg}')
@@ -596,7 +596,7 @@ class WebAPICase(test.SickbeardTestDBCase):
     def test_get_human_qualities(self):
         data = self._request_from_api(webapi.CMD_SickGearGetqualityStrings)
         self._check_success_base_response(data, webapi.CMD_SickGearGetqualityStrings)
-        r, msg = self._check_types(data['data'], [(f'{q}', string_types) for q in iterkeys(Quality.qualityStrings)])
+        r, msg = self._check_types(data['data'], [(f'{q}', string_types) for q in Quality.qualityStrings.keys()])
         self.assertTrue(r, msg=f'Failed command:'
                                f' {webapi._functionMaper_reversed[webapi.CMD_SickGearGetqualityStrings]}'
                                f' - data dict{msg}')
@@ -663,7 +663,7 @@ class WebAPICase(test.SickbeardTestDBCase):
                 r, msg = self._check_types(
                     data['data'][s],
                     [(t.lower().replace(" ", "_").replace("(", "").replace(")", ""), integer_types)
-                     for k, t in iteritems(Quality.qualityStrings) if Quality.NONE != k])
+                     for k, t in Quality.qualityStrings.items() if Quality.NONE != k])
                 self.assertTrue(r, msg=f'Failed command: '
                                        f'{webapi._functionMaper_reversed[webapi.CMD_SickGearShowStats]}'
                                        f' - data dict - {s}:{msg}')
@@ -841,8 +841,8 @@ class WebAPICase(test.SickbeardTestDBCase):
         self.reset_show_data = True
         failed_msg = 'Failed to set all or some status. Check data.'
         success_msg = 'All status set successfully.'
-        for cur_quality_str, cur_quality in itertools.chain(iteritems(webapi.quality_map), iteritems({'None': None})):
-            for cur_value, cur_status in iteritems(statusStrings.statusStrings):
+        for cur_quality_str, cur_quality in itertools.chain(webapi.quality_map.items(), {'None': None}.items()):
+            for cur_value, cur_status in statusStrings.statusStrings.items():
                 if (cur_quality and cur_value not in (SNATCHED, DOWNLOADED, ARCHIVED)) or \
                         (None is cur_quality and SNATCHED == cur_value):
                     continue
@@ -851,8 +851,8 @@ class WebAPICase(test.SickbeardTestDBCase):
                 if cur_value in (UNKNOWN, UNAIRED, SNATCHED_PROPER, SNATCHED_BEST, SUBTITLED):
                     continue
                 for cur_show in test_shows:
-                    for season, eps in iteritems(cur_show['episodes']):
-                        for ep_nb, cur_ep in iteritems(eps):
+                    for season, eps in cur_show['episodes'].items():
+                        for ep_nb, cur_ep in eps.items():
                             ep_obj = sickgear.helpers.find_show_by_id({cur_show['tvid']: cur_show['prodid']}).\
                                 get_episode(season, ep_nb)
                             params = {'indexer': cur_show['tvid'], 'indexerid': cur_show['prodid'], 'season': season,

@@ -26,7 +26,7 @@ import sickgear
 
 from lib.dateutil.parser import parse
 
-from six import iteritems, moves, string_types
+from six import moves, string_types
 
 # noinspection PyUnreachableCode
 if False:
@@ -81,7 +81,7 @@ class NewIdDict(dict):
         :param kwargs:
         """
         if isinstance(other, dict):
-            other = {o: self.set_value(v, self.get(o), tv_src, o) for o, v in iteritems(other)}
+            other = {o: self.set_value(v, self.get(o), tv_src, o) for o, v in other.items()}
         super(NewIdDict, self).update(other, **kwargs)
 
 
@@ -100,7 +100,7 @@ def get_missing_ids(show_ids, show_obj, tv_src):
         tvinfo_config['custom_ui'] = classes.AllShowInfosNoFilterListUI
         t = sickgear.TVInfoAPI(tv_src).setup(**tvinfo_config)
         show_name, f_date = None, None
-        if any(1 for k, v in iteritems(show_ids) if v and k in t.supported_id_searches):
+        if any(1 for k, v in show_ids.items() if v and k in t.supported_id_searches):
             try:
                 found_shows = t.search_show(ids=show_ids)
                 res_count = len(found_shows or [])
@@ -117,7 +117,7 @@ def get_missing_ids(show_ids, show_obj, tv_src):
             show_name, f_date = get_show_name_date(show_obj)
         for show in found_shows or []:
             if confirm_show(f_date, show['firstaired'], show_name, clean_show_name(show['seriesname'])):
-                if any(v for k, v in iteritems(show['ids']) if tv_src != k and v):
+                if any(v for k, v in show['ids'].items() if tv_src != k and v):
                     f_show = [show]
                 else:
                     f_show = t.search_show(ids={tv_src: show['id']})
@@ -187,7 +187,7 @@ def get_show_name_date(show_obj):
 
 def combine_mapped_new_dict(mapped, new_ids):
     # type: (Dict[int, Dict], Dict[int, integer_types]) -> Dict[int, integer_types]
-    return {n: m for d in ({k: v['id'] for k, v in iteritems(mapped) if v['id']}, new_ids) for n, m in iteritems(d)}
+    return {n: m for d in ({k: v['id'] for k, v in mapped.items() if v['id']}, new_ids) for n, m in d.items()}
 
 
 def combine_new_ids(cur_ids, new_ids, src_id):
@@ -199,7 +199,7 @@ def combine_new_ids(cur_ids, new_ids, src_id):
     :param new_ids:
     :param src_id:
     """
-    return {k: v for d in (cur_ids, new_ids) for k, v in iteritems(d)
+    return {k: v for d in (cur_ids, new_ids) for k, v in d.items()
             if v and (k == src_id or not cur_ids.get(k) or v == cur_ids.get(k, ''))}
 
 
@@ -241,7 +241,7 @@ def map_indexers_to_show(show_obj, update=False, force=False, recheck=False, im_
                                             'date': datetime.date.fromordinal(date if 0 < date else 1)}
 
     # get list of needed ids
-    mis_map = [k for k, v in iteritems(mapped) if (v['status'] not in [
+    mis_map = [k for k, v in mapped.items() if (v['status'] not in [
         MapStatus.NO_AUTOMATIC_CHANGE, MapStatus.SOURCE])
                and ((0 == v['id'] and MapStatus.NONE == v['status'])
                     or force or recheck or (update and 0 == v['id'] and k not in defunct_indexer))]
@@ -258,7 +258,7 @@ def map_indexers_to_show(show_obj, update=False, force=False, recheck=False, im_
             for i in all_ids_srcs:
                 if new_ids.verified.get(i):
                     continue
-                search_ids = {k: v for k, v in iteritems(combine_mapped_new_dict(mapped, new_ids))
+                search_ids = {k: v for k, v in combine_mapped_new_dict(mapped, new_ids).items()
                               if k not in searched.setdefault(i, {})}
                 if search_ids:
                     search_done = True
@@ -266,7 +266,7 @@ def map_indexers_to_show(show_obj, update=False, force=False, recheck=False, im_
                     new_ids.update(get_missing_ids(search_ids, show_obj, tv_src=i), tv_src=i)
                     if new_ids.get(i) and 0 < new_ids.get(i):
                         searched[i].update({i: new_ids[i]})
-                confirmed = all(v for k, v in iteritems(new_ids.verified) if k not in defunct_indexer)
+                confirmed = all(v for k, v in new_ids.verified.items() if k not in defunct_indexer)
                 if confirmed:
                     break
             if confirmed or not search_done:
@@ -374,7 +374,7 @@ def should_recheck_update_ids(show_obj):
     """
     try:
         today = datetime.date.today()
-        ids_updated = min([v.get('date') for k, v in iteritems(show_obj.ids) if k != show_obj.tvid and
+        ids_updated = min([v.get('date') for k, v in show_obj.ids.items() if k != show_obj.tvid and
                            k not in defunct_indexer] or [datetime.date.fromtimestamp(1)])
         if today - ids_updated >= datetime.timedelta(days=365):
             return True

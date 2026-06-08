@@ -26,7 +26,6 @@ from ..helpers import try_int
 from json_helper import json_loads
 
 from _23 import b64encodestring, quote
-from six import iteritems
 
 # noinspection PyUnreachableCode
 if False:
@@ -132,9 +131,9 @@ class SnowflProvider(generic.TorrentProvider):
             if not html:
                 raise generic.HaltParseException
 
-            rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
+            rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
                 'js': r'<script[^>]+?src="([^"]+?js\?v=[\w]{8,})"',
-                'token': r'\w\s*=\s*"(\w{30,40})"', 'seed': r'n random[^"]+"([^"]+)'})])
+                'token': r'\w\s*=\s*"(\w{30,40})"', 'seed': r'n random[^"]+"([^"]+)'}.items()])
 
             js_src = rc['js'].findall(html)
             for src in js_src:
