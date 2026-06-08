@@ -21,8 +21,6 @@ import re
 from . import generic
 from ..helpers import anon_url, try_int
 
-from six import iteritems
-
 
 class TorrentLeechProvider(generic.TorrentProvider):
     def __init__(self):
@@ -78,7 +76,7 @@ class TorrentLeechProvider(generic.TorrentProvider):
         results = []
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in iteritems(dict(id=r'download.*?/([\d]+)')))
+        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in dict(id=r'download.*?/([\d]+)').items())
         lrs_found = False
         lrs_new = True
         for search_urls in urls:  # this intentionally iterates once to preserve indentation

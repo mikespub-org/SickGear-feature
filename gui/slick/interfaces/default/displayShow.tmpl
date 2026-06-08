@@ -5,7 +5,6 @@
     Quality, statusStrings, WANTED, SKIPPED, ARCHIVED, IGNORED, FAILED, DOWNLOADED
 #from sickgear.helpers import anon_url, get_size, human, maybe_plural, generate_word_str
 #from sickgear.indexers.indexer_config import TVINFO_TVDB, TVINFO_IMDB
-#from six import iteritems
 <% def sg_var(varname, default=False): return getattr(sickgear, varname, default) %>#slurp#
 <% def sg_str(varname, default=''): return getattr(sickgear, varname, default) %>#slurp#
 ##
@@ -196,7 +195,7 @@
 .main span{border-bottom:1px solid #0a0}
 </style>
 #set $tvdb_id = None
-#for $src_id, $src_name in iteritems($TVInfoAPI().all_sources)
+#for $src_id, $src_name in $TVInfoAPI().all_sources.items()
     #if $TVInfoAPI($src_id).config.get('defunct') and $src_id != $show_obj.tvid
         #continue
     #end if

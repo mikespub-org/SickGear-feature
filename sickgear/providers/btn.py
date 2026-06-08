@@ -30,8 +30,6 @@ from bs4_parser import BS4Parser
 from exceptions_helper import AuthException
 from json_helper import json_dumps
 
-from six import iteritems
-
 
 class BTNProvider(generic.TorrentProvider):
 
@@ -155,7 +153,7 @@ class BTNProvider(generic.TorrentProvider):
                                 found_torrents.update(data_json['torrents'])
 
                     cnt = len(results)
-                    for torrentid, torrent_info in iteritems(found_torrents):
+                    for torrentid, torrent_info in found_torrents.items():
                         seeders, leechers, size = (try_int(n, n) for n in [torrent_info.get(x) for x in
                                                                            ('Seeders', 'Leechers', 'Size')])
                         if self._reject_item(seeders, leechers, container=self.reject_m2ts and (
@@ -215,9 +213,9 @@ class BTNProvider(generic.TorrentProvider):
                     if 2 > len(tbl_rows):
                         raise generic.HaltParseException
 
-                    rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
+                    rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
                         'cats': rf'(?i)cat\[(?:{self._categories_string(mode, template="", delimiter="|")})\]',
-                        'get': 'download'})])
+                        'get': 'download'}.items()])
 
                     head = None
                     for tr in tbl_rows[1:]:

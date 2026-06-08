@@ -25,7 +25,7 @@ import sickgear
 from ._legacy_classes import LegacySearchResult, LegacyProper
 from .common import Quality
 
-from six import integer_types, iteritems, string_types
+from six import integer_types, string_types
 
 # noinspection PyUnreachableCode
 if False:
@@ -357,7 +357,7 @@ class OrderedDefaultdict(OrderedDict):
 
     def __reduce__(self):  # optional, for pickle support
         args = (self.default_factory,) if self.default_factory else ()
-        return self.__class__, args, None, None, iteritems(self)
+        return self.__class__, args, None, None, self.items()
 
     def first_key(self):
         return next(iter(self))

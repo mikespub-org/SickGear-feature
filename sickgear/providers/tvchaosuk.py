@@ -28,7 +28,6 @@ from bs4_parser import BS4Parser
 from dateutil.parser import parse
 
 from _23 import unquote_plus
-from six import iteritems
 
 
 class TVChaosUKProvider(generic.TorrentProvider):
@@ -76,8 +75,8 @@ class TVChaosUKProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
-            'info': r'/torrents?/(?P<tid>(?P<tid_num>\d{2,})[^"]*)', 'get': 'download'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
+            'info': r'/torrents?/(?P<tid>(?P<tid_num>\d{2,})[^"]*)', 'get': 'download'}.items()])
         for mode in search_params:
             for search_string in search_params[mode]:
                 search_string = unquote_plus(search_string)

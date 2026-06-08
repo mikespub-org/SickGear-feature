@@ -26,8 +26,7 @@ from bs4_parser import BS4Parser
 from requests.cookies import cookiejar_from_dict
 
 from _23 import quote, unquote
-from six import string_types, iteritems
-
+from six import string_types
 
 class SpeedCDProvider(generic.TorrentProvider):
 
@@ -111,8 +110,8 @@ class SpeedCDProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
-            'info': '/t/', 'get': 'download', 'fl': r'\[freeleech\]'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
+            'info': '/t/', 'get': 'download', 'fl': r'\[freeleech\]'}.items()])
 
         for mode in search_params:
             rc['cats'] = re.compile(r'(?i)browse/(?:%s)'

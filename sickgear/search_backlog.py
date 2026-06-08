@@ -26,7 +26,7 @@ from .search import wanted_episodes
 from .sgdatetime import SGDatetime
 from .tv import TVidProdid, TVEpisode, TVShow
 
-from six import iteritems, itervalues, moves
+from six import moves
 
 # noinspection PyUnreachableCode
 if False:
@@ -125,7 +125,7 @@ class BacklogSearcher(Job):
         """
         for segments in items:
             if len(segments):
-                for season, segment in iteritems(segments):  # type: int, List[TVEpisode]
+                for season, segment in segments.items():  # type: int, List[TVEpisode]
                     if prevent_same and \
                             sickgear.search_queue_scheduler.action.is_in_queue(segment[0].show_obj, segment):
                         continue
@@ -268,7 +268,7 @@ class BacklogSearcher(Job):
             counter = 0
             for w in wanted_list:  # type: Dict
                 f = False
-                for season, segment in iteritems(w):  # type: int, List[TVEpisode]
+                for season, segment in w.items():  # type: int, List[TVEpisode]
                     counter += 1
                     if not f:
                         h_part.append(segment[0].show_obj.tvid_prodid)
@@ -284,7 +284,7 @@ class BacklogSearcher(Job):
         if not runparts and parts:
             runparts = parts[0]
             wanted_list = list(filter(
-                lambda wi: wi and next(itervalues(wi))[0].show_obj.tvid_prodid in runparts, wanted_list))
+                lambda wi: wi and next(wi.values())[0].show_obj.tvid_prodid in runparts, wanted_list))
 
         limited_wanted_list = []
         if standard_backlog and not any_torrent_enabled and runparts:

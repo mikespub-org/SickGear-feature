@@ -65,7 +65,7 @@ from lib.tvinfo_base import RoleTypes, TVINFO_FACEBOOK, TVINFO_INSTAGRAM, TVINFO
 from lib.tvinfo_base.exceptions import *
 from sg_helpers import calc_age, int_to_time, remove_file_perm, time_to_int
 
-from six import integer_types, iteritems, iterkeys, itervalues, moves, string_types
+from six import integer_types, moves, string_types
 
 # noinspection PyUnreachableCode
 if False:
@@ -152,7 +152,7 @@ class TVidProdid(object):
 
         if isinstance(tvid_prodid, dict) and 1 == len(tvid_prodid):
             try:
-                for (cur_tvid, cur_prodid) in iteritems(tvid_prodid):
+                for (cur_tvid, cur_prodid) in tvid_prodid.items():
                     self.tvid, self.prodid = int(cur_tvid), int(cur_prodid)
             except ValueError:
                 pass
@@ -417,7 +417,7 @@ class Person(Referential):
             fetched = self._data_fetched
             cur_data = self._remember_properties()
             self.load_from_db()
-            cur_data['ids'] = dict(chain.from_iterable(iteritems(_d) for _d in (self.ids, ids or {})))
+            cur_data['ids'] = dict(chain.from_iterable(_d.items() for _d in (self.ids, ids or {})))
             self.update_properties(**cur_data)
             self._data_fetched = fetched
         elif not self.name:
@@ -493,7 +493,7 @@ class Person(Referential):
                     FROM person_ids
                     WHERE %s
                     """ % ' OR '.join(['( src = ? AND src_id = ? )'] * len(self.ids)),
-                    list(reduce(lambda a, b: a + b, iteritems(self.ids))))
+                    list(reduce(lambda a, b: a + b, self.ids.items())))
             for cur_id in sql_result or []:
                 return cur_id['person_id']
 
@@ -578,7 +578,7 @@ class Person(Referential):
                     self.remove_img()
                     self.image_url = None
 
-        for cur_key, cur_value in iteritems(kwargs):
+        for cur_key, cur_value in kwargs.items():
             if cur_key in ('image_url', 'thumb_url'):
                 continue
             if cur_key not in self.__dict__:
@@ -699,7 +699,7 @@ class Person(Referential):
             self.update_properties(
                 gender=person_obj.gender, homepage=person_obj.homepage,
                 ids=dict(chain.from_iterable(
-                    iteritems(_d) for _d in (self.ids, {_k: _v for _k, _v in iteritems(person_obj.ids)
+                    _d.items() for _d in (self.ids, {_k: _v for _k, _v in person_obj.ids.items()
                                                         if _v and TVINFO_SLUG != _k} or {}))),
                 birthday=person_obj.birthdate, deathday=person_obj.deathdate, biography=person_obj.bio,
                 birthplace=person_obj.birthplace, deathplace=person_obj.deathplace, height=person_obj.height,
@@ -725,7 +725,7 @@ class Person(Referential):
         tvsrc_result, found_persons, found_on_src, search_sources, \
             found_ids, ids_to_check, imdb_confirmed, source_confirmed = \
             None, {}, set(), [TVINFO_TRAKT, TVINFO_TMDB, TVINFO_IMDB, TVINFO_TVDB, TVINFO_TVMAZE], \
-            set([_k for _k, _v in iteritems(self.ids) if _v] + ['text']), {}, False, {}
+            set([_k for _k, _v in self.ids.items() if _v] + ['text']), {}, False, {}
         # confirmed_character =  False
         max_search_src = len(search_sources)
         logger.debug(f'Getting extra data for: {self.name}')
@@ -784,8 +784,8 @@ class Person(Referential):
                                         # confirmed_character = True
                                         break
                                     elif any(_ti_src == _so_src and bool(_ti_ids) and _ti_ids == _so_ids['id']
-                                             for _ti_src, _ti_ids in iteritems(cur_ch.ti_show.ids)
-                                             for _so_src, _so_ids in iteritems(show_obj.ids)):
+                                             for _ti_src, _ti_ids in cur_ch.ti_show.ids.items()
+                                             for _so_src, _so_ids in show_obj.ids.items()):
                                         rp = pd
                                         confirmed_on_src = True
                                         # confirmed_character = True
@@ -909,7 +909,7 @@ class Person(Referential):
                      ';;;'.join(self.nicknames or []), ';;;'.join(self.akas or []), self.id]],
                 ]
             if force or self.dirty_ids:
-                for cur_src, cur_ids in iteritems(self.ids):
+                for cur_src, cur_ids in self.ids.items():
                     sql_l.extend([
                         ['UPDATE person_ids SET src_id = ? WHERE person_id = ? AND src = ?',
                          [cur_ids, self.id, cur_src]],
@@ -944,7 +944,7 @@ class Person(Referential):
 
     def __eq__(self, other):
         return (self.id not in [None, 0] and other.id == self.id) \
-               and any(self.ids[_o] == ids for _o, ids in iteritems(other.ids))
+               and any(self.ids[_o] == ids for _o, ids in other.ids.items())
 
     def __str__(self):
         lived, id_str, id_list = '', '', []
@@ -952,7 +952,7 @@ class Person(Referential):
             lived += f' {self.birthday}'
         if self.deathday:
             lived += f' - {self.deathday}'
-        for _src, _ids in iteritems(self.ids):
+        for _src, _ids in self.ids.items():
             id_list.append(f'{sickgear.TVInfoAPI(_src).name}: {_ids}')
         if id_list:
             id_str = f' ({", ".join(id_list)})'
@@ -1002,7 +1002,7 @@ class Character(Referential):
             if not sid and self.id:
                 self.load_from_db()
                 self.update_properties(name=name, person=person, biography=bio,
-                                       ids=dict(chain.from_iterable(iteritems(_d) for _d in (self.ids, ids or {}))),
+                                       ids=dict(chain.from_iterable(_d.items() for _d in (self.ids, ids or {}))),
                                        image_url=image_url, thumb_url=thumb_url)
             elif not self.name:
                 self.load_from_db()
@@ -1025,7 +1025,7 @@ class Character(Referential):
                     FROM character_ids 
                     WHERE %s
                     """ % ' OR '.join(['( src = ? AND src_id = ? )'] * len(self.ids)),
-                    list(reduce(lambda a, b: a+b, iteritems(self.ids))))
+                    list(reduce(lambda a, b: a+b, self.ids.items())))
                 if sql_result:
                     return sql_result[0]['character_id']
         elif self.person:
@@ -1089,7 +1089,7 @@ class Character(Referential):
                     pass
 
     def update_properties(self, **kwargs):
-        for cur_key, cur_value in iteritems(kwargs):
+        for cur_key, cur_value in kwargs.items():
             if cur_key not in self.__dict__:
                 raise Exception(f'Character has no property [{cur_key}]')
             if None is not cur_value and cur_value != self.__dict__[cur_key]:
@@ -1116,8 +1116,8 @@ class Character(Referential):
     def combine_start_end_years(self, new_years):
         # type: (Dict[integer_types, Dict[AnyStr, int]]) -> None
         new_dict = dict(chain.from_iterable(
-                    iteritems(_d) for _d in (self.persons_years,
-                                             {_k: _v for _k, _v in iteritems(new_years) if _v} or {})))
+                    _d.items() for _d in (self.persons_years,
+                                             {_k: _v for _k, _v in new_years.items() if _v} or {})))
         if new_dict != self.persons_years:
             self.persons_years = new_dict
             self.dirty_years = True
@@ -1247,7 +1247,7 @@ class Character(Referential):
                     """, [self.biography, self.image_url, self.name, self.thumb_url, self._set_updated(), self.id]],
                 ]
             if force or self.dirty_ids:
-                for cur_tvid, cur_src_id in iteritems(self.ids):
+                for cur_tvid, cur_src_id in self.ids.items():
                     sql_l.extend([[
                         """
                         UPDATE character_ids SET src_id = ?
@@ -1293,7 +1293,7 @@ class Character(Referential):
                 """ % ','.join(['?'] * len(self.person)),
                 [self.id] + [_p.id for _p in self.person]])
             for cur_per in self.person:
-                if cur_per.id and any(1 for _v in itervalues(self.persons_years.get(cur_per.id, {})) if _v):
+                if cur_per.id and any(1 for _v in self.persons_years.get(cur_per.id, {}).values() if _v):
                     p_years = self.persons_years.get(cur_per.id, {})
                     sql_l.append([
                         """
@@ -1312,12 +1312,12 @@ class Character(Referential):
 
     def __eq__(self, other):
         return other.person == self.person and ((self.id not in [None, 0] and other.id == self.id)
-                                                or any(self.ids[_o] == _v for _o, _v in iteritems(other.ids))
+                                                or any(self.ids[_o] == _v for _o, _v in other.ids.items())
                                                 or (not other.ids and other.name == self.name))
 
     def __str__(self):
         id_str, id_list = '', []
-        for _src, _ids in iteritems(self.ids):
+        for _src, _ids in self.ids.items():
             id_list.append(f'{sickgear.TVInfoAPI(_src).name}: {_ids}')
         if id_list:
             id_str = f' ({", ".join(id_list)})'
@@ -1625,7 +1625,7 @@ class TVShow(TVShowBase):
     @ids.setter
     def ids(self, value):
         if isinstance(value, dict):
-            for cur_key, cur_value in iteritems(value):
+            for cur_key, cur_value in value.items():
                 if cur_key not in indexermapper.indexer_list or \
                         not isinstance(cur_value, dict) or \
                         not isinstance(cur_value.get('id'), integer_types) or \
@@ -1907,7 +1907,7 @@ class TVShow(TVShowBase):
                         birthday=person.birthday, birthplace=person.birthplace,
                         deathday=person.deathday, deathplace=cur_row['deathplace'],
                         gender=person.gender, height=cur_row['height'],
-                        ids=dict(chain.from_iterable(iteritems(_d) for _d in (existing_person.ids, person.ids or {}))),
+                        ids=dict(chain.from_iterable(_d.items() for _d in (existing_person.ids, person.ids or {}))),
                         image_url=person.image_url, name=person.name,
                         nicknames=set((cur_row['nicknames'] and cur_row['nicknames'].split(';;;')) or []),
                         real_name=cur_row['realname'], thumb_url=person.thumb_url
@@ -2078,7 +2078,7 @@ class TVShow(TVShowBase):
             return False
 
         logger.log(f'{self.tvid_prodid}: Writing NFOs for show')
-        for cur_provider in itervalues(sickgear.metadata_provider_dict):
+        for cur_provider in sickgear.metadata_provider_dict.values():
             result = cur_provider.create_show_metadata(self, force) or result
 
         return result
@@ -2153,7 +2153,7 @@ class TVShow(TVShowBase):
             return False
 
         logger.log(f'{self.tvid_prodid}: Updating NFOs for show with new TV info')
-        for cur_provider in itervalues(sickgear.metadata_provider_dict):
+        for cur_provider in sickgear.metadata_provider_dict.values():
             try:
                 result = cur_provider.update_show_indexer_metadata(self) or result
             except (BaseException, Exception) as e:
@@ -2419,7 +2419,7 @@ class TVShow(TVShowBase):
         fanart_result = poster_result = banner_result = False
         season_posters_result = season_banners_result = season_all_poster_result = season_all_banner_result = False
 
-        for cur_provider in itervalues(sickgear.metadata_provider_dict):
+        for cur_provider in sickgear.metadata_provider_dict.values():
             # FIXME: Needs to not show this message if the option is not enabled?
             logger.debug(f'Running metadata routines for {cur_provider.name}')
 
@@ -2794,7 +2794,7 @@ class TVShow(TVShowBase):
         existing_cast = set(hash(*([', '.join(p.name for p in c.person or [] if p.name)]))
                             for c in cast_list or [])
         new_cast = set(hash(*([', '.join(p.name for p in c.person or [] if p.name)]))
-                       for c_t, c_l in iteritems(show_info_cast or {}) for c in c_l or []
+                       for c_t, c_l in (show_info_cast or {}).items() for c in c_l or []
                        and c_t in (RoleTypes.ActorMain, RoleTypes.Host, RoleTypes.Interviewer, RoleTypes.Presenter))
         now = datetime.date.today().toordinal()
         max_age = random.randint(30, 60)
@@ -2912,7 +2912,7 @@ class TVShow(TVShowBase):
             name=src_person.name, gender=src_person.gender,
             birthday=src_person.birthdate, deathday=src_person.deathdate,
             biography=src_person.bio,
-            ids=dict(chain.from_iterable(iteritems(_d) for _d in (person_obj.ids, p_ids))),
+            ids=dict(chain.from_iterable(_d.items() for _d in (person_obj.ids, p_ids))),
             deathplace=src_person.deathplace, akas=src_person.akas,
             nicknames=src_person.nicknames, real_name=src_person.real_name,
             height=src_person.height)
@@ -2942,7 +2942,7 @@ class TVShow(TVShowBase):
         cast_list = self._load_cast_from_db()
         remove_char_ids = {c.id for c in cast_list or []}
         cast_ordered = WeakList()
-        for cur_cast_type, cur_cast_list in iteritems(show_info_cast):  # type: (integer_types, List[TVInfoCharacter])
+        for cur_cast_type, cur_cast_list in show_info_cast.items():  # type: (integer_types, List[TVInfoCharacter])
             if cur_cast_type not in (RoleTypes.ActorMain, RoleTypes.Host, RoleTypes.Interviewer, RoleTypes.Presenter):
                 continue
             for cur_cast in cur_cast_list:
@@ -2954,7 +2954,7 @@ class TVShow(TVShowBase):
                 mc = next((_c for _c in cast_list or []
                            if (None is not cur_cast.id and _c.ids.get(self.tvid) == cur_cast.id)
                            or (unique_name and cur_cast.name and _c.name == cur_cast.name)
-                           or any(_c.ids.get(_src) == cur_cast.ids.get(_src) for _src in iterkeys(cur_cast.ids) or {})),
+                           or any(_c.ids.get(_src) == cur_cast.ids.get(_src) for _src in cur_cast.ids.keys() or {})),
                           None)  # type: Optional[Character]
                 if not mc:
                     unique_person = not any(1 for _cp in
@@ -3017,7 +3017,7 @@ class TVShow(TVShowBase):
                     mc.update_properties(
                         name=cur_cast.name, image_url=cur_cast.image, thumb_url=cur_cast.thumb_url,
                         ids=dict(chain.from_iterable(
-                            iteritems(_d) for _d in (mc.ids, ({}, {self.tvid: cur_cast.id})[None is not cur_cast.id]))))
+                            _d.items() for _d in (mc.ids, ({}, {self.tvid: cur_cast.id})[None is not cur_cast.id]))))
                 else:
                     persons = []
                     for cur_person in cur_cast.person:
@@ -3183,7 +3183,7 @@ class TVShow(TVShowBase):
                         akas_head[cur_cc] = cc_aka
                     else:
                         akas_tail += [cc_aka]
-            imdb_info['akas'] = '|'.join([_aka for _aka in itervalues(akas_head) if _aka] + sorted(akas_tail))
+            imdb_info['akas'] = '|'.join([_aka for _aka in akas_head.values() if _aka] + sorted(akas_tail))
 
         # tv
         if isinstance(imdb_tv.get('title'), string_types):
@@ -3216,7 +3216,7 @@ class TVShow(TVShowBase):
         if isinstance(imdb_certificates.get('certificates'), dict):
             certs_head = OrderedDict([(_k, None) for _k in en_cc])
             certs_tail = []
-            for cur_cc, cur_values in iteritems(imdb_certificates.get('certificates')):
+            for cur_cc, cur_values in imdb_certificates.get('certificates').items():
                 if cur_cc and isinstance(cur_values, (list, tuple)):
                     for cur_cert in cur_values:
                         if isinstance(cur_cert, dict) and cur_cert.get('certificate'):
@@ -3230,7 +3230,7 @@ class TVShow(TVShowBase):
                             else:
                                 certs_tail += [cc_cert]
             imdb_info['certificates'] = '|'.join(
-                [_cert for _cert in itervalues(certs_head) if _cert] + sorted(certs_tail))
+                [_cert for _cert in certs_head.values() if _cert] + sorted(certs_tail))
         if (not imdb_info['certificates'] and isinstance(imdb_tv.get('certificate'), dict)
                 and isinstance(imdb_tv.get('certificate').get('certificate'), string_types)):
             imdb_info['certificates'] = f'US:{imdb_tv.get("certificate").get("certificate")}'
@@ -3239,7 +3239,7 @@ class TVShow(TVShowBase):
 
         # Rename dict keys without spaces for DB upsert
         self.imdb_info = dict(
-            [(_k.replace(' ', '_'), _k(_v) if hasattr(_v, 'keys') else _v) for _k, _v in iteritems(imdb_info)])
+            [(_k.replace(' ', '_'), _k(_v) if hasattr(_v, 'keys') else _v) for _k, _v in imdb_info.items()])
         logger.debug(f'{self.tvid_prodid}: Obtained info from IMDb -> {self._imdb_info}')
 
         logger.log(f'{self.tvid_prodid}: Parsed latest IMDb show info for [{self._name}]')
@@ -3324,8 +3324,8 @@ class TVShow(TVShowBase):
             tvid_prodid = self.tvid_prodid
             if tvid_prodid in sickgear.switched_shows:
                 sickgear.switched_shows.pop(tvid_prodid)
-            elif tvid_prodid in itervalues(sickgear.switched_shows):
-                sickgear.switched_shows = {_k: _v for _k, _v in iteritems(sickgear.switched_shows)
+            elif tvid_prodid in sickgear.switched_shows.values():
+                sickgear.switched_shows = {_k: _v for _k, _v in sickgear.switched_shows.items()
                                             if tvid_prodid != _v}
         except (BaseException, Exception):
             pass
@@ -4102,7 +4102,7 @@ class TVEpisode(TVEpisodeBase):
 
         # check for nfo and tbn
         if os.path.isfile(self.location):
-            for cur_provider in itervalues(sickgear.metadata_provider_dict):
+            for cur_provider in sickgear.metadata_provider_dict.values():
                 if cur_provider.episode_metadata:
                     new_result = cur_provider.has_episode_metadata(self)
                 else:
@@ -4699,7 +4699,7 @@ class TVEpisode(TVEpisodeBase):
         """
         result = False
 
-        for cur_provider in itervalues(sickgear.metadata_provider_dict):
+        for cur_provider in sickgear.metadata_provider_dict.values():
             try:
                 result = cur_provider.create_episode_metadata(self, force) or result
             except (BaseException, Exception) as e:
@@ -4715,7 +4715,7 @@ class TVEpisode(TVEpisodeBase):
         """
         result = False
 
-        for cur_provider in itervalues(sickgear.metadata_provider_dict):
+        for cur_provider in sickgear.metadata_provider_dict.values():
             try:
                 result = cur_provider.create_episode_thumb(self) or result
             except (BaseException, Exception) as e:

@@ -33,7 +33,7 @@ from .history import reset_status
 from .name_parser.parser import InvalidNameException, InvalidShowException, NameParser
 from .sgdatetime import SGDatetime
 
-from six import iteritems, iterkeys, string_types, text_type
+from six import string_types, text_type
 from sg_helpers import long_path, scantree
 
 import lib.rarfile.rarfile as rarfile
@@ -564,9 +564,9 @@ class ProcessTVShow(object):
 
             init_history_cnt = len(archive_history)
 
-            archive_history = {k_arc: v for k_arc, v in iteritems(archive_history) if os.path.isfile(k_arc)}
+            archive_history = {k_arc: v for k_arc, v in archive_history.items() if os.path.isfile(k_arc)}
 
-            unused_files = list(set([os.path.join(path, x) for x in archives]) - set(iterkeys(archive_history)))
+            unused_files = list(set([os.path.join(path, x) for x in archives]) - set(archive_history.keys()))
             archives = [os.path.basename(x) for x in unused_files]
             if unused_files:
                 for f in unused_files:
@@ -714,7 +714,7 @@ class ProcessTVShow(object):
                         rar_content = [os.path.normpath(x.filename) for x in rar_handle.infolist() if not x.is_dir()]
                         renamed = self.cleanup_names(path, rar_content)
                         cur_unpacked = rar_content if not renamed else \
-                            (list(set(rar_content) - set(iterkeys(renamed))) + list(renamed.values()))
+                            (list(set(rar_content) - set(renamed.keys())) + list(renamed.values()))
                         self._log_helper('Unpacked content: ["%s"]' % '", "'.join(map(text_type, cur_unpacked)))
                         unpacked_files += cur_unpacked
                 except (rarfile.PasswordRequired, rarfile.RarWrongPassword):

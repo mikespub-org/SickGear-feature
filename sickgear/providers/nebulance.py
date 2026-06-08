@@ -26,7 +26,6 @@ from bs4_parser import BS4Parser
 from json_helper import json_dumps
 
 from _23 import unquote_plus
-from six import iteritems
 
 
 class NebulanceProvider(generic.TorrentProvider):
@@ -80,7 +79,7 @@ class NebulanceProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({'nodots': r'[\.\s]+'})])
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {'nodots': r'[\.\s]+'}.items()])
         for mode in search_params:
             for search_string in search_params[mode]:
 

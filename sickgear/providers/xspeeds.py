@@ -25,8 +25,6 @@ from .. import logger
 from ..helpers import has_anime, try_int
 from bs4_parser import BS4Parser
 
-from six import iteritems
-
 
 class XspeedsProvider(generic.TorrentProvider):
 
@@ -61,7 +59,7 @@ class XspeedsProvider(generic.TorrentProvider):
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
         rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in
-                   iteritems({'info': 'detail', 'get': 'download', 'fl': 'free'})])
+                   {'info': 'detail', 'get': 'download', 'fl': 'free'}.items()])
         for mode in search_params:
             save_url, restore = self._set_categories(mode)
             if self.should_skip():

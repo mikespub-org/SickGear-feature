@@ -6,7 +6,6 @@
 #from sickgear.helpers import anon_url
 #from sickgear.tv import PersonGenders
 #from sg_helpers import spoken_height
-#from six import iteritems
 <% def sg_var(varname, default=False): return getattr(sickgear, varname, default) %>#slurp#
 <% def sg_str(varname, default=''): return getattr(sickgear, varname, default) %>#slurp#
 ##
@@ -206,7 +205,7 @@ def param(visible=True, rid=None, cache_person=None, cache_char=None, person=Non
 
 #set $section_links = False
 #set $all_sources = $TVInfoAPI().all_non_fallback_sources
-#for $cur_src, $cur_sid in sorted(iteritems($person.ids))
+#for $cur_src, $cur_sid in sorted($person.ids.items())
 	#if $cur_src not in $all_sources:
 		#continue
 	#end if

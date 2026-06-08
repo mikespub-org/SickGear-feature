@@ -55,7 +55,7 @@ from .webserve import AddShows
 import dateutil.parser
 
 from _23 import decode_str, unquote_plus
-from six import integer_types, iteritems, iterkeys, string_types, text_type
+from six import integer_types, string_types, text_type
 
 # noinspection PyUnreachableCode
 if False:
@@ -93,7 +93,7 @@ quality_map = {'sdtv': Quality.SDTV,
                'uhd4kweb': Quality.UHD4KWEB,
                'unknown': Quality.UNKNOWN}
 
-quality_map_inversed = {v: k for k, v in iteritems(quality_map)}
+quality_map_inversed = {v: k for k, v in quality_map.items()}
 
 
 def api_log(obj, msg, level=logger.MESSAGE):
@@ -176,11 +176,11 @@ class Api(webserve.BaseHandler):
         return self.get(route, *args, **kwargs)
 
     def _decode_params(self, kwargs):
-        for k, v in iteritems(kwargs):
+        for k, v in kwargs.items():
             if isinstance(v, list):
                 kwargs[k] = [decode_str(l) for l in v]
             elif isinstance(v, dict):
-                kwargs[k] = {a: decode_str(b) for a, b in iteritems(v)}
+                kwargs[k] = {a: decode_str(b) for a, b in v.items()}
             else:
                 kwargs[k] = decode_str(v)
         return kwargs
@@ -190,7 +190,7 @@ class Api(webserve.BaseHandler):
         route = route.strip('/') or 'index'
 
         kwargs = self._decode_params(self.request.arguments)
-        for arg, value in iteritems(kwargs):
+        for arg, value in kwargs.items():
             if not isinstance(value, dict) and 1 == len(value):
                 kwargs[arg] = value[0]
 
@@ -869,7 +869,7 @@ class CMD_ListCommands(ApiCall):
         out = ''
         table_sickgear_commands = ''
         table_sickgear_commands = ''
-        for f, v in sorted(iteritems(_functionMaper), key=lambda x: (re.sub(r'^s[bg]\.', '', x[0], flags=re.I),
+        for f, v in sorted(_functionMaper.items(), key=lambda x: (re.sub(r'^s[bg]\.', '', x[0], flags=re.I),
                                                                      re.sub(r'^sg\.', '1', x[0], flags=re.I))):
             if 'listcommands' == f:
                 continue
@@ -900,7 +900,7 @@ class CMD_ListCommands(ApiCall):
                 table = ''
 
                 if 'requiredParameters' in help and isinstance(help['requiredParameters'], dict):
-                    for p, d in iteritems(help['requiredParameters']):
+                    for p, d in help['requiredParameters'].items():
                         des = ''
                         if isinstance(d, dict) and 'desc' in d:
                             des = d.get('desc')
@@ -908,7 +908,7 @@ class CMD_ListCommands(ApiCall):
                                  "<td><p>%s</p></td></tr>" % (p, des)
 
                 if 'optionalParameters' in help and isinstance(help['optionalParameters'], dict):
-                    for p, d in iteritems(help['optionalParameters']):
+                    for p, d in help['optionalParameters'].items():
                         des = ''
                         if isinstance(d, dict) and 'desc' in d:
                             des = d.get('desc')
@@ -955,7 +955,7 @@ class CMD_Help(ApiCall):
         # required
         # optional
         self.subject, args = self.check_params(args, kwargs, 'subject', 'help',
-                                               False, 'string', iterkeys(_functionMaper))
+                                               False, 'string', _functionMaper.keys())
         ApiCall.__init__(self, handler, args, kwargs)
 
     def run(self):
@@ -1064,7 +1064,7 @@ class CMD_SickGearComingEpisodes(ApiCall):
             try:
                 show_obj = helpers.find_show_by_id({ep['tv_id']: ep['prod_id']})
                 ep['tvdbid'] = show_obj.ids.get(TVINFO_TVDB, {'id': 0})['id']
-                ep['ids'] = {k: v.get('id') for k, v in iteritems(show_obj.ids)}
+                ep['ids'] = {k: v.get('id') for k, v in show_obj.ids.items()}
             except (BaseException, Exception):
                 ep['tvdbid'] = (None, ep['prod_id'])[TVINFO_TVDB == ep['tv_id']]
                 ep['ids'] = None
@@ -1370,7 +1370,7 @@ class CMD_SickGearEpisodeSetStatus(ApiCall):
 
         extra_msg = ''
         if start_backlog:
-            for season, segment in iteritems(segments):  # type: int, List[TVEpisode]
+            for season, segment in segments.items():  # type: int, List[TVEpisode]
                 backlog_queue_item = search_queue.BacklogQueueItem(show_obj, segment)
                 sickgear.search_queue_scheduler.action.add_item(backlog_queue_item)
 
@@ -2310,7 +2310,7 @@ class CMD_SickGearGetIndexers(ApiCall):
     def run(self):
         result = {}
         for i in indexer_config.tvinfo_config:
-            for d, v in iteritems(indexer_config.tvinfo_config[i]):
+            for d, v in indexer_config.tvinfo_config[i].items():
                 if self.searchable_only and (indexer_config.tvinfo_config[i].get('mapped_only') or
                                              not indexer_config.tvinfo_config[i].get('active') or
                                              indexer_config.tvinfo_config[i].get('defunct')):
@@ -2604,11 +2604,11 @@ class CMD_SickGearSearchIndexers(ApiCall):
 
                 for curSeries in (apiData or []):
                     if (int(curSeries['id']) == self.prodid and i == self.tvid) or \
-                            any({self.tvid: self.prodid} == {k: v} for k, v in iteritems(curSeries['ids'])):
+                            any({self.tvid: self.prodid} == {k: v} for k, v in curSeries['ids'].items()):
                         if not self.name and curSeries['ids'].get(self.tvid) == int(curSeries['id']):
                             search_kw['name'] = curSeries['seriesname']
                             search_name = curSeries['seriesname']
-                        new_ids = {k: v for k, v in iteritems(curSeries['ids']) if v and k != self.tvid}
+                        new_ids = {k: v for k, v in curSeries['ids'].items() if v and k != self.tvid}
                         if new_ids:
                             if 'ids' not in search_kw:
                                 search_kw['ids'] = {}
@@ -3272,7 +3272,7 @@ class CMD_SickGearShow(ApiCall):
         showDict['airs'] = str(show_obj.airs).replace('am', ' AM').replace('pm', ' PM').replace('  ', ' ')
         showDict['indexerid'] = self.prodid
         showDict['tvrage_id'] = show_obj.ids.get(TVINFO_TVRAGE, {'id': 0})['id']
-        showDict['ids'] = {k: v.get('id') for k, v in iteritems(show_obj.ids)}
+        showDict['ids'] = {k: v.get('id') for k, v in show_obj.ids.items()}
         showDict['tvrage_name'] = show_obj.name
         showDict['network'] = show_obj.network
         if not showDict['network']:
@@ -4553,7 +4553,7 @@ class CMD_SickGearShows(ApiCall):
                 'indexerid': cur_show_obj.prodid,
                 'indexer': cur_show_obj.tvid,
                 'tvdbid': cur_show_obj.ids.get(TVINFO_TVDB, {'id': 0})['id'],
-                'ids': {k: v.get('id') for k, v in iteritems(cur_show_obj.ids)},
+                'ids': {k: v.get('id') for k, v in cur_show_obj.ids.items()},
                 'tvrage_id': cur_show_obj.ids.get(TVINFO_TVRAGE, {'id': 0})['id'],
                 'tvrage_name': cur_show_obj.name,
                 'network': cur_show_obj.network,
@@ -4673,7 +4673,7 @@ class CMD_SickGearListTraktAccounts(ApiCall):
 
     def run(self):
         """ list Trakt accounts in sickgear """
-        accounts = [{'name': v.name, 'account_id': v.account_id} for a, v in iteritems(sickgear.TRAKT_ACCOUNTS)]
+        accounts = [{'name': v.name, 'account_id': v.account_id} for a, v in sickgear.TRAKT_ACCOUNTS.items()]
         return _responds(RESULT_SUCCESS, accounts)
 
 
@@ -4886,4 +4886,4 @@ _functionMaper = {'help': CMD_Help,
                   'sg.shows.queue': CMD_SickGearShowsQueue,
                   }
 
-_functionMaper_reversed = {v: k for k, v in iteritems(_functionMaper)}
+_functionMaper_reversed = {v: k for k, v in _functionMaper.items()}

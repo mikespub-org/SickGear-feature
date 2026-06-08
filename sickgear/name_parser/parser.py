@@ -38,7 +38,7 @@ from ..classes import OrderedDefaultdict
 
 from .._legacy_classes import LegacyParseResult
 from _23 import decode_str, list_range
-from six import iteritems, iterkeys, itervalues, string_types, text_type
+from six import string_types, text_type
 
 # noinspection PyUnreachableCode
 if False:
@@ -363,8 +363,8 @@ class NameParser(object):
                             patt = '(?i)(?:e(?:p(?:isode)?)?|part|pt)[. _-]?(%s)'
                             try:
                                 src_num = str(re.findall(patt % r'\w+', best_result.extra_info)[0])
-                                alt_num = nums.get(src_num) or list(iterkeys(nums))[
-                                    list(itervalues(nums)).index(src_num)]
+                                alt_num = nums.get(src_num) or list(nums.keys())[
+                                    list(nums.values()).index(src_num)]
                                 re_partnum = re.compile(patt % (f'{src_num}|{alt_num}'))
                                 for ep_details in sql_result:
                                     if re_partnum.search(ep_details['name']):
@@ -896,7 +896,7 @@ class NameParserCache(object):
         :param show_obj: TVShow object
         """
         with self.lock:
-            self._previous_parsed = OrderedDefaultdict(None, [(k, v) for k, v in iteritems(self._previous_parsed)
+            self._previous_parsed = OrderedDefaultdict(None, [(k, v) for k, v in self._previous_parsed.items()
                                                        if v.show_obj != show_obj])
 
 

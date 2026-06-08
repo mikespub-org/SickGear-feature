@@ -29,8 +29,6 @@ from ..tv import TVEpisode
 
 from bs4_parser import BS4Parser
 
-from six import iteritems
-
 # noinspection PyUnreachableCode
 if False:
     from typing import Any, AnyStr, Dict, List, Optional
@@ -102,8 +100,8 @@ class FSTProvider(generic.NZBProvider):
         if not cats:
             return results
 
-        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in iteritems(dict(
-            cat=f'(?:{"|".join(cats)})', results='(?:collections|searchbits)')))
+        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in dict(
+            cat=f'(?:{"|".join(cats)})', results='(?:collections|searchbits)').items())
         mode = ('search', 'cache')['' == search]
         post_data = None
         if 'cache' == mode:

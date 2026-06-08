@@ -6,7 +6,7 @@ import sickgear
 from .helpers import try_int
 
 from _23 import decode_bytes, decode_str
-from six import iteritems, text_type
+from six import text_type
 
 
 def read_config_string(data):
@@ -30,7 +30,7 @@ def build_config(**kwargs):
         root_dirs = root_pieces[1:]
 
     for item in [re.findall(r'update-trakt-(\d+)-(.*)', k)
-                 for k, v in iteritems(kwargs) if k.startswith('update-trakt-')]:
+                 for k, v in kwargs.items() if k.startswith('update-trakt-')]:
         for account_id, location in item:
             account_id = try_int(account_id, None)
             if None is account_id:

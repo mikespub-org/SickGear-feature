@@ -35,7 +35,6 @@ from .sgdatetime import SGDatetime
 import lib.rarfile.rarfile as rarfile
 
 from _23 import list_range
-from six import iteritems
 
 # noinspection PyUnreachableCode
 if False:
@@ -80,7 +79,7 @@ class ReleaseMap(Job):
 
     def fetch_xem_ids(self):
 
-        for cur_tvid, cur_name in iteritems(sickgear.TVInfoAPI().xem_supported_sources):
+        for cur_tvid, cur_name in sickgear.TVInfoAPI().xem_supported_sources.items():
             xem_ids = self._get_xem_ids(cur_name, sickgear.TVInfoAPI(cur_tvid).config['xem_origin'])
             if len(xem_ids):
                 MEMCACHE['release_map_xem'][cur_tvid] = xem_ids
@@ -141,7 +140,7 @@ class ReleaseMap(Job):
                 if 'failure' == parsed_json['result']:
                     continue
 
-                for cur_prodid, cur_names in iteritems(parsed_json['data']):
+                for cur_prodid, cur_names in parsed_json['data'].items():
                     try:
                         result[(cur_tvid, int(cur_prodid))] = cur_names
                     except (BaseException, Exception):
@@ -205,7 +204,7 @@ class ReleaseMap(Job):
                 # if this exception isn't already in the DB then add it
                 for cur_ex_dict in filter(lambda e: e not in existing_exceptions, exceptions[cur_tvid_prodid]):
                     try:
-                        exception, season = next(iteritems(cur_ex_dict))
+                        exception, season = next(cur_ex_dict.items())
                     except (BaseException, Exception):
                         logger.error('release exception error')
                         logger.error(traceback.format_exc())
@@ -342,13 +341,13 @@ class ReleaseMap(Job):
 
         result = {}
         count_updated_numbers = 0
-        for cur_tvid_prodid, cur_season_data in iteritems(data):
+        for cur_tvid_prodid, cur_season_data in data.items():
             show_obj = sickgear.helpers.find_show_by_id(cur_tvid_prodid, no_mapped_ids=True)
             if not show_obj:
                 continue
 
             used = set()
-            for cur_for_season, cur_data in iteritems(cur_season_data):
+            for cur_for_season, cur_data in cur_season_data.items():
                 cur_for_season = helpers.try_int(cur_for_season, None)
                 tvid, prodid = TVidProdid(cur_tvid_prodid).tuple
                 if cur_data.get('n'):  # alt names
@@ -356,7 +355,7 @@ class ReleaseMap(Job):
                     result[(tvid, prodid)] += [{_name: cur_for_season} for _name in cur_data.get('n')]
 
                 for cur_update in cur_data.get('se') or []:
-                    for cur_for_episode, cur_se_range in iteritems(cur_update):  # scene episode alt numbers
+                    for cur_for_episode, cur_se_range in cur_update.items():  # scene episode alt numbers
                         cur_for_episode = helpers.try_int(cur_for_episode, None)
 
                         target_season, episode_range = cur_se_range.split('x')

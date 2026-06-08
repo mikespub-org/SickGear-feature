@@ -27,8 +27,6 @@ from ..helpers import try_int
 import exceptions_helper
 import feedparser
 
-from six import iteritems
-
 
 class ImmortalSeedProvider(generic.TorrentProvider):
 
@@ -66,9 +64,9 @@ class ImmortalSeedProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
             'seed': r'seed[^\d/]+([\d]+)', 'leech': r'leech[^\d/]+([\d]+)',
-            'size': r'size[^\d/]+([^/]+)', 'get': '(.*download.*)', 'title': r'NUKED\b\.(.*)$'})])
+            'size': r'size[^\d/]+([^/]+)', 'get': '(.*download.*)', 'title': r'NUKED\b\.(.*)$'}.items()])
         for mode in search_params:
             for search_string in search_params[mode]:
                 search_string = search_string.replace(' ', '.')

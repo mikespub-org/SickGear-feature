@@ -24,7 +24,6 @@ from ..helpers import try_int
 from bs4_parser import BS4Parser
 
 from _23 import b64decodestring
-from six import iteritems
 
 
 class ThePirateBayProvider(generic.TorrentProvider):
@@ -82,9 +81,9 @@ class ThePirateBayProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
             'info': 'detail|descript', 'get': 'magnet',
-            'verify': '(?:helper|moderator|trusted|vip)', 'size': r'size[^\d]+(\d+(?:[.,]\d+)?\W*[bkmgt]\w+)'})])
+            'verify': '(?:helper|moderator|trusted|vip)', 'size': r'size[^\d]+(\d+(?:[.,]\d+)?\W*[bkmgt]\w+)'}.items()])
 
         for mode in search_params:
             for search_string in search_params[mode]:

@@ -31,7 +31,7 @@ from .indexers.indexer_config import TVINFO_TVDB
 from .name_parser.parser import InvalidNameException, InvalidShowException, NameParser
 
 from _23 import decode_str
-from six import iteritems, string_types
+from six import string_types
 from sg_helpers import long_path, cmdline_runner
 
 # noinspection PyUnreachableCode
@@ -771,9 +771,9 @@ class PostProcessor(object):
 
         # search all possible names for our new quality, in case the file or dir doesn't have it
         # nzb name is the most reliable if it exists, followed by folder name and lastly file name
-        for thing, cur_name in iteritems({'nzb name': self.nzb_name,
-                                          'folder name': self.folder_name,
-                                          'file name': self.file_name}):
+        for thing, cur_name in {'nzb name': self.nzb_name,
+                                'folder name': self.folder_name,
+                                'file name': self.file_name}.items():
 
             # some stuff might be None at this point still
             if not cur_name:

@@ -23,7 +23,6 @@ from ..helpers import anon_url, try_int
 from bs4_parser import BS4Parser
 
 from _23 import b64decodestring
-from six import iteritems
 
 
 class TorrentDayProvider(generic.TorrentProvider):
@@ -90,7 +89,7 @@ class TorrentDayProvider(generic.TorrentProvider):
         results = []
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in iteritems(dict(get='download', id=r'download.*?/([\d]+)')))
+        rc = dict((k, re.compile(f'(?i){v}')) for (k, v) in dict(get='download', id=r'download.*?/([\d]+)').items())
         lrs_found = False
         lrs_new = True
         for search_urls in urls:  # this intentionally iterates once to preserve indentation

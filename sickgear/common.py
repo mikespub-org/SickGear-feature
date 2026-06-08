@@ -23,7 +23,7 @@ import uuid
 
 import sickgear
 
-from six import integer_types, iterkeys, string_types
+from six import integer_types, string_types
 
 # noinspection PyUnresolvedReferences
 # noinspection PyUnreachableCode
@@ -241,7 +241,7 @@ class Quality(object):
         name = os.path.basename(name)
 
         # if we have our exact text then assume we put it there
-        for _x in sorted(iterkeys(Quality.qualityStrings), reverse=True):
+        for _x in sorted(Quality.qualityStrings.keys(), reverse=True):
             if Quality.UNKNOWN == _x:
                 continue
 
@@ -463,7 +463,7 @@ class Quality(object):
         if UNKNOWN == status:
             return UNKNOWN, Quality.UNKNOWN
 
-        for q in sorted(iterkeys(Quality.qualityStrings), reverse=True):
+        for q in sorted(Quality.qualityStrings.keys(), reverse=True):
             if status > q * 100:
                 return status - q * 100, q
 
@@ -573,7 +573,7 @@ for (attr_name, qual_val) in [
     ('DOWNLOADED', DOWNLOADED), ('ARCHIVED', ARCHIVED), ('FAILED', FAILED),
 ]:
     setattr(Quality, attr_name, list(map(lambda qk: Quality.composite_status(qual_val, qk),
-                                         iterkeys(Quality.qualityStrings))))
+                                         Quality.qualityStrings.keys())))
 Quality.SNATCHED_ANY = Quality.SNATCHED + Quality.SNATCHED_PROPER + Quality.SNATCHED_BEST
 
 SD = Quality.combine_qualities([Quality.SDTV, Quality.SDDVD], [])

@@ -25,8 +25,6 @@ from .. import logger
 from ..helpers import try_int
 from bs4_parser import BS4Parser
 
-from six import iteritems
-
 FLTAG = r'</a>\s+<img[^>]+%s[^<]+<br'
 
 
@@ -64,7 +62,7 @@ class FanoProvider(generic.TorrentProvider):
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
         rc = dict([(k, re.compile(f'(?i){v}'))
-                   for (k, v) in iteritems({'abd': r'(\d{4}(?:[.]\d{2}){2})', 'info': 'details', 'get': 'download'})])
+                   for (k, v) in {'abd': r'(\d{4}(?:[.]\d{2}){2})', 'info': 'details', 'get': 'download'}.items()])
         log = ''
         if self.filter:
             non_marked = 'f0' in self.filter

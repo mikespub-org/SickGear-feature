@@ -29,7 +29,6 @@ from .scene_exceptions import ReleaseMap
 from sg_helpers import scantree
 
 from _23 import quote_plus
-from six import iterkeys, itervalues
 
 # noinspection PyUnreachableCode
 if False:
@@ -395,7 +394,7 @@ def all_possible_show_names(show_obj, season=-1, force_anime=False):
     if not show_obj.is_anime and not force_anime:
         new_show_names = []
         country_list = common.countryList
-        country_list.update(dict(zip(itervalues(common.countryList), iterkeys(common.countryList))))
+        country_list.update(dict(zip(common.countryList.values(), common.countryList.keys())))
         for cur_name in set(show_names):
             if not cur_name:
                 continue

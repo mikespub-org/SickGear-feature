@@ -21,7 +21,6 @@ import sickgear
 from exceptions_helper import ex
 
 from _23 import b64encodestring, decode_str, etree, unquote_plus, urlencode
-from six import iteritems
 # noinspection PyUnresolvedReferences
 from six.moves import urllib
 
@@ -224,7 +223,7 @@ class PLEXNotifier(Notifier):
         if not self._testing:
             hosts_try = (hosts_all.copy(), hosts_match.copy())[any(hosts_match)]
             host_list = []
-            for section_key, cur_host in iteritems(hosts_try):
+            for section_key, cur_host in hosts_try.items():
                 refresh_result = None
                 if not self._testing:
                     refresh_result = sickgear.helpers.get_url(

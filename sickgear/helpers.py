@@ -43,7 +43,7 @@ from lxml_etree import etree, is_lxml
 from base64 import decodebytes as b64decodebytes, encodebytes as b64encodebytes
 
 from _23 import decode_bytes, decode_str, scandir
-from six import iteritems, string_types, text_type
+from six import string_types, text_type
 # noinspection PyUnresolvedReferences
 from six.moves import zip
 
@@ -238,7 +238,7 @@ def find_show_by_id(
 
             if isinstance(show_id, dict):
                 if no_mapped_ids:
-                    sid_int_list = [sickgear.tv.TVShow.create_sid(k, v) for k, v in iteritems(show_id) if k and v and
+                    sid_int_list = [sickgear.tv.TVShow.create_sid(k, v) for k, v in show_id.items() if k and v and
                                     0 < v and sickgear.tv.tvid_bitmask >= k]
                     if not check_multishow:
                         return next((sickgear.showDict.get(_show_sid_id) for _show_sid_id in sid_int_list
@@ -246,7 +246,7 @@ def find_show_by_id(
                     results = [sickgear.showDict.get(_show_sid_id) for _show_sid_id in sid_int_list
                                if sickgear.showDict.get(_show_sid_id)]
                 else:
-                    results = [_show_obj for k, v in iteritems(show_id) if k and v and 0 < v
+                    results = [_show_obj for k, v in show_id.items() if k and v and 0 < v
                                for _show_obj in show_list if v == _show_obj.internal_ids.get(k, {'id': 0})['id']]
 
     num_shows = len(set(results))
@@ -1618,7 +1618,7 @@ def upgrade_new_naming():
         if sickgear.FANART_RATINGS:
             from sickgear.tv import TVidProdid
             ne = {}
-            for k, v in iteritems(sickgear.FANART_RATINGS):
+            for k, v in sickgear.FANART_RATINGS.items():
                 nk = show_list.get(try_int(k))
                 if nk:
                     ne[TVidProdid({nk: int(k)})()] = sickgear.FANART_RATINGS[k]

@@ -23,8 +23,6 @@ from .. import logger
 from ..helpers import try_int
 from bs4_parser import BS4Parser
 
-from six import iteritems
-
 
 class TorrentingProvider(generic.TorrentProvider):
 
@@ -61,9 +59,9 @@ class TorrentingProvider(generic.TorrentProvider):
 
         items = {'Cache': [], 'Season': [], 'Episode': [], 'Propers': []}
 
-        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in iteritems({
+        rc = dict([(k, re.compile(f'(?i){v}')) for (k, v) in {
             'info': 'detail', 'cats': f'cat=(?:{self._categories_string(template="", delimiter="|")})',
-            'get': 'download'})])
+            'get': 'download'}.items()])
         for mode in search_params:
             for search_string in search_params[mode]:
                 search_url = self.urls['search'] % (self._categories_string(), search_string)

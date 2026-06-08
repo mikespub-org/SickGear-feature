@@ -48,7 +48,7 @@ import requests
 import requests.cookies
 
 from _23 import decode_bytes, make_btih, quote, quote_plus, urlparse
-from six import iteritems, iterkeys, itervalues, string_types
+from six import string_types
 from sg_helpers import try_int
 
 # noinspection PyUnreachableCode
@@ -115,7 +115,7 @@ class ProviderFailList(object):
                     value = SGDatetime.timestamp_far(e.fail_time)
                 default = {'date': str(fail_date), 'date_time': date_time,
                            'timestamp': helpers.try_int(value), 'multirow': False}
-                for et in itervalues(ProviderFailTypes.names):
+                for et in ProviderFailTypes.names.values():
                     default[et] = b_d.copy()
                 fail_dict.setdefault(date_time, default)[ProviderFailTypes.names[e.fail_type]]['count'] = 1
             else:
@@ -128,28 +128,28 @@ class ProviderFailList(object):
                     fail_dict[date_time][ProviderFailTypes.names[e.fail_type]].setdefault('code', {})[e.code] = 1
 
         row_count = {}
-        for (k, v) in iteritems(fail_dict):
+        for (k, v) in fail_dict.items():
             row_count.setdefault(v.get('date'), 0)
             if v.get('date') in row_count:
                 row_count[v.get('date')] += 1
-        for (k, v) in iteritems(fail_dict):
+        for (k, v) in fail_dict.items():
             if 1 < row_count.get(v.get('date')):
                 fail_dict[k]['multirow'] = True
 
-        fail_list = sorted([fail_dict[k] for k in iterkeys(fail_dict)], key=lambda y: y.get('date_time'), reverse=True)
+        fail_list = sorted([fail_dict[k] for k in fail_dict.keys()], key=lambda y: y.get('date_time'), reverse=True)
 
         totals = {}
         for fail_date in set([fail.get('date') for fail in fail_list]):
             daytotals = {}
-            for et in itervalues(ProviderFailTypes.names):
+            for et in ProviderFailTypes.names.values():
                 daytotals.update({et: sum([x.get(et).get('count') for x in fail_list if fail_date == x.get('date')])})
             totals.update({fail_date: daytotals})
-        for (fail_date, total) in iteritems(totals):
+        for (fail_date, total) in totals.items():
             for i, item in enumerate(fail_list):
                 if fail_date == item.get('date'):
                     if item.get('multirow'):
                         fail_list[i:i] = [item.copy()]
-                        for et in itervalues(ProviderFailTypes.names):
+                        for et in ProviderFailTypes.names.values():
                             fail_list[i][et] = {'count': total[et]}
                             if et == ProviderFailTypes.names[ProviderFailTypes.http]:
                                 fail_list[i][et]['code'] = {}
@@ -574,9 +574,9 @@ class GenericProvider(object):
         kwargs['failure_monitor'] = False
         kwargs['exclude_no_data'] = False
         sickgear.MEMCACHE.setdefault('cookies', {})
-        for k, v in iteritems(dict(
+        for k, v in dict(
                 headers=self.headers, hooks=dict(response=self.cb_response),
-                url_solver=sickgear.FLARESOLVERR_HOST, memcache_cookies=sickgear.MEMCACHE['cookies'])):
+                url_solver=sickgear.FLARESOLVERR_HOST, memcache_cookies=sickgear.MEMCACHE['cookies']).items():
             kwargs.setdefault(k, v)
         if 'nzbs.in' not in url:  # this provider returns 503's 3 out of 4 requests with the persistent session system
             kwargs.setdefault('session', self.session)
@@ -1010,9 +1010,9 @@ class GenericProvider(object):
         :return: dict column indices or None for leech, seeds, and size
         """
         results = {}
-        rc = dict([(k, re.compile(f'(?i){r}')) for (k, r) in itertools.chain(iteritems(
-            {'seed': r'(?:seed|s/l)', 'leech': r'(?:leech|peers)', 'size': r'(?:size)'}),
-            iteritems(({}, custom_match)[any([custom_match])]))])
+        rc = dict([(k, re.compile(f'(?i){r}')) for (k, r) in itertools.chain(
+            {'seed': r'(?:seed|s/l)', 'leech': r'(?:leech|peers)', 'size': r'(?:size)'}.items(),
+            ({}, custom_match)[any([custom_match])].items())])
         table = table_row.find_parent('table')
         header_row = table.tr or table.thead.tr or table.tbody.tr
         for y in [x for x in header_row(True) if x.attrs.get('class')]:
@@ -1022,12 +1022,12 @@ class GenericProvider(object):
 
         headers = [re.sub(
             r'\s+', '',
-            ((any([cell.get_text()]) and any(rc[x].search(cell.get_text()) for x in iterkeys(rc)) and cell.get_text())
-             or (cell.attrs.get('id') and any(rc[x].search(cell['id']) for x in iterkeys(rc)) and cell['id'])
-             or (cell.attrs.get('title') and any(rc[x].search(cell['title']) for x in iterkeys(rc)) and cell['title'])
+            ((any([cell.get_text()]) and any(rc[x].search(cell.get_text()) for x in rc.keys()) and cell.get_text())
+             or (cell.attrs.get('id') and any(rc[x].search(cell['id']) for x in rc.keys()) and cell['id'])
+             or (cell.attrs.get('title') and any(rc[x].search(cell['title']) for x in rc.keys()) and cell['title'])
              or next(iter(set(filter(lambda rz: any([rz]), [
                 next(iter(set(filter(lambda ry: any([ry]), [
-                    cell.find(tag, **p) for p in [{attr: rc[x]} for x in iterkeys(rc)]]))), {}).get(attr)
+                    cell.find(tag, **p) for p in [{attr: rc[x]} for x in rc.keys()]]))), {}).get(attr)
                 for (tag, attr) in [
                     ('img', 'title'), ('img', 'src'), ('i', 'title'), ('i', 'class'),
                     ('abbr', 'title'), ('a', 'title'), ('a', 'href')] + (custom_tags or [])]))), '')
@@ -1041,13 +1041,13 @@ class GenericProvider(object):
             for i, width in enumerate(colspans):
                 all_headers += [headers[i]] + ([''] * (width - 1))
 
-        for k, r in iteritems(rc):
+        for k, r in rc.items():
             if k not in results:
                 for name in filter(lambda v: any([v]) and r.search(v), all_headers[::-1]):
                     results[k] = all_headers.index(name) - len(all_headers)
                     break
 
-        for missing in set(iterkeys(rc)) - set(iterkeys(results)):
+        for missing in set(rc.keys()) - set(results.keys()):
             results[missing] = None
 
         return results
@@ -1193,7 +1193,7 @@ class GenericProvider(object):
                     else:
                         items[quality].append(item)
 
-            item_list = list(itertools.chain(*[v for (k, v) in sorted(iteritems(items), reverse=True)]))
+            item_list = list(itertools.chain(*[v for (k, v) in sorted(items.items(), reverse=True)]))
             item_list += items_unknown if items_unknown else []
 
         # filter results
@@ -1767,9 +1767,9 @@ class TorrentProvider(GenericProvider):
         sp_detail = ([sp_detail], sp_detail)[isinstance(sp_detail, list)]
         detail = ({}, {'Season_only': sp_detail})[detail_only
                                                   and not self.show_obj.is_sports and not self.show_obj.is_anime]
-        return [dict(itertools.chain(iteritems({'Season': self._build_search_strings(sp_detail, scene, prefix,
-                                                                                     season=season)}),
-                                     iteritems(detail)))]
+        return [dict(itertools.chain({'Season': self._build_search_strings(sp_detail, scene, prefix,
+                                                                           season=season)}.items(),
+                                     detail.items()))]
 
     def _episode_strings(self,
                          ep_obj,  # type: TVEpisode
@@ -1814,9 +1814,9 @@ class TorrentProvider(GenericProvider):
                 ep_detail = ([ep_detail], ep_detail)[isinstance(ep_detail, list)] + ['%d' % ep_dict['episodenumber']]
         ep_detail = ([ep_detail], ep_detail)[isinstance(ep_detail, list)]
         detail = ({}, {'Episode_only': ep_detail})[detail_only and not show_obj.is_sports and not show_obj.is_anime]
-        return [dict(itertools.chain(iteritems({'Episode': self._build_search_strings(ep_detail, scene, prefix,
-                                                                                      season=season)}),
-                                     iteritems(detail)))]
+        return [dict(itertools.chain({'Episode': self._build_search_strings(ep_detail, scene, prefix,
+                                                                            season=season)}.items(),
+                                     detail.items()))]
 
     @staticmethod
     def _ep_dict(ep_obj):
@@ -1970,7 +1970,7 @@ class TorrentProvider(GenericProvider):
             cur_url = cur_url.replace('{ts}', f'{str(time.time())[2:6]}.')
             if 10 < len(cur_url) and ((expire and (expire > int(time.time()))) or
                                       self._has_signature(self.get_url(cur_url, skip_auth=True))):
-                for k, v in iteritems(getattr(self, 'url_tmpl', {})):
+                for k, v in getattr(self, 'url_tmpl', {}).items():
                     self.urls[k] = v % {'home': cur_url, 'vars': getattr(self, 'url_vars', {}).get(k, '')}
 
                 if last_url != cur_url or (expire and not (expire > int(time.time()))):
@@ -2088,10 +2088,10 @@ class TorrentProvider(GenericProvider):
                 post_params = dict(username=self.username, password=self.password)
             elif isinstance(post_params, type({})):
                 # noinspection PyUnresolvedReferences
-                if self.username not in itervalues(post_params):
+                if self.username not in post_params.values():
                     # noinspection PyUnresolvedReferences
                     post_params['username'] = self.username
-                if self.password not in itervalues(post_params):
+                if self.password not in post_params.values():
                     post_params[(passfield, 'password')[not passfield]] = self.password
 
         # noinspection PyTypeChecker

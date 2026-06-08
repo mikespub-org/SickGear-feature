@@ -111,7 +111,7 @@ import lib.rarfile.rarfile as rarfile
 from _23 import decode_bytes, decode_str, getargspec, \
     map_consume, map_none, quote_plus, unquote_plus, urlparse
 from lib.sg_lang_codes import alpha3_to_alpha2, lang_to_country
-from six import binary_type, integer_types, iteritems, iterkeys, itervalues, moves, string_types
+from six import binary_type, integer_types, moves, string_types
 from lib.tvinfo_base import TVInfoShow
 
 if is_orjson:
@@ -388,7 +388,7 @@ class RouteHandler(RequestHandler):
             self.finish(use_404 and self.page_not_found() or None)
         else:
             request_kwargs = {k: self.decode_data(v if not (isinstance(v, list) and 1 == len(v)) else v[0])
-                              for k, v in iteritems(self.request.arguments) if not xsrf_filter or ('_xsrf' != k)}
+                              for k, v in self.request.arguments.items() if not xsrf_filter or ('_xsrf' != k)}
             if 'tvid_prodid' in request_kwargs and request_kwargs['tvid_prodid'] in sickgear.switched_shows:
                 # in case show has been switched, redirect to new id
                 url = self.request.uri.replace('tvid_prodid=%s' % request_kwargs['tvid_prodid'],
@@ -408,7 +408,7 @@ class RouteHandler(RequestHandler):
                 # no filtering for legacy and routes that depend on *args and **kwargs
                 result = yield self.async_call(method, request_kwargs)  # method(**request_kwargs)
             else:
-                filter_kwargs = dict(filter(lambda kv: kv[0] in method_args, iteritems(request_kwargs)))
+                filter_kwargs = dict(filter(lambda kv: kv[0] in method_args, request_kwargs.items()))
                 result = yield self.async_call(method, filter_kwargs)  # method(**filter_kwargs)
             self.finish(result)
 
@@ -951,7 +951,7 @@ class NoXSRFHandler(RouteHandler):
         mapped = 0
         mapping = None
         maps = [x.split('=') for x in sickgear.KODI_PARENT_MAPS.split(',') if any(x)]
-        for k, d in iteritems(data):
+        for k, d in data.items():
             try:
                 d['label'] = '%s%s{Kodi}' % (d['label'], bool(d['label']) and ' ' or '')
             except (BaseException, Exception):
@@ -1144,7 +1144,7 @@ class MainHandler(WebHandler):
             exc_info = kwargs['exc_info']
             trace_info = ''.join(['%s<br>' % strip_html_tags(line) for line in traceback.format_exception(*exc_info)])
             request_info = ''.join(['<strong>%s</strong>: %s<br>' % (k, strip_html_tags(self.request.__dict__[k]))
-                                    for k in iterkeys(self.request.__dict__)])
+                                    for k in self.request.__dict__.keys()])
             error = strip_html_tags(exc_info[1])
 
             self.set_header('Content-Type', 'text/html')
@@ -1602,7 +1602,7 @@ r.close()
 
         sql_result = []
         if data:
-            media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), iteritems(data)))
+            media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), data.items()))
 
             def chunks(lines, n):
                 for c in range(0, len(lines), n):
@@ -1625,7 +1625,7 @@ r.close()
                         episode_id=r['episode_id'], status=r['status'], location=r['location'],
                         file_size=r['file_size'])}), sql_result)
 
-            for (k, v) in iteritems(data):
+            for (k, v) in data.items():
 
                 bname = (os.path.basename(v.get('path_file')) or '').lower()
                 if not bname:
@@ -2532,9 +2532,9 @@ class Home(MainHandler):
                 if not sickgear.DISPLAY_SHOW_SPECIALS:
                     del (ep_counts['totals'][0])
 
-            ep_counts['eps_all'] = sum(itervalues(ep_counts['totals']))
+            ep_counts['eps_all'] = sum(ep_counts['totals'].values())
             ep_counts['eps_most'] = max(list(ep_counts['totals'].values()) + [0])
-            all_seasons = sorted(iterkeys(ep_counts['totals']), reverse=True)
+            all_seasons = sorted(ep_counts['totals'].keys(), reverse=True)
             t.lowest_season, t.highest_season = all_seasons and (all_seasons[-1], all_seasons[0]) or (0, 0)
 
             # 55 == seasons 1-10 and excludes the random season 0
@@ -2770,7 +2770,7 @@ class Home(MainHandler):
                         else:
                             showlist[show_obj.tag] = [show_obj]
 
-                sorted_show_lists += [[key, shows] for key, shows in iteritems(showlist)]
+                sorted_show_lists += [[key, shows] for key, shows in showlist.items()]
 
         elif 'anime' == sickgear.SHOWLIST_TAGVIEW:
             shows = []
@@ -2837,7 +2837,7 @@ class Home(MainHandler):
             return ('No scene exceptions', 'No season exceptions')[wanted_not_found]
 
         out = []
-        for season, names in iter(sorted(iteritems(exceptions_list))):
+        for season, names in iter(sorted(exceptions_list.items())):
             if None is wanted_season or wanted_season == season:
                 out.append('S%s: %s' % (('%02d' % season, '*')[-1 == season], ',<br>\n'.join(names)))
         return '\n<hr class="exception-divider">\n'.join(out)
@@ -2871,7 +2871,7 @@ class Home(MainHandler):
         new_ids = {}
         save_map = []
         with show_obj.lock:
-            for k, v in iteritems(kwargs):
+            for k, v in kwargs.items():
                 t = re.search(r'mid-(\d+)', k)
                 if t:
                     i = helpers.try_int(v, None)
@@ -2889,7 +2889,7 @@ class Home(MainHandler):
                             'date': dt_date.fromordinal(1)})['status'] = \
                             (MapStatus.NONE, MapStatus.NO_AUTOMATIC_CHANGE)['true' == v]
             if new_ids:
-                for k, v in iteritems(new_ids):
+                for k, v in new_ids.items():
                     if None is v.get('id') or None is v.get('status'):
                         continue
                     if (show_obj.ids.get(k, {'id': 0}).get('id') != v.get('id')
@@ -2931,7 +2931,7 @@ class Home(MainHandler):
                 ui.notifications.message(*[s.strip() for s in msg.split(',')])
 
         response.update({
-            'map': {k: {r: w for r, w in iteritems(v) if 'date' != r} for k, v in iteritems(show_obj.ids)}
+            'map': {k: {r: w for r, w in v.items() if 'date' != r} for k, v in show_obj.ids.items()}
         })
         return json_dumps(response)
 
@@ -2943,7 +2943,7 @@ class Home(MainHandler):
             return json_dumps({})
         save_map = []
         with show_obj.lock:
-            for k, v in iteritems(kwargs):
+            for k, v in kwargs.items():
                 t = re.search(r'lockid-(\d+)', k)
                 if t:
                     new_status = (MapStatus.NONE, MapStatus.NO_AUTOMATIC_CHANGE)['true' == v]
@@ -2967,7 +2967,7 @@ class Home(MainHandler):
                 save_mapping(show_obj, save_map=save_map)
             map_indexers_to_show(show_obj, force=True)
             ui.notifications.message('Mapping Reloaded')
-        return json_dumps({k: {r: w for r, w in iteritems(v) if 'date' != r} for k, v in iteritems(show_obj.ids)})
+        return json_dumps({k: {r: w for r, w in v.items() if 'date' != r} for k, v in show_obj.ids.items()})
 
     @private_call
     @staticmethod
@@ -3501,7 +3501,7 @@ class Home(MainHandler):
             season_list = ''
             season_wanted = []
             if sickgear.search_backlog.BacklogSearcher.providers_active(scheduled=False):
-                for season, segment in iteritems(segments):  # type: int, List[sickgear.tv.TVEpisode]
+                for season, segment in segments.items():  # type: int, List[sickgear.tv.TVEpisode]
                     if not show_obj.paused:
                         cur_backlog_queue_item = search_queue.BacklogQueueItem(show_obj, segment)
                         sickgear.search_queue_scheduler.action.add_item(cur_backlog_queue_item)
@@ -3526,7 +3526,7 @@ class Home(MainHandler):
         elif FAILED == status:
             msg = f'Retrying search automatically for the following season of <b>{show_obj.unique_name}</b>:<br><ul>'
 
-            for season, segment in iteritems(segments):  # type: int, List[sickgear.tv.TVEpisode]
+            for season, segment in segments.items():  # type: int, List[sickgear.tv.TVEpisode]
                 cur_failed_queue_item = search_queue.FailedQueueItem(show_obj, segment)
                 sickgear.search_queue_scheduler.action.add_item(cur_failed_queue_item)
 
@@ -3792,7 +3792,7 @@ class Home(MainHandler):
         # try to download subtitles for that episode
         try:
             previous_subtitles = set([subliminal.language.Language(x) for x in ep_obj.subtitles])
-            ep_obj.subtitles = set([x.language for x in next(itervalues(ep_obj.download_subtitles()))])
+            ep_obj.subtitles = set([x.language for x in next(ep_obj.download_subtitles().values())])
         except (BaseException, Exception):
             return json_dumps({'result': 'failure'})
 
@@ -4325,7 +4325,7 @@ class AddShows(Home):
         search_tvid = sg_helpers.try_int(search_tvid, None)
         search_term = search_term and search_term.strip()
         ids_to_search, id_srcs, searchable = {}, [], \
-            (list(iterkeys(sickgear.TVInfoAPI().search_sources)), [search_tvid])[
+            (list(sickgear.TVInfoAPI().search_sources.keys()), [search_tvid])[
                 search_tvid in sickgear.TVInfoAPI().search_sources]
         id_check = re.finditer(r'((\w+):\W*([t0-9]+))', search_term)
         if id_check:
@@ -4423,8 +4423,8 @@ class AddShows(Home):
                         continue
                     tv_src_id = int(cur_result['id'])
                     if cur_tvid in exclude_results:
-                        ids_search_used.update({k: v for k, v in iteritems(cur_result.get('ids', {}))
-                                                if v and k not in iterkeys(ids_to_search)})
+                        ids_search_used.update({k: v for k, v in cur_result.get('ids', {}).items()
+                                                if v and k not in ids_to_search.keys()})
                     else:
                         if type(cur_result) == dict:
                             results[cur_tvid][tv_src_id] = cur_result.copy()
@@ -4438,15 +4438,14 @@ class AddShows(Home):
                         if results[cur_tvid][tv_src_id]['direct_id'] or \
                                 any(ids_to_search[si] == results[cur_tvid][tv_src_id].get('ids', {})[si]
                                     for si in ids_to_search):
-                            ids_search_used.update({k: v for k, v in iteritems(
-                                results[cur_tvid][tv_src_id].get('ids', {}))
-                                                    if v and k not in iterkeys(ids_to_search)})
+                            ids_search_used.update({k: v for k, v in results[cur_tvid][tv_src_id].get('ids', {}).items()
+                                                    if v and k not in ids_to_search.keys()})
                         results[cur_tvid][tv_src_id]['rename_suggest'] = '' \
                             if not results[cur_tvid][tv_src_id]['firstaired'] \
                             else _parse_date_year(results[cur_tvid][tv_src_id]['firstaired'])
                     if trakt_only_search and TVINFO_TRAKT == cur_tvid:
-                        ids_search_used.update({k: v for k, v in iteritems(cur_result.get('ids', {}))
-                                                if v and k not in iterkeys(ids_to_search)})
+                        ids_search_used.update({k: v for k, v in cur_result.get('ids', {}).items()
+                                                if v and k not in ids_to_search.keys()})
                     if not text_search_used and cur_tvid in ids_to_search and tv_src_id == ids_to_search.get(cur_tvid):
                         used_search_term.update(self._generate_search_text_list(cur_result['seriesname']))
                         if not term:
@@ -4461,11 +4460,11 @@ class AddShows(Home):
                 pass
 
         id_names = {tvid: (name, '%s via %s' % (sickgear.TVInfoAPI(TVINFO_TVDB).name, name))[TVINFO_TRAKT == tvid]
-                    for tvid, name in iteritems(sickgear.TVInfoAPI().all_sources)}
+                    for tvid, name in sickgear.TVInfoAPI().all_sources.items()}
 
         if TVINFO_TRAKT in results and TVINFO_TVDB in results:
             tvdb_ids = list(results[TVINFO_TVDB])
-            results[TVINFO_TRAKT] = {k: v for k, v in iteritems(results[TVINFO_TRAKT]) if v['ids'].tvdb not in tvdb_ids}
+            results[TVINFO_TRAKT] = {k: v for k, v in results[TVINFO_TRAKT].items() if v['ids'].tvdb not in tvdb_ids}
 
         def in_db(tvid, prod_id):
             show_obj = helpers.find_show_by_id({(tvid, TVINFO_TVDB)[TVINFO_TRAKT == tvid]: prod_id},
@@ -4517,7 +4516,7 @@ class AddShows(Home):
                                                    show.get('language_country_code') or '')),
                        None, None, None, None, None, None, None, None, None,  # 18 - 26
                        show['direct_id'], show.get('rename_suggest')
-                       ] for show in itervalues(shows)] for tvid, shows in iteritems(results)])
+                       ] for show in shows.values()] for tvid, shows in results.items()])
 
         def final_order(sortby_index, data, final_sort):
             idx_is_indb = 1
@@ -4709,7 +4708,7 @@ class AddShows(Home):
                 break
 
         with db.DBConnection() as sg_db:
-            for _, cur_data in iteritems(dir_data):
+            for _, cur_data in dir_data.items():
                 cur_data['exists'] = sg_db.mass_action(cur_data['sql'])
 
                 for cur_enum, cur_normpath in enumerate(cur_data['normpath']):
@@ -4724,7 +4723,7 @@ class AddShows(Home):
                         dir_item['rename_suggest'] = cur_data['rename_suggest'][cur_enum]
 
                     tvid = prodid = show_name = None
-                    for cur_provider in itervalues(sickgear.metadata_provider_dict):
+                    for cur_provider in sickgear.metadata_provider_dict.values():
                         if prodid and show_name:
                             break
 
@@ -4797,7 +4796,7 @@ class AddShows(Home):
         if use_show_name and 1 == show_name.count(':'):  # if colon is found once
             search_tvid = list(filter(lambda x: bool(x),
                                       [('%s:' % sickgear.TVInfoAPI(_tvid).config['slug']) in show_name and _tvid
-                                       for _tvid, _ in iteritems(t.infosrc)]))
+                                       for _tvid, _ in t.infosrc.items()]))
             search_tvid = 1 == len(search_tvid) and search_tvid[0]
         t.provided_tvid = search_tvid or int(tvid or sickgear.TVINFO_DEFAULT)
         t.infosrc_icons = [sickgear.TVInfoAPI(cur_tvid).config.get('icon') for cur_tvid in t.infosrc]
@@ -4806,7 +4805,7 @@ class AddShows(Home):
         t.blocklist = []
         t.groups = []
 
-        t.show_scene_maps = list(itervalues(scene_exceptions.MEMCACHE['release_map_xem']))
+        t.show_scene_maps = list(scene_exceptions.MEMCACHE['release_map_xem'].values())
 
         has_shows = len(sickgear.showList)
         t.try_id = []  # [dict try_tip: try_term]
@@ -4964,13 +4963,13 @@ class AddShows(Home):
             else:
                 del accounts[acc_id]
 
-        gears = [[k, v] for k, v in iteritems(accounts) if 'sickgear' in v.lower()]
+        gears = [[k, v] for k, v in accounts.items() if 'sickgear' in v.lower()]
         if gears:
             del accounts[gears[0][0]]
-        yours = [[k, v] for k, v in iteritems(accounts) if 'your' == v.replace('(Off) ', '').lower()]
+        yours = [[k, v] for k, v in accounts.items() if 'your' == v.replace('(Off) ', '').lower()]
         if yours:
             del accounts[yours[0][0]]
-        sickgear.IMDB_ACCOUNTS = [x for tup in sorted(list(iteritems(accounts)), key=lambda t: t[1]) for x in tup]
+        sickgear.IMDB_ACCOUNTS = [x for tup in sorted(list(accounts.items()), key=lambda t: t[1]) for x in tup]
         if gears:
             sickgear.IMDB_ACCOUNTS.insert(0, gears[0][1])
             sickgear.IMDB_ACCOUNTS.insert(0, gears[0][0])
@@ -5491,8 +5490,8 @@ class AddShows(Home):
             with BS4Parser(html) as soup:
                 shows = [] if not soup else soup.find_all(class_='list_item')
                 oldest, newest, oldest_dt, newest_dt = None, None, 9999999, 0
-                rc = [(k, re.compile(r'(?i).*?(\d+)\s*%s.*' % v)) for (k, v) in iteritems(
-                    dict(months='months?', weeks='weeks?', days='days?', hours='hours?', minutes='min'))]
+                rc = [(k, re.compile(r'(?i).*?(\d+)\s*%s.*' % v)) for (k, v) in
+                    dict(months='months?', weeks='weeks?', days='days?', hours='hours?', minutes='min').items()]
                 rc_show = re.compile(r'^namelink_(\d+)$')
                 rc_title_clean = re.compile(r'(?i)(?:\s*\((?:19|20)\d{2}\))?$')
                 for row in shows:
@@ -7008,7 +7007,7 @@ class AddShows(Home):
                     lambda tvid_slug: item['ids'].get(tvid_slug[1])
                     and not sickgear.TVInfoAPI(tvid_slug[0]).config.get('defunct'),
                     map(lambda _tvid: (_tvid, sickgear.TVInfoAPI(_tvid).config['slug']),
-                        iterkeys(sickgear.TVInfoAPI().all_sources))):
+                        sickgear.TVInfoAPI().all_sources.keys())):
                 try:
                     src_id = item['ids'][infosrc_slug]
                     tvid_prodid_list += ['%s:%s' % (infosrc_slug, src_id)]
@@ -7559,9 +7558,9 @@ class Manage(MainHandler):
         with db.DBConnection() as sg_db:
             if not any(changes):
                 sg_db = None
-            for tvid_prodid, c_what_to in iteritems(changes):
+            for tvid_prodid, c_what_to in changes.items():
                 tvid_prodid_list = TVidProdid(tvid_prodid).list
-                for what, to in iteritems(c_what_to):
+                for what, to in c_what_to.items():
                     if 'all' == what:
                         sql_result = sg_db.select(
                             'SELECT season, episode'
@@ -7602,10 +7601,10 @@ class Manage(MainHandler):
             new_status = wanted_status
 
         changes = {}
-        for tvid_prodid, to_what in iteritems(to_change):
+        for tvid_prodid, to_what in to_change.items():
             changes.setdefault(tvid_prodid, dict())
             all_to = None
-            for to, what in iteritems(to_what):
+            for to, what in to_what.items():
                 if 'all' in what:
                     all_to = to
                     continue
@@ -8102,7 +8101,7 @@ class Manage(MainHandler):
                                                               to_delete, to_remove) if _x]), '')})
 
         update, refresh, rename, subtitle, errors = [], [], [], [], []
-        for cur_tvid_prodid, cur_show_obj in iteritems(to_change):
+        for cur_tvid_prodid, cur_show_obj in to_change.items():
 
             if cur_tvid_prodid in to_delete:
                 cur_show_obj.delete_show(True)
@@ -8434,7 +8433,7 @@ class ShowTasks(Manage):
     @staticmethod
     def switch_ignore_warning(**kwargs):
 
-        for cur_tvid_prodid, state in iteritems(kwargs):
+        for cur_tvid_prodid, state in kwargs.items():
             show_obj = helpers.find_show_by_id(cur_tvid_prodid)
             if show_obj:
                 change = -1
@@ -8673,7 +8672,7 @@ class History(MainHandler):
                         dict(name=k, id=sickgear.GenericProvider.make_id(k), img=img(k), cls=img(k, True),
                              fails=v.fails_sorted, next_try=v.get_next_try_time,
                              has_limit=getattr(v, 'has_limit', False), tmr_limit_time=v.tmr_limit_time)
-                        for k, v in iteritems(sg_helpers.DOMAIN_FAILURES.domain_list)]))
+                        for k, v in sg_helpers.DOMAIN_FAILURES.domain_list.items()]))
 
                     t.domain_fail_cnt = len([d for d in t.domain_fail_stats if len(d['fails'])])
 
@@ -8869,7 +8868,7 @@ class History(MainHandler):
 
             if states:
                 # Prune user removed items that are no longer being returned by API
-                media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), iteritems(states)))
+                media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), states.items()))
                 sql = "FROM [tv_episodes_watched] WHERE hide=1 AND label LIKE '%%{Emby}'"
                 with db.DBConnection(row_type='dict') as sg_db:
                     files = sg_db.select(f'SELECT location {sql}')
@@ -8912,7 +8911,7 @@ class History(MainHandler):
 
                     plex.fetch_show_states()
 
-                    for k, v in iteritems(plex.show_states):
+                    for k, v in plex.show_states.items():
                         if 0 < v.get('played') or 0:
                             played += 1
                             states[idx] = v
@@ -8936,7 +8935,7 @@ class History(MainHandler):
 
             if states:
                 # Prune user removed items that are no longer being returned by API
-                media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), iteritems(states)))
+                media_paths = list(map(lambda arg: os.path.basename(arg[1]['path_file']), states.items()))
                 sql = "FROM [tv_episodes_watched] WHERE hide=1 AND label LIKE '%%{Plex}'"
                 with db.DBConnection(row_type='dict') as sg_db:
                     files = sg_db.select(f'SELECT location {sql}')
@@ -8998,17 +8997,17 @@ class History(MainHandler):
                                              [cur_result['rowid']])
                         if 1 == r_del.rowcount:
                             h_records += ['%s-%s-%s' % (cur_result['rowid'], k, v)
-                                          for k, v in iteritems(row_show_ids[cur_result['rowid']])]
+                                          for k, v in row_show_ids[cur_result['rowid']].items()]
                     else:
                         r_del = sg_db.action('UPDATE [tv_episodes_watched] SET hide=1 WHERE `rowid` == ?',
                                              [cur_result['rowid']])
                         if 1 == r_del.rowcount:
                             removed += ['%s-%s-%s' % (cur_result['rowid'], k, v)
-                                        for k, v in iteritems(row_show_ids[cur_result['rowid']])]
+                                        for k, v in row_show_ids[cur_result['rowid']].items()]
 
         updating = False
         with db.DBConnection(row_type='dict') as sg_db:  # type: db.DBConnection
-            for epid, tvid_prodid_dict in iteritems(deleted):
+            for epid, tvid_prodid_dict in deleted.items():
                 sql_result = sg_db.select('SELECT season, episode FROM [tv_episodes] WHERE `episode_id` = %s' % epid)
                 for cur_result in sql_result:
                     show_obj = helpers.find_show_by_id(tvid_prodid_dict)
@@ -9112,11 +9111,11 @@ class ConfigGeneral(Config):
 
             # add original show name
             show_obj = sickgear.helpers.find_show_by_id(tvid_prodid, no_mapped_ids=True)
-            first_key = next(iteritems(alts))[0]
+            first_key = next(alts.items())[0]
             alts[first_key].update(dict({'#': show_obj.name}))
 
             # process alternative release names
-            for (season, names) in iteritems(alt_names):
+            for (season, names) in alt_names.items():
                 alts[season].update(dict(n=names))
 
             # process alternative release numbers
@@ -9130,7 +9129,7 @@ class ConfigGeneral(Config):
 
             # minimise episode lists into ranges e.g. 1x1, 2x2, ... 5x5 => 1x1-5
             minimal = {}
-            for ft_s, ft_e_range in iteritems(for_target_group):
+            for ft_s, ft_e_range in for_target_group.items():
                 minimal.setdefault(ft_s, [])
                 last_f_e = None
                 for (f_e, t_e) in ft_e_range:
@@ -9148,7 +9147,7 @@ class ConfigGeneral(Config):
                     if add_new:
                         minimal[ft_s] += [[f_e, t_e]]  # singular
 
-            for (f_s, t_s), ft_list in iteritems(minimal):
+            for (f_s, t_s), ft_list in minimal.items():
                 alts[f_s].setdefault('se', [])
                 for fe_te in ft_list:
                     alts[f_s]['se'] += [dict({fe_te[0]: '%sx%s' % (t_s, '-'.join(['%s' % x for x in fe_te[1:]]))})]
