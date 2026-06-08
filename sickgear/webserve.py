@@ -9111,7 +9111,7 @@ class ConfigGeneral(Config):
 
             # add original show name
             show_obj = sickgear.helpers.find_show_by_id(tvid_prodid, no_mapped_ids=True)
-            first_key = next(alts.items())[0]
+            first_key = next(iter(alts.items()))[0]
             alts[first_key].update(dict({'#': show_obj.name}))
 
             # process alternative release names
