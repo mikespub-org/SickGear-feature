@@ -155,11 +155,17 @@ def has_media_ext(filename):
     """
     # ignore samples
     if re.search(r'(^|[\W_])(sample\d*)[\W_]', filename, re.I) \
-            or filename.startswith('._'):  # and MAC OS's 'resource fork' files
+            or filename.startswith('._'):  # and macOS's 'resource fork' files
         return False
 
     sep_file = filename.rpartition('.')
-    return (None is re.search('extras?$', sep_file[0], re.I)) and (sep_file[2].lower() in mediaExtensions)
+    found = bool(re.search(
+        'extras|'
+        r'-(Behind\sThe\sScenes|Deleted\sScenes|'
+        'Featurettes|Interviews|Scenes|Shorts|Trailers|Other)',
+        sep_file[0], re.I))
+
+    return not found and (sep_file[2].lower() in mediaExtensions)
 
 
 def has_image_ext(filename):
