@@ -1,6 +1,7 @@
 ﻿### 3.36.0 (2026-xx-xx xx:xx:00 UTC)
 
 * Change update actions and optimise unittest
+* Update actions/checkout@v6.0.2 to actions/checkout@v6.0.3
 * Update apprise 1.9.9 (4639799) to 1.11.0 (158c4e1)
 * Update certifi 2026.02.25 to 2026.05.20
 * Update chardet packages 7.3.0 (00667a4) to 7.4.1 (9079efc)
