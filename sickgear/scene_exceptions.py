@@ -204,7 +204,7 @@ class ReleaseMap(Job):
                 # if this exception isn't already in the DB then add it
                 for cur_ex_dict in filter(lambda e: e not in existing_exceptions, exceptions[cur_tvid_prodid]):
                     try:
-                        exception, season = next(cur_ex_dict.items())
+                        exception, season = next(iter(cur_ex_dict.items()))
                     except (BaseException, Exception):
                         logger.error('release exception error')
                         logger.error(traceback.format_exc())
