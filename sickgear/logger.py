@@ -206,7 +206,7 @@ class SBRotatingLogHandler(object):
             out_line = f'{threading.current_thread().name} :: {to_log}'
 
             sb_logger = logging.getLogger('sickgear')
-            setattr(sb_logger, 'db', lambda *args: sb_logger.log(DB, *args))
+            setattr(sb_logger, 'dbase', lambda *args: sb_logger.log(DB, *args))
 
             # sub_logger = logging.getLogger('subliminal')
             # tornado_logger = logging.getLogger('tornado')
@@ -223,7 +223,7 @@ class SBRotatingLogHandler(object):
                     # add errors to the UI logger
                     classes.ErrorViewer.add(classes.UIError(out_line))
                 elif DB == log_level:
-                    sb_logger.db(out_line)
+                    sb_logger.dbase(out_line)
                 else:
                     sb_logger.log(log_level, out_line)
             except ValueError:
@@ -383,6 +383,14 @@ class TimedCompressedRotatingFileHandler(TimedRotatingFileHandler):
 
 
 sb_log_instance = SBRotatingLogHandler('sickgear.log')
+
+
+def dbase(to_log):
+    # type: (AnyStr) -> None
+    """ log message flagged as db
+    :param to_log: log message
+    """
+    sb_log_instance.log(to_log, DB)
 
 
 def debug(to_log):
