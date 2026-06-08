@@ -31,7 +31,6 @@ from .sgdatetime import SGDatetime
 from sg_helpers import make_path, compress_file, remove_file_perm, scantree
 
 from _23 import scandir
-from six import iterkeys, iteritems, itervalues
 
 # noinspection PyUnreachableCode
 if False:
@@ -76,25 +75,44 @@ def mass_upsert_sql(table_name, value_dict, key_dict, sanitise=True):
     :type sanitise: Boolean
     :return: list of 2 sql command
     """
-    sql_l = []
-
-    gen_params = (lambda my_dict: [f'{x} = ?' for x in iterkeys(my_dict)])
-
     # sanity: remove k, v pairs in keyDict from valueDict
     if sanitise:
-        value_dict = dict(filter(lambda k: k[0] not in key_dict, iteritems(value_dict)))
+        value_dict = dict(filter(lambda k: k[0] not in key_dict, value_dict.items()))
+
+    gen_params = (lambda my_dict: [f'{x} = ?' for x in my_dict.keys()])
+
+    if db_support_upsert:
+        # noinspection SqlResolve
+        update_sql = [f'UPDATE SET {", ".join(gen_params(value_dict))}'
+                      f' WHERE {" AND ".join(gen_params(key_dict))}',
+                      list(value_dict.values()) + list(key_dict.values())]
+
+        ks = list(itertools.chain(value_dict.keys(), key_dict.keys()))
+        if not sanitise:
+            value_dict = dict(filter(lambda k: k[0] not in key_dict, value_dict.items()))
+        vs = list(itertools.chain(value_dict.values(), key_dict.values()))
+        # noinspection SqlResolve
+        return [[
+            'INSERT INTO [' + table_name + '] (' +
+            ', '.join(["'%s'" % ('%s' % v).replace("'", "''") for v in ks]) + ')' +
+            ' VALUES (' + ','.join(['?'] * len(ks)) + ')' +
+            ' ON CONFLICT DO ' +
+            update_sql[0],
+            vs + update_sql[1]]]
 
     # noinspection SqlResolve
-    sql_l.append([f'UPDATE [{table_name}] SET {", ".join(gen_params(value_dict))}'
+    update_sql = [f'UPDATE [{table_name}] SET {", ".join(gen_params(value_dict))}'
                   f' WHERE {" AND ".join(gen_params(key_dict))}',
-                  list(value_dict.values()) + list(key_dict.values())])
+                  list(value_dict.values()) + list(key_dict.values())]
+
+    sql_l = [update_sql]
 
     # noinspection SqlResolve
     sql_l.append(['INSERT INTO [' + table_name + '] ('
                   + ', '.join(["'%s'" % ('%s' % v).replace("'", "''") for v in
-                               itertools.chain(iterkeys(value_dict), iterkeys(key_dict))]) + ')'
+                               itertools.chain(value_dict.keys(), key_dict.keys())]) + ')'
                   + ' SELECT ' + ', '.join(["'%s'" % ('%s' % v).replace("'", "''") for v in
-                                            itertools.chain(itervalues(value_dict), itervalues(key_dict))])
+                                            itertools.chain(value_dict.values(), key_dict.values())])
                   + ' WHERE changes() = 0'])
     return sql_l
 
@@ -307,7 +325,7 @@ class DBConnection(object):
 
         changes_before = self.connection.total_changes
 
-        gen_params = (lambda my_dict: [f'{x} = ?' for x in iterkeys(my_dict)])
+        gen_params = (lambda my_dict: [f'{x} = ?' for x in my_dict.keys()])
 
         # noinspection SqlResolve
         query = (f'UPDATE [{table_name}]'
@@ -319,19 +337,17 @@ class DBConnection(object):
         if self.connection.total_changes == changes_before:
             # noinspection SqlResolve
             query = (f'INSERT INTO [{table_name}]'
-                     f' ({", ".join(itertools.chain(iterkeys(value_dict), iterkeys(key_dict)))})'
+                     f' ({", ".join(itertools.chain(value_dict.keys(), key_dict.keys()))})'
                      f' VALUES ({", ".join(["?"] * (len(value_dict) + len(key_dict)))})')
             self.action(query, list(value_dict.values()) + list(key_dict.values()))
 
     def table_info(self, table_name):
         # type: (AnyStr) -> Dict[AnyStr, Dict[AnyStr, AnyStr]]
 
-        # FIXME ? binding is not supported here, but I cannot find a way to escape a string manually
-        sql_result = self.select(f'PRAGMA table_info([{table_name}])')
-        columns = {}
-        for cur_column in sql_result:
-            columns[cur_column['name']] = {'type': cur_column['type']}
-        return columns
+        # SQLite 3.16.0+ supports bindings with the table-valued pragma_table_info() function
+        # and replaces the unsafe self.select(f'PRAGMA table_info([{table_name}])')
+        return {_r['name']: {'type': _r['type']}
+                for _r in self.select('SELECT * FROM pragma_table_info(?)', (table_name,))}
 
     @staticmethod
     def _dict_factory(cursor, row):
@@ -347,11 +363,8 @@ class DBConnection(object):
 
     def has_index(self, table_name, index):
         # type: (AnyStr, AnyStr) -> bool
-        sql_results = self.select(f'PRAGMA index_list([{table_name}])')
-        for result in sql_results:
-            if result['name'] == index:
-                return True
-        return False
+        return any([index == _r['name']
+                    for _r in self.select('SELECT name FROM pragma_index_list(?)', (table_name,))])
 
     def remove_index(self, table, name):
         # type: (AnyStr, AnyStr) -> None

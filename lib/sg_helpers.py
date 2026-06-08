@@ -553,10 +553,10 @@ class ConnectionFailList(object):
     def _save_fail_value(self, field, value):
         with db.DBConnection('cache.db') as sg_db:
             if sg_db.has_table('connection_fails_count'):
-                r = sg_db.action('UPDATE connection_fails_count SET %s = ? WHERE domain_url = ?' % field,
+                r = sg_db.action(f'UPDATE connection_fails_count SET {field} = ? WHERE domain_url = ?',
                                  [value, self.url])
                 if 0 == r.rowcount:
-                    sg_db.action('REPLACE INTO connection_fails_count (domain_url, %s) VALUES (?,?)' % field,
+                    sg_db.action(f'REPLACE INTO connection_fails_count (domain_url, {field}) VALUES (?,?)',
                                  [self.url, value])
 
     def save_list(self):
