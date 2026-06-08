@@ -12,7 +12,7 @@
 * Update browser_ua from user-agents 2.1.38 (a78437e)
 * Update SimpleJSON 3.20.2 (10e5aaf) to 4.0.0 (1608c05)
 * Update soupsieve 2.8.3 (5aedc41) to 2.8.4 (28108ab)
-* Update Tornado Web Server 6.5.5 (7d64650) to 6.5.6 (aba2569)
+* Update Tornado Web Server 6.5.5 (7d64650) to 6.5.7 (48fc2d4)
 * Update tmdbsimple 2.9.2 (0b3359f) to 2.9.6 (e17ec76)
 * Update urllib3 2.6.3 (0248277) to 2.7.0 (9a950b9)
 * Update zoneinfo 2025c to 2026b (fallback)
@@ -96,6 +96,7 @@
 * Update packaging 26.1 (c1a88a3) to 26.2 (84a87ee)
 * Update Requests library 2.33.1 (111d2b7) to 2.34.0 (0b401c7)
 * Update Requests library 2.34.0 (0b401c7) to 2.34.2 (6e83187)
+* Update Tornado Web Server 6.5.6 (aba2569) to 6.5.7 (48fc2d4)
 * Fix import if orjson is not installed that blocked running unittests
 * Change temporary remove browse filters while a bug is being investigated, and remove tag-trait-self from actor lists
 * Fix save states on browse shows when a tab is open on a page and sg restarts e.g. for an upgrade
